@@ -1,0 +1,256 @@
+{
+  "schema_version": 1,
+  "reviewed_on": "2026-11-14",
+  "scope": "Curated educational guidance from public NASA Human Research Program pages. These are research summaries, not patient datasets, diagnoses, or mission medical procedures. AstroTip is not a validated medical device.",
+  "priority_note": "NASA describes mission-dependent risks, not a universal ranked list. AstroTip brings reported symptoms and concerns to the top; prevention topics remain visible even when fingertip readings look normal. A priority is an app follow-up prompt, not an estimated probability of disease.",
+  "sources": [
+    {"id": "hazards", "title": "NASA: Five hazards of human spaceflight", "url": "https://www.nasa.gov/hrp/hazards/"},
+    {"id": "risks", "title": "NASA: Human spaceflight risks", "url": "https://www.nasa.gov/hrp/risks/"},
+    {"id": "research", "title": "NASA: Ongoing HRP research", "url": "https://www.nasa.gov/hrp/ongoing-hrp-research/"},
+    {"id": "hypoxia", "title": "NASA: Hypoxia", "url": "https://www.nasa.gov/reference/risk-of-hypoxia/"},
+    {"id": "cardiovascular", "title": "NASA: Cardiovascular adaptations", "url": "https://www.nasa.gov/reference/risk-of-cardiovascular-adaptations/"},
+    {"id": "fitness", "title": "NASA: Cardiorespiratory and musculoskeletal fitness", "url": "https://www.nasa.gov/reference/risk-of-reduced-cardiorespiratory-and-musculoskeletal-fitness/"},
+    {"id": "bone", "title": "NASA: Spaceflight-induced bone changes", "url": "https://www.nasa.gov/reference/risk-of-spaceflight-induced-bone-changes/"},
+    {"id": "sans", "title": "NASA: Spaceflight Associated Neuro-ocular Syndrome", "url": "https://www.nasa.gov/reference/risk-of-spaceflight-associated-neuro-ocular-syndrome-sans/"},
+    {"id": "vestibular", "title": "NASA: Sensorimotor and vestibular function", "url": "https://www.nasa.gov/reference/risk-of-altered-sensorimotor-and-vestibular-function/"},
+    {"id": "sleep", "title": "NASA: Sleep and irregular schedules", "url": "https://www.nasa.gov/reference/risk-from-inadequate-sleep-and-irregular-schedules/"},
+    {"id": "behavioral", "title": "NASA: Behavioral changes and psychiatric disorders", "url": "https://www.nasa.gov/reference/risk-of-behavioral-changes-and-psychiatric-disorders/"},
+    {"id": "teamwork", "title": "NASA: Teamwork", "url": "https://www.nasa.gov/reference/risk-of-inadequate-teamwork/"},
+    {"id": "immune", "title": "NASA: Altered immune responses", "url": "https://www.nasa.gov/reference/risk-of-altered-immune-system-responses/"},
+    {"id": "microbes", "title": "NASA: Host-microorganism interactions", "url": "https://www.nasa.gov/reference/risk-of-host-microorganism-interactions/"},
+    {"id": "nutrition", "title": "NASA: Food and nutrition", "url": "https://www.nasa.gov/reference/risk-of-inadequate-food-and-nutrition/"},
+    {"id": "decompression", "title": "NASA: Decompression sickness", "url": "https://www.nasa.gov/reference/risk-of-decompression-sickness/"},
+    {"id": "eva", "title": "NASA: Injury and performance during spacewalks", "url": "https://www.nasa.gov/reference/risk-of-injury-and-compromised-performance-from-extravehicular-activity-eva/"},
+    {"id": "radiation", "title": "NASA: Radiation-induced cancers", "url": "https://www.nasa.gov/reference/risk-of-radiation-induced-cancers/"},
+    {"id": "radiation_hazard", "title": "NASA: Space radiation hazard", "url": "https://www.nasa.gov/hrp/hazard-space-radiation/"},
+    {"id": "distance_hazard", "title": "NASA: Distance from Earth", "url": "https://www.nasa.gov/hrp/hazard-distance-from-earth/"},
+    {"id": "systems", "title": "NASA: Systems operations support", "url": "https://www.nasa.gov/reference/risk-of-inadequate-systems-operations-support/"},
+    {"id": "dynamic_loads", "title": "NASA: Injury from dynamic loads", "url": "https://www.nasa.gov/reference/risk-of-injury-from-dynamic-loads/"},
+    {"id": "medlineplus_oximetry", "title": "MedlinePlus: Pulse Oximetry (general reference, not a spaceflight threshold)", "url": "https://medlineplus.gov/lab-tests/pulse-oximetry/"},
+    {"id": "fda_oximetry", "title": "FDA: Pulse Oximeters", "url": "https://www.fda.gov/medical-devices/products-and-medical-procedures/pulse-oximeters"},
+    {"id": "medlineplus_emergencies", "title": "MedlinePlus: Recognizing medical emergencies (general reference)", "url": "https://medlineplus.gov/ency/article/001927.htm"}
+  ],
+  "hazards": [
+    {"id": "radiation", "title": "Space radiation"},
+    {"id": "isolation", "title": "Isolation and confinement"},
+    {"id": "distance", "title": "Distance from Earth"},
+    {"id": "gravity", "title": "Gravity fields"},
+    {"id": "environment", "title": "Hostile or closed environments"}
+  ],
+  "conditions": [
+    {
+      "id": "hypoxia",
+      "title": "Low oxygen / hypoxia concern",
+      "hazard_ids": ["environment"],
+      "why_it_matters": "Reduced-pressure habitats can lower oxygen availability and affect thinking, vision, and sleep.",
+      "priority_rationale": "Oxygen readings and reported breathing concerns deserve timely review. NASA describes planned mild hypoxia exposure as relatively low risk; an abnormal reading is not a diagnosis.",
+      "monitoring": "Record SpO2, measurement quality, symptoms, and activity context; have trained crew review habitat and suit oxygen/pressure data when relevant.",
+      "limitations": "A fingertip estimate cannot diagnose hypoxia, establish a safe spacecraft atmosphere, or exclude a problem when symptoms are present.",
+      "countermeasures": [
+        {"text": "Have trained crew follow the mission's oxygen and pressure procedures and arrange medical review of symptoms or unexpected readings.", "evidence": "Mission protocol", "source_ids": ["hypoxia"]}
+      ],
+      "research": [
+        {"text": "NASA is studying reduced-pressure exposure and suit-pressure options; these are not instructions to adjust oxygen or pressure yourself.", "source_ids": ["hypoxia"]}
+      ],
+      "source_ids": ["hypoxia", "risks", "medlineplus_oximetry", "fda_oximetry"]
+    },
+    {
+      "id": "cardiovascular",
+      "title": "Cardiovascular changes",
+      "hazard_ids": ["gravity"],
+      "why_it_matters": "Spaceflight can change circulation and increase concerns about fainting, abnormal rhythms, and blood clots, especially on longer missions.",
+      "priority_rationale": "Heart-rate observations can prompt follow-up, while fainting or chest symptoms require clinical assessment regardless of the sensor result.",
+      "monitoring": "Log resting heart rate, activity context, dizziness, and fainting; clinicians may need blood pressure, ECG, or ultrasound.",
+      "limitations": "Pulse readings cannot diagnose an arrhythmia, blood clot, blood-pressure disorder, or cardiovascular disease.",
+      "countermeasures": [
+        {"text": "Keep to the crew's prescribed exercise and nutrition plan to support cardiovascular fitness.", "evidence": "Operational countermeasure", "source_ids": ["cardiovascular"]},
+        {"text": "Use pre-landing fluid and compression plans only as directed by the mission medical team.", "evidence": "Mission protocol", "source_ids": ["cardiovascular"]}
+      ],
+      "research": [
+        {"text": "Research is examining blood-flow and clotting changes and preparation for cardiovascular emergencies on deep-space missions.", "source_ids": ["cardiovascular", "research"]}
+      ],
+      "source_ids": ["cardiovascular"]
+    },
+    {
+      "id": "fitness",
+      "title": "Muscle loss and reduced fitness",
+      "hazard_ids": ["gravity"],
+      "why_it_matters": "Weightlessness can reduce strength and aerobic capacity, making mission tasks harder and increasing injury risk.",
+      "priority_rationale": "Prevention matters throughout a mission even without symptoms; task readiness cannot be inferred from normal pulse or oxygen readings.",
+      "monitoring": "Record missed exercise sessions, weakness, fatigue, and difficulty completing usual tasks; use crew fitness evaluations for actual performance measures.",
+      "limitations": "AstroTip does not measure muscle mass, strength, aerobic capacity, or readiness for a spacewalk.",
+      "countermeasures": [
+        {"text": "Follow the individually prescribed resistance and aerobic exercise schedule and periodic fitness assessments.", "evidence": "Operational countermeasure", "source_ids": ["fitness"]}
+      ],
+      "research": [
+        {"text": "Zero T2 tests exercise without a treadmill; CIPHER studies changes across body systems. Neither establishes an exercise prescription for this user.", "source_ids": ["research"]}
+      ],
+      "source_ids": ["fitness", "research"]
+    },
+    {
+      "id": "bone",
+      "title": "Bone loss and fracture risk",
+      "hazard_ids": ["gravity"],
+      "why_it_matters": "Reduced loading in microgravity weakens bones and can increase fracture risk; changes may be silent.",
+      "priority_rationale": "Bone health needs preventive follow-up on long missions and during return to gravity, even when fingertip measurements are reassuring.",
+      "monitoring": "Record exercise adherence, pain, and injuries. Clinical bone scans before and after flight assess bone density.",
+      "limitations": "Fingertip sensors and symptom check-ins cannot measure bone density or rule out a fracture.",
+      "countermeasures": [
+        {"text": "Follow the mission's resistance exercise plan and scheduled bone-health reviews.", "evidence": "Operational countermeasure", "source_ids": ["bone"]}
+      ],
+      "research": [
+        {"text": "NASA studies longer-term bone changes and medical countermeasures. Bone-loss medication requires an individualized clinical decision.", "source_ids": ["bone"]}
+      ],
+      "source_ids": ["bone"]
+    },
+    {
+      "id": "sans",
+      "title": "Vision changes / SANS",
+      "hazard_ids": ["gravity"],
+      "why_it_matters": "Headward fluid shifts in weightlessness can change the eyes and brain; long-term consequences remain under investigation.",
+      "priority_rationale": "NASA identifies SANS as a major research priority for long missions. New visual changes warrant review without relying on fingertip measurements.",
+      "monitoring": "Record blurred or changed vision and headaches; arrange mission eye examinations and imaging when indicated.",
+      "limitations": "A photo, pulse reading, or normal SpO2 cannot diagnose or exclude SANS. Symptoms alone do not establish SANS.",
+      "countermeasures": [
+        {"text": "Report new visual changes to the medical team and follow the planned eye-monitoring schedule.", "evidence": "Mission protocol", "source_ids": ["sans"]}
+      ],
+      "research": [
+        {"text": "B-Complex and Thigh Cuff investigate possible countermeasures for space-related eye changes. Supplements and cuffs are investigational, not self-treatment recommendations.", "source_ids": ["research", "sans"]}
+      ],
+      "source_ids": ["sans", "research"]
+    },
+    {
+      "id": "vestibular",
+      "title": "Dizziness and motion sickness",
+      "hazard_ids": ["gravity"],
+      "why_it_matters": "Gravity transitions can disrupt orientation, coordination, and motion tolerance, affecting safe movement and vehicle operation.",
+      "priority_rationale": "Balance and orientation concerns matter most around gravity transitions and tasks that demand coordination.",
+      "monitoring": "Record dizziness, nausea, balance problems, and timing relative to landing or other gravity transitions.",
+      "limitations": "Fingertip measurements cannot identify the cause of dizziness or assess vestibular function.",
+      "countermeasures": [
+        {"text": "Tell the crew about disorientation and use the mission's trained assistance and task-readiness procedures before demanding movement or piloting.", "evidence": "Mission protocol", "source_ids": ["vestibular"]}
+      ],
+      "research": [
+        {"text": "NASA is evaluating orientation training, recovery aids, and motion-sickness medicines. Medication choices belong with the medical team.", "source_ids": ["vestibular"]}
+      ],
+      "source_ids": ["vestibular"]
+    },
+    {
+      "id": "sleep",
+      "title": "Sleep loss and fatigue",
+      "hazard_ids": ["isolation", "environment"],
+      "why_it_matters": "Disrupted light cycles, sleep loss, and heavy workloads can impair health and mission performance.",
+      "priority_rationale": "Daily sleep and fatigue reports help identify concerns before they interfere with demanding tasks.",
+      "monitoring": "Track sleep duration, perceived sleep quality, fatigue, and work/rest disruption.",
+      "limitations": "Check-ins are self-reports; a fingertip reading does not establish sleep quality or fitness for duty.",
+      "countermeasures": [
+        {"text": "Protect scheduled sleep and recovery time and follow the mission's day/night lighting plan.", "evidence": "Operational countermeasure", "source_ids": ["sleep"]},
+        {"text": "Discuss persistent fatigue and workload adjustments with the crew lead or medical team.", "evidence": "Mission protocol", "source_ids": ["sleep"]}
+      ],
+      "research": [
+        {"text": "ARCHeR monitored sleep, activity, and well-being on Artemis II; it is a research study, not a validated AstroTip fatigue model.", "source_ids": ["research"]}
+      ],
+      "source_ids": ["sleep", "research"]
+    },
+    {
+      "id": "behavioral",
+      "title": "Behavioral health and teamwork",
+      "hazard_ids": ["isolation", "distance"],
+      "why_it_matters": "Isolation and confinement can affect mood and decisions; communication delays make support and team coordination harder.",
+      "priority_rationale": "Stress, mood concerns, and conflict can affect safety even when physiological readings are unremarkable.",
+      "monitoring": "Record perceived stress, mood concerns, isolation, and team friction; seek a private conversation with the appropriate support professional.",
+      "limitations": "Self-reports and pulse readings cannot diagnose a psychiatric disorder or measure team effectiveness.",
+      "countermeasures": [
+        {"text": "Maintain planned contact with family and behavioral-health support; use protected self-care time or journaling.", "evidence": "Operational countermeasure", "source_ids": ["behavioral"]},
+        {"text": "Use practiced team communication and conflict-resolution routines; raise unresolved strain with the crew lead.", "evidence": "Mission protocol", "source_ids": ["teamwork"]}
+      ],
+      "research": [
+        {"text": "Ground-based isolation studies test support strategies, privacy needs, and how teams adapt during long missions.", "source_ids": ["behavioral", "teamwork"]}
+      ],
+      "source_ids": ["behavioral", "teamwork"]
+    },
+    {
+      "id": "immune",
+      "title": "Immune changes and infection concerns",
+      "hazard_ids": ["environment", "radiation", "gravity"],
+      "why_it_matters": "Spaceflight stressors can alter immunity and reactivate dormant viruses; changes in microbes may also affect illness risk.",
+      "priority_rationale": "New illness or skin symptoms need review in a shared habitat; normal vitals do not exclude infection or immune changes.",
+      "monitoring": "Log feverishness, rashes, sores, and new illness symptoms; clinical samples and environmental sampling provide different information.",
+      "limitations": "The app cannot measure immune function, identify a pathogen, or diagnose infection from a photo.",
+      "countermeasures": [
+        {"text": "Follow crew infection-prevention and environmental-sampling procedures, and report new illness to the medical team.", "evidence": "Mission protocol", "source_ids": ["microbes", "immune"]},
+        {"text": "Follow preflight exposure-limiting precautions set by the mission team.", "evidence": "Operational countermeasure", "source_ids": ["microbes"]}
+      ],
+      "research": [
+        {"text": "Immune Biomarkers examined Artemis II blood and saliva samples. Such laboratory research does not validate immunity estimates from fingertip readings.", "source_ids": ["research"]}
+      ],
+      "source_ids": ["immune", "microbes", "research"]
+    },
+    {
+      "id": "nutrition",
+      "title": "Inadequate nutrition",
+      "hazard_ids": ["environment", "distance"],
+      "why_it_matters": "Food must remain safe, nutritious, and appealing through long missions with limited resupply.",
+      "priority_rationale": "Poor intake or appetite deserves follow-up because it can undermine health and performance across multiple body systems.",
+      "monitoring": "Record missed meals, poor appetite, and difficulty following the assigned food plan; review intake with the nutrition team.",
+      "limitations": "Pulse and SpO2 do not measure hydration, energy balance, vitamin status, or malnutrition.",
+      "countermeasures": [
+        {"text": "Follow the mission nutrition plan and report foods that are unavailable, poorly tolerated, or unappealing so the team can adjust the menu.", "evidence": "Mission protocol", "source_ids": ["nutrition"]}
+      ],
+      "research": [
+        {"text": "NASA is improving diet quality, food variety, and shelf life for longer missions; these studies do not justify unsupervised supplementation.", "source_ids": ["nutrition"]}
+      ],
+      "source_ids": ["nutrition"]
+    },
+    {
+      "id": "eva",
+      "title": "Spacewalk injury and decompression concerns",
+      "hazard_ids": ["environment", "gravity"],
+      "why_it_matters": "Pressure transitions can cause decompression sickness; suit work also creates physical and cognitive strain.",
+      "priority_rationale": "Symptoms during or after an EVA or pressure change need prompt mission-team review, even with normal fingertip readings.",
+      "monitoring": "Record recent spacewalks or pressure changes, pain, unusual fatigue, and breathing or neurological symptoms; use suit telemetry and crew medical assessment.",
+      "limitations": "SpO2 does not detect nitrogen bubbles, exclude decompression sickness, measure carbon dioxide, or clear a crew member for an EVA.",
+      "countermeasures": [
+        {"text": "Use the approved prebreathe, suit-check, and EVA fitness procedures under trained crew supervision.", "evidence": "Mission protocol", "source_ids": ["decompression", "eva"]},
+        {"text": "For suspected decompression symptoms, alert the crew and follow the mission procedure to safely end the EVA and return to a pressurized environment.", "evidence": "Mission protocol", "source_ids": ["decompression"]}
+      ],
+      "research": [
+        {"text": "Variable-pressure suits and habitat-atmosphere designs are under study. Pressure changes require mission authority, not app instructions.", "source_ids": ["decompression", "eva"]}
+      ],
+      "source_ids": ["decompression", "eva", "hypoxia"]
+    },
+    {
+      "id": "radiation",
+      "title": "Radiation exposure and long-term health",
+      "hazard_ids": ["radiation"],
+      "why_it_matters": "Space radiation can increase cancer risk and may harm the nervous, cardiovascular, and other systems, particularly beyond Earth's shielding.",
+      "priority_rationale": "This major exploration hazard must stay visible despite being undetectable by the fingertip sensor and often not immediately perceptible.",
+      "monitoring": "Use approved personal or vehicle dosimetry, radiation alerts, exposure records, and scheduled medical surveillance.",
+      "limitations": "Heart rate, SpO2, symptoms, and photos cannot quantify radiation dose or rule out radiation-related harm.",
+      "countermeasures": [
+        {"text": "Follow mission radiation alerts, shielding or shelter procedures, exposure monitoring, and medical follow-up plans.", "evidence": "Mission protocol", "source_ids": ["radiation", "radiation_hazard"]}
+      ],
+      "research": [
+        {"text": "NASA studies better shielding, personalized risk estimates, and possible drug countermeasures. No protective medication is prescribed by this app.", "source_ids": ["radiation"]}
+      ],
+      "source_ids": ["radiation", "radiation_hazard"]
+    },
+    {
+      "id": "medical_support",
+      "title": "Medical readiness and landing injury",
+      "hazard_ids": ["distance", "gravity", "environment"],
+      "why_it_matters": "Delayed Earth support increases the need for onboard capability. Landing forces and weakened bones or muscles also create injury risk.",
+      "priority_rationale": "Medical readiness supports every condition; landing and injury concerns need clinical review rather than clearance from a simple sensor.",
+      "monitoring": "Record injuries and new functional difficulties; maintain accessible medical procedures, equipment status, and a health log for the crew medical officer.",
+      "limitations": "AstroTip cannot examine injuries, verify medical supplies, replace trained care, or certify vehicle and restraint safety.",
+      "countermeasures": [
+        {"text": "Keep approved offline procedures available and practice the mission's medical and equipment-response training before it is needed.", "evidence": "Mission protocol", "source_ids": ["systems", "distance_hazard"]},
+        {"text": "Use approved seating, restraints, and landing or egress assistance procedures; report pain or injury to the medical team.", "evidence": "Mission protocol", "source_ids": ["dynamic_loads"]}
+      ],
+      "research": [
+        {"text": "NASA uses body models to improve landing protection and develops systems crews can operate with less immediate ground support.", "source_ids": ["dynamic_loads", "systems"]}
+      ],
+      "source_ids": ["systems", "dynamic_loads", "distance_hazard"]
+    }
+  ]
+}
