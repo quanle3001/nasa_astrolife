@@ -1,0 +1,16 @@
+{
+    "sources": [
+        {
+            "id": "nasa-hrp-five-hazards",
+            "title": "NASA Human Research Program: Five Hazards of Human Spaceflight",
+            "url": "https://www.nasa.gov/hrp/hazards/",
+            "usage": "spaceflight risk reference"
+        },
+        {
+            "id": "nasa-osdr",
+            "title": "NASA Open Science Data Repository",
+            "url": "https://science.nasa.gov/biological-physical/data/osdr/",
+            "usage": "candidate studies; no dataset selected yet"
+        }
+    ]
+}
