@@ -1,104 +1,145 @@
-# AstroTip desktop app
+# AstroTip — Native Desktop Application
 
-AstroTip reads your ESP32/MAX30102 over USB serial, analyzes valid estimates locally,
-and shows relevant health prompts and suggested next steps. NASA guidance stays in
-an internal offline catalog; the interface does not display a NASA library or research feed.
+The AstroTip desktop application is developed in **Python using PySide6 (Qt)**. It is designed as an offline-first interface for collecting, visualizing, storing, and eventually analyzing astronaut health indicators.
 
-## Start the app
+## Software Architecture
 
-Dependencies are already installed in this workspace. In **Command Prompt**:
+| Directory | Responsibility |
+|---|---|
+| `run.py` | Main application entry point |
+| `astrotip/ui/` | Desktop windows, dashboard, navigation, and interactive pages |
+| `astrotip/inputs/` | ESP32 serial data, questionnaires, manual inputs, images, and camera capture |
+| `astrotip/analysis/` | Measurement validation, local ML, and NASA-informed guidance |
+| `astrotip/models/` | Shared health data structures, units, and metadata |
+| `astrotip/storage/` | SQLite database and local health records |
+| `resources/` | NASA references and dataset documentation |
+| `tests/` | Software testing and validation |
 
-```cmd
-C:\Users\evatr\Desktop\nasa_astrotip\.venv\Scripts\python.exe C:\Users\evatr\Desktop\nasa_astrotip\software\run.py
+## Requirements
+
+- Python 3.11 or newer (Python 3.12 recommended)
+- Visual Studio Code or another Python-compatible editor
+- Python virtual environment (`venv`)
+- Dependencies listed in `requirements.txt`
+
+Core libraries:
+
+- `PySide6` — Native desktop UI and future webcam capture
+- `pyserial` — ESP32 communication
+- `pyqtgraph` — Real-time health visualizations
+- `numpy` — Numerical processing
+- `Pillow` — Image processing and validation
+- `sqlite3` — Built-in Python database library
+
+Optional dependencies for local ML, dataset analysis, testing, and packaging are defined in `requirements-ml.txt` and `requirements-dev.txt`.
+
+## Installation
+
+Run the following commands from the repository root.
+
+### 1. Create a virtual environment
+
+```bash
+python3 -m venv .venv
 ```
 
-In **PowerShell**:
+### 2. Activate the environment
+
+macOS / Linux:
+
+```bash
+source .venv/bin/activate
+```
+
+Windows PowerShell:
 
 ```powershell
-& "C:\Users\evatr\Desktop\nasa_astrotip\.venv\Scripts\python.exe" "C:\Users\evatr\Desktop\nasa_astrotip\software\run.py"
+.venv\Scripts\Activate.ps1
 ```
 
-For a fresh installation, use Python 3.10+ and install `software/requirements.txt`
-into a virtual environment first. This is a native desktop app, not a localhost website.
+### 3. Install dependencies
 
-## Connect the ESP32
+```bash
+python -m pip install --upgrade pip
+python -m pip install -r software/requirements.txt
+```
 
-1. Upload the firmware in `electrical/firmware/max30102_serial_test` to the ESP32
-   using your existing PlatformIO setup if it is not already installed. The app
-   does not upload firmware or alter the board's configuration.
-2. Connect the board with a USB cable that supports data. In Windows Device Manager,
-   expand **Ports (COM & LPT)**. Unplug/reconnect the board to identify its COM port.
-3. Close PlatformIO/Arduino Serial Monitor or any other program using that port.
-4. Open AstroTip's **Sensor monitor**, click **Refresh ports**, select the COM port,
-   and click **Connect**. You can also enter a COM port manually.
-5. Rest a finger on the sensor and keep still. The first complete report may take
-   several seconds. Valid heart-rate and oxygen estimates appear and are analyzed
-   automatically. **Review / save this reading** captures that reading for review;
-   **Save to history** explicitly saves the snapshot.
+### 4. Run the application
 
-If no port appears, check the USB data cable, USB socket, and the board's USB serial
-adapter driver. If connected but no reports arrive, check firmware upload, sensor
-wiring, and whether another serial monitor is holding the port. Error messages from
-this firmware appear in the monitor. Use Disconnect before opening another monitor.
+```bash
+python software/run.py
+```
 
-The adapter matches the existing firmware's **multiline text reports at 115200 baud**,
-including `Finger Detection`, `Heart Rate`, `Blood Oxygen (SpO2)`, and the two
-`Measurement Valid` flags. The firmware header mentions CSV, but the actual
-`printHealthReport()` output is text. No firmware edits are needed for this adapter.
+### 5. Stop the application
 
-## Measurement handling
+Close the application window or press `Ctrl + C` in the terminal.
 
-- Only complete reports are accepted; fragments and startup messages never mix
-  measurements from different reports.
-- Finger absence, unavailable / -1 values, failed validity flags, and out-of-range
-  estimates stay unavailable. Heart rate and SpO2 validity are handled independently.
-- The adapter follows the firmware's output ranges (35–220 bpm and 70–100% SpO2).
-  Those ranges are parser acceptance bounds, not healthy ranges. Values outside
-  them are unavailable and are never interpreted as normal.
-- On sensor error, disconnect, or no complete report for eight seconds, live
-  readings and live analysis clear and capturing a new snapshot is disabled.
-- Device validity flags are not clinical validation or a calibrated quality score.
-- **Optional check-in** supports symptoms and manual observations. Unchecked symptoms
-  mean unreported. Free-text notes are not analyzed. Live readings are not silently
-  combined with a previous manual check-in.
+To deactivate the virtual environment:
 
-## Internal analysis and evidence
+```bash
+deactivate
+```
 
-The curated catalog covers the five NASA hazards and all 17 risks on NASA's linked
-public overview, organized into 13 internal groups. Only relevant findings and
-next steps appear in results; research studies are not presented as treatments.
-See [the evidence manifest](resources/dataset_manifest.md) for source mapping.
+## ESP32 Firmware Development
 
-NASA's pages are research summaries, not a patient dataset or a trained diagnostic
-model. Explicit rules use symptoms, readings, and optional mission context. SpO2
-at or below 88% prompts immediate medical attention; at or below 92% prompts
-medical review. These are general MedlinePlus reference values, not NASA flight
-limits. Poor/unknown quality never suppresses a low-reading prompt. Pulse is
-recorded for review against personal clinician-approved limits; the app has no
-personal baseline. Sleep under six hours is an app reminder, not a clinical cutoff.
+The firmware is developed separately under:
 
-The prototype cannot diagnose, prescribe, or clear someone for duty. Pulse and
-SpO2 cannot assess radiation exposure, bone density, SANS, immune function, or
-mental health. Missing measurements are never treated as healthy results.
+`electrical/firmware/max30102_serial_test/`
 
-## History and privacy
+It uses PlatformIO with the Arduino framework and the SparkFun MAX3010x library.
 
-Saving is optional. SQLite history is stored locally, unencrypted, under
-`%LOCALAPPDATA%/AstroTip/history.sqlite3`; the exact path is shown in the app.
-Sensor snapshots retain the port, receipt timestamp, values, assessment, and
-internal evidence review date. No observations are sent to a server.
-
-Camera analysis and a trained local AI model remain unimplemented. Hardware
-connection must be checked with the actual device; automated tests use protocol
-fixtures and simulated transports, not a clinical or physical sensor validation.
-
-## Verification
+### Compile
 
 From the repository root:
 
-```powershell
-.venv/Scripts/python.exe -W error::ResourceWarning -m unittest discover -s software/tests -v
+```bash
+pio run -d electrical/firmware/max30102_serial_test
 ```
 
-Tests cover input validation, evidence references, assessment priorities, history,
-serial report fragmentation/validity, errors, stale samples, reconnects, and Qt flows.
+### Upload to ESP32
+
+```bash
+pio run -d electrical/firmware/max30102_serial_test -t upload
+```
+
+### Monitor sensor readings
+
+```bash
+pio device monitor -b 115200
+```
+
+Uploading and reading real sensor data require physical hardware. Compiling does not.
+
+The initial firmware outputs descriptive serial reports containing red/infrared optical measurements, heart-rate and SpO₂ estimates, and measurement validity.
+
+## Planned Application Features
+
+- **Live Dashboard:** Display real-time sensor data, signal quality, and health trends.
+- **Daily Check-in:** Collect sleep, mood, fatigue, symptoms, and activity information.
+- **Manual Health Input:** Record measurements from external instruments.
+- **Photos & Camera:** Import image files or capture images directly with a webcam.
+- **Health History:** Store and visualize measurements over time.
+- **Local Assessment:** Interpret measurements using validated rules and optional lightweight ML.
+- **NASA Sources:** Provide traceable evidence for spaceflight-related health guidance.
+
+## Current Limitations
+
+The current application is a **navigation-only placeholder**.
+
+It does not yet:
+
+- Connect to the ESP32 or process live serial data.
+- Capture or analyze medical images.
+- Save completed health records.
+- Run a trained machine-learning model.
+- Generate medical assessments.
+
+These capabilities will be implemented incrementally.
+
+When the desktop serial reader is added, close the PlatformIO Serial Monitor before connecting PySerial, since both programs generally cannot access the same serial port simultaneously.
+
+## Development Notes
+
+Keep the desktop application and embedded firmware modular. Verify the physical sensor and serial output before implementing higher-level assessment features.
+
+NASA research references and compatible datasets should be documented with source information, measurement units, limitations, and data provenance.

@@ -17,4 +17,5 @@ if __name__ == "__main__":
         QMessageBox.critical(None, "AstroTip could not start", f"The local guidance catalog could not be loaded.\n\n{exc}")
         sys.exit(1)
     window.show()
+
     sys.exit(app.exec())

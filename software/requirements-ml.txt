@@ -1,0 +1,5 @@
+# Optional local modeling and NASA dataset preparation
+scikit-learn>=1.5,<2
+joblib>=1.4,<2
+pandas>=2.2,<4
+requests>=2.32,<3
