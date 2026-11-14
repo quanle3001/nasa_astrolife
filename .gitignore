@@ -1,0 +1,6 @@
+# Python and PlatformIO
+.venv/
+__pycache__/
+*.pyc
+.pio/
+.DS_Store
