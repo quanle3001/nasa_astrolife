@@ -27,7 +27,7 @@ export function AppShell({ page, setPage, mission, connected, backendReady, disc
   // Each page starts at its top; the shared scroll container otherwise keeps the previous page's offset.
   useEffect(() => { scroller.current?.scrollTo({ top: 0 }); }, [page]);
   return (
-    <div className="cosmic-app relative min-h-screen text-slate-100" data-mission={mission}>
+    <div className="cosmic-app relative min-h-screen text-space-white" data-mission={mission}>
       <header className="space-navbar app-drag-region">
         <button type="button" className="app-no-drag brand-lockup" onClick={() => setPage("sensor")} aria-label="AstroTip telemetry home">
           <span className="brand-orbit"><span>A</span></span>

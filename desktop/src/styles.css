@@ -107,6 +107,9 @@ button { cursor: pointer; }
 button:disabled { cursor: default; }
 :focus-visible { outline: none; box-shadow: var(--focus-ring); }
 ::selection { background: rgba(70, 217, 232, .28); color: #fff; }
+input, textarea { caret-color: var(--color-space-cyan); }
+/* Vitals and timestamps line up digit-for-digit as values change. */
+.viewport-card strong, .metric-value, time { font-variant-numeric: tabular-nums; }
 
 /* ---------- Primitives ----------
    In the components layer so Tailwind utilities on the same element still win
@@ -127,7 +130,7 @@ button:disabled { cursor: default; }
   .control { width: 100%; min-height: var(--control-height); border: 1px solid rgba(120,156,196,.24); border-radius: var(--radius-md); background: rgba(3,7,17,.35); padding: 10px 12px; color: var(--color-space-white); outline: none; transition: border-color var(--duration-base), background var(--duration-base), box-shadow var(--duration-base); }
   .control:hover { border-color: rgba(150,190,225,.38); }
   .control:focus { border-color: rgba(70,217,232,.72); box-shadow: 0 0 0 3px rgba(70,217,232,.12); }
-  .control::placeholder { color: #5d6f88; }
+  .control::placeholder { color: #8293aa; }
   select.control option { background: var(--color-space-surface); color: var(--color-space-white); }
   .form-grid { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0,1fr)); }
   .form-grid label > span { margin-bottom: 7px; display: block; font-size: var(--text-xs); font-weight: 600; color: var(--color-space-muted); }

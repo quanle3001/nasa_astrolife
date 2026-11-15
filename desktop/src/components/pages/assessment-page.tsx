@@ -15,7 +15,7 @@ export function AssessmentPage({ config, bundle, saved, saving, onSave, onEdit }
     return (
       <div className="page-grid">
         <div className="page-heading"><div><p className="telemetry-label text-teal-300">Mission health review</p><h1>Health priorities & next steps</h1><p>Complete a check-in or review a fresh sensor reading to see current priorities.</p></div></div>
-        <Card className="grid min-h-80 place-items-center p-8 text-center"><div><ShieldCheck className="mx-auto size-10 text-slate-600" /><h2 className="mt-4 text-xl font-semibold text-white">No assessment in memory</h2><p className="mt-2 text-sm text-slate-500">No input has been analyzed yet. Connect your sensor or enter an optional check-in.</p><Button className="mt-5" onClick={onEdit}>Open daily check-in</Button></div></Card>
+        <Card className="grid min-h-80 place-items-center p-8 text-center"><div><ShieldCheck className="mx-auto size-10 text-space-subtle" /><h2 className="mt-4 text-xl font-semibold text-white">No assessment in memory</h2><p className="mt-2 text-sm text-space-subtle">No input has been analyzed yet. Connect your sensor or enter an optional check-in.</p><Button className="mt-5" onClick={onEdit}>Open daily check-in</Button></div></Card>
       </div>
     );
   }
@@ -39,12 +39,12 @@ export function AssessmentPage({ config, bundle, saved, saving, onSave, onEdit }
       <div className="space-y-3">
         {findings.length ? findings.map((finding, index) => (
           <motion.div key={`${finding.condition_id}-${index}`} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.06 }}>
-            <Card className="p-5"><div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-semibold text-white">{config.condition_titles[finding.condition_id] || finding.condition_id.replaceAll("_", " ")}</h2><span className={cn("priority-badge", `priority-${finding.level}`)}>{LEVEL_LABELS[finding.level]}</span></div><p className="mt-3 text-sm leading-6 text-slate-300">{finding.reason}</p>{finding.actions.length > 0 && <div className="mt-4 border-t border-white/[.08] pt-4"><div className="telemetry-label">Suggested next steps</div><ul className="mt-3 space-y-2 text-sm text-slate-300">{[...new Set(finding.actions)].map((action) => <li key={action} className="flex gap-2"><span className="mt-2 size-1 shrink-0 rounded-full bg-teal-300" />{action}</li>)}</ul></div>}</Card>
+            <Card className="p-5"><div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-semibold text-white">{config.condition_titles[finding.condition_id] || finding.condition_id.replaceAll("_", " ")}</h2><span className={cn("priority-badge", `priority-${finding.level}`)}>{LEVEL_LABELS[finding.level]}</span></div><p className="mt-3 text-sm leading-6 text-space-silver">{finding.reason}</p>{finding.actions.length > 0 && <div className="mt-4 border-t border-white/[.08] pt-4"><div className="telemetry-label">Suggested next steps</div><ul className="mt-3 space-y-2 text-sm text-space-silver">{[...new Set(finding.actions)].map((action) => <li key={action} className="flex gap-2"><span className="mt-2 size-1 shrink-0 rounded-full bg-teal-300" />{action}</li>)}</ul></div>}</Card>
           </motion.div>
-        )) : <Card className="p-5 text-sm text-slate-400">No specific follow-up trigger was entered. This does not establish that you are healthy.</Card>}
+        )) : <Card className="p-5 text-sm text-space-muted">No specific follow-up trigger was entered. This does not establish that you are healthy.</Card>}
       </div>
-      <Card className="p-4 text-xs leading-5 text-slate-500">Pulse and oxygen estimates cannot diagnose a condition or assess radiation exposure, bone health, eye changes, or mental health. Seek help for concerning symptoms even if a reading looks typical.</Card>
-      <p className="text-xs text-slate-500">{saved ? "Saved to local health history." : "Unsaved assessment. Save only if you want a local record on this computer."}<br />Local history file (unencrypted): {config.history_path}</p>
+      <Card className="p-4 text-xs leading-5 text-space-subtle">Pulse and oxygen estimates cannot diagnose a condition or assess radiation exposure, bone health, eye changes, or mental health. Seek help for concerning symptoms even if a reading looks typical.</Card>
+      <p className="text-xs text-space-subtle">{saved ? "Saved to local health history." : "Unsaved assessment. Save only if you want a local record on this computer."}<br />Local history file (unencrypted): {config.history_path}</p>
     </div>
   );
 }
