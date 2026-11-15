@@ -1,5 +1,6 @@
-import { motion, useReducedMotion } from "motion/react";
-import { ClipboardCheck, Database, HeartPulse, Orbit, Sparkles, UserRound } from "lucide-react";
+import { motion } from "motion/react";
+import { useCalmMotion, useMotionPreference } from "@/lib/motion-preference";
+import { ClipboardCheck, Database, HeartPulse, Orbit, Pause, Play, Sparkles, UserRound } from "lucide-react";
 import { useEffect, useRef, type ReactNode } from "react";
 import { StatusBadge } from "@/components/spaceui/status-badge";
 import { MISSIONS } from "@/lib/missions";
@@ -19,7 +20,8 @@ export function AppShell({ page, setPage, mission, connected, backendReady, disc
   page: PageId; setPage: (page: PageId) => void; mission: MissionId; connected: boolean; backendReady: boolean; disclaimer: string;
   children: ReactNode;
 }) {
-  const reduced = useReducedMotion();
+  const reduced = useCalmMotion();
+  const { paused, setPaused } = useMotionPreference();
   const missionData = MISSIONS[mission];
   const scroller = useRef<HTMLElement>(null);
   // Each page starts at its top; the shared scroll container otherwise keeps the previous page's offset.
@@ -45,6 +47,14 @@ export function AppShell({ page, setPage, mission, connected, backendReady, disc
         <div className="app-no-drag nav-status">
           <StatusBadge status={backendReady ? "online" : "warning"} primaryText={backendReady ? "Backend" : "Backend offline"} aria-label={backendReady ? "Local Python backend ready" : "Local Python backend offline"} className="nav-badge" />
           <StatusBadge status={connected ? "online" : "offline"} primaryText={connected ? "Sensor live" : "No sensor"} animated={connected} aria-label={connected ? "Sensor connected" : "No sensor connected"} className="nav-badge" />
+          <button
+            type="button"
+            className="motion-toggle"
+            aria-pressed={paused}
+            aria-label={paused ? "Resume background motion" : "Pause background motion"}
+            title={paused ? "Resume background motion" : "Pause background motion"}
+            onClick={() => setPaused(!paused)}
+          >{paused ? <Play className="size-3.5" /> : <Pause className="size-3.5" />}</button>
           <span className="mission-chip"><Orbit className="size-3.5" style={{ color: missionData.color }} /><span>{mission.toUpperCase()}</span></span>
         </div>
       </header>

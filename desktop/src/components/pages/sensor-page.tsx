@@ -1,4 +1,5 @@
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
+import { useCalmMotion } from "@/lib/motion-preference";
 import { Cable, ChevronRight, CircleGauge, ClipboardCheck, PlugZap, RefreshCw, ShieldAlert, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { BorderBeam } from "@/components/effects/border-beam";
@@ -22,7 +23,7 @@ export interface SensorViewState {
 export function SensorPage({ state, mission, onReview, onCheckin }: {
   state: SensorViewState; mission: MissionId; onReview: (bundle: AssessmentBundle) => void; onCheckin: () => void;
 }) {
-  const reduced = useReducedMotion();
+  const reduced = useCalmMotion();
   const portInput = useRef<HTMLInputElement>(null);
   const [ports, setPorts] = useState<SerialPort[]>([]);
   const [port, setPort] = useState("");

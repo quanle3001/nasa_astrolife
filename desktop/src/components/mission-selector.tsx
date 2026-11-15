@@ -1,4 +1,5 @@
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
+import { useCalmMotion } from "@/lib/motion-preference";
 import { CheckCircle2, ExternalLink, Film, Maximize2, Orbit, PlayCircle } from "lucide-react";
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { BorderBeam } from "@/components/effects/border-beam";
@@ -25,7 +26,7 @@ function MissionCard({ media, selected, onSelect, onPreview, onKeyDown, buttonRe
   media: MissionMedia; selected: boolean; onSelect: () => void; onPreview: () => void;
   onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => void; buttonRef: (node: HTMLButtonElement | null) => void;
 }) {
-  const reduced = useReducedMotion();
+  const reduced = useCalmMotion();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [engaged, setEngaged] = useState(false);
   const { failed, playing } = usePreviewVideo(videoRef, engaged && Boolean(media.video), media.video_segment);

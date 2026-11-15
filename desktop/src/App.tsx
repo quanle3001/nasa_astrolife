@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { useCalmMotion } from "@/lib/motion-preference";
+import { motion } from "motion/react";
 import { AlertTriangle, LoaderCircle, RotateCcw } from "lucide-react";
 import { AppShell, type PageId } from "@/components/app-shell";
 import { AssessmentPage } from "@/components/pages/assessment-page";
@@ -20,7 +21,7 @@ const requestedPage = new URLSearchParams(window.location.search).get("page") as
 const initialPage: PageId = requestedPage && ["sensor", "checkin", "assessment", "history"].includes(requestedPage) ? requestedPage : "sensor";
 
 function PageStage({ active, children }: { active: boolean; children: React.ReactNode }) {
-  const reduced = useReducedMotion();
+  const reduced = useCalmMotion();
   return (
     <motion.section
       hidden={!active}
@@ -32,7 +33,7 @@ function PageStage({ active, children }: { active: boolean; children: React.Reac
 }
 
 export default function App() {
-  const reducedMotion = Boolean(useReducedMotion());
+  const reducedMotion = Boolean(useCalmMotion());
   const [page, setPage] = useState<PageId>(initialPage);
   const [mission, setMission] = useState<MissionId>("leo");
   const [config, setConfig] = useState<AppConfig | null>(null);

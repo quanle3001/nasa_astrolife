@@ -11,7 +11,9 @@ import { useEffect, useState, type RefObject } from "react";
 const ambient = new Set<HTMLVideoElement>();
 let foreground: HTMLVideoElement | null = null;
 
-const reducedMotion = () => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+const reducedMotion = () =>
+  (typeof window !== "undefined" && Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches))
+  || (typeof document !== "undefined" && document.documentElement.dataset.motion === "paused");
 const documentHidden = () => typeof document !== "undefined" && document.visibilityState === "hidden";
 
 function safePlay(video: HTMLVideoElement) {
@@ -30,6 +32,11 @@ function syncAmbient() {
 }
 
 if (typeof document !== "undefined") {
+  // In-app "Pause motion" toggled (see motion-preference.tsx).
+  document.addEventListener("astrotip:motion-change", () => {
+    if (reducedMotion() && foreground) { foreground.pause(); foreground = null; }
+    syncAmbient();
+  });
   document.addEventListener("visibilitychange", () => {
     if (documentHidden() && foreground) { foreground.pause(); foreground = null; }
     syncAmbient();

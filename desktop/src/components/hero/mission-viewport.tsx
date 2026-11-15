@@ -1,4 +1,5 @@
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
+import { useCalmMotion } from "@/lib/motion-preference";
 import { Activity, HeartPulse, Sparkles, Waves } from "lucide-react";
 import { ProximityGrid } from "@/components/spaceui/proximity-grid";
 import { MISSIONS } from "@/lib/missions";
@@ -47,7 +48,7 @@ function TelemetryCard({ className, icon, label, value, unit, float }: {
  * Values come straight from the sensor state; nothing is simulated.
  */
 export function MissionViewport({ mission, telemetry }: { mission: MissionId; telemetry: ViewportTelemetry }) {
-  const reduced = useReducedMotion();
+  const reduced = useCalmMotion();
   const media = MISSIONS[mission];
   return (
     <ProximityGrid className="mission-viewport" data-mission={mission} style={{ "--accent": media.color } as React.CSSProperties}>

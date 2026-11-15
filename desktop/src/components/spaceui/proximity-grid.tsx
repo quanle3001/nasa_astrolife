@@ -8,8 +8,9 @@
  * AstroTip cell color token, radial edge fade, disabled under reduced motion,
  * and no min-height / background so it can sit behind hero media.
  */
+import { useCalmMotion } from "@/lib/motion-preference";
 import * as React from "react";
-import { motion, useMotionValue, useReducedMotion, useSpring, useTransform, type MotionValue } from "motion/react";
+import { motion, useMotionValue, useSpring, useTransform, type MotionValue } from "motion/react";
 import { cn } from "@/lib/utils";
 
 interface GridCellProps {
@@ -42,7 +43,7 @@ export interface ProximityGridProps extends React.HTMLAttributes<HTMLDivElement>
 
 export function ProximityGrid({ cellSize = 56, gap = 4, proximity = 3.5, inset = 8, className, children, ...props }: ProximityGridProps) {
   const ref = React.useRef<HTMLDivElement>(null);
-  const reduced = Boolean(useReducedMotion());
+  const reduced = Boolean(useCalmMotion());
   const pointerX = useMotionValue(-1000);
   const pointerY = useMotionValue(-1000);
   const rawActive = useMotionValue(0);

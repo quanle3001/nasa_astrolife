@@ -189,6 +189,9 @@ button:disabled { cursor: default; }
 .nav-capsule-item:hover,.nav-capsule-item.is-active { color:var(--color-space-white); }
 .nav-capsule-active { position:absolute; inset:0; border:1px solid rgba(70,217,232,.32); border-radius:inherit; background:linear-gradient(110deg,rgba(59,130,246,.2),rgba(70,217,232,.1)); box-shadow:inset 0 1px rgba(255,255,255,.07); }
 .nav-status { display:flex; align-items:center; justify-self:end; gap:7px; }
+.motion-toggle { display:grid; width:32px; height:32px; flex:none; place-items:center; border:1px solid rgba(255,255,255,.12); border-radius:50%; background:rgba(3,7,17,.55); color:var(--color-space-silver); backdrop-filter:blur(10px); transition:border-color var(--duration-fast), color var(--duration-fast), background var(--duration-fast); }
+.motion-toggle:hover { border-color:rgba(70,217,232,.45); color:#fff; }
+.motion-toggle[aria-pressed="true"] { border-color:rgba(70,217,232,.55); background:rgba(70,217,232,.14); color:var(--color-space-cyan); }
 .mission-chip { display:flex; height:32px; align-items:center; gap:6px; border:1px solid rgba(255,255,255,.1); border-radius:var(--radius-pill); background:rgba(255,255,255,.03); padding:0 11px; color:var(--color-space-silver); font-size:var(--text-label); font-weight:800; letter-spacing:.1em; }
 .space-footer { margin:8px auto 24px; display:flex; width:min(calc(var(--page-max) - var(--page-gutter) * 2),calc(100% - var(--page-gutter) * 2)); flex-direction:column; align-items:center; gap:10px; border-top:1px solid rgba(255,255,255,.07); padding-top:18px; text-align:center; }
 .space-footer-disclaimer { margin:0; max-width:100%; color:var(--color-space-muted); font-size:var(--text-xs); line-height:1.6; white-space:nowrap; }
@@ -348,3 +351,6 @@ button:disabled { cursor: default; }
   .viewport-orbit-spin,.viewport-satellite,.viewport-image,.viewport-hud-dot { animation:none !important; }
   .viewport-scan { display:none; }
 }
+/* In-app "Pause motion": freeze decorative loops in place (state spinners keep running). */
+:root[data-motion="paused"] *:not(.animate-spin), :root[data-motion="paused"] *::before, :root[data-motion="paused"] *::after { animation-play-state: paused !important; }
+:root[data-motion="paused"] .viewport-scan { display:none; }
