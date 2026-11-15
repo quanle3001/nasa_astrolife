@@ -26,6 +26,7 @@ from astrotip.bridge.ppg_batcher import PpgBatcher, contact_state
 from astrotip.inputs.sensor_serial import SerialReader, available_ports
 from astrotip.inputs.simulated_reader import SIMULATED_PORT, SimulatedReader
 from astrotip.models.health_indicator import CheckIn, SYMPTOMS
+from astrotip.nasa.radlab import BUNDLED_CACHE, RadLabService, fetch as fetch_radlab
 from astrotip.questionnaire.registry import applicable_answers, load_registry, validate_answer
 from astrotip.questionnaire.session import checkin_from_answers
 from astrotip.storage.app_state import AppStateStore
@@ -58,7 +59,8 @@ class InputRelay(QObject):
 
 
 class BridgeService(QObject):
-    def __init__(self, app: QCoreApplication, reader_factory=SerialReader, simulated_factory=SimulatedReader):
+    def __init__(self, app: QCoreApplication, reader_factory=SerialReader, simulated_factory=SimulatedReader,
+                 radlab_fetcher=fetch_radlab):
         super().__init__()
         self.app = app
         self.reader_factory = reader_factory
@@ -77,6 +79,9 @@ class BridgeService(QObject):
         self.mission_context = load_mission_context(self.catalog)
         self.registry = load_registry(self.catalog)
         self.state = AppStateStore(self.history.path)
+        # A dataset retrieved on this computer is kept next to the health history.
+        self.radlab = RadLabService(self.history.path.parent / "nasa_cache" / BUNDLED_CACHE.name, fetcher=radlab_fetcher)
+        self._radlab_refresh: Thread | None = None
         self.latest_sensor_checkin: CheckIn | None = None
         self.reader = None
         self.active_port = ""
@@ -103,6 +108,7 @@ class BridgeService(QObject):
             "session.submit": self.submit_session,
             "actions.list": self.list_actions,
             "actions.update": self.update_action,
+            "nasa.radlab.get": self.get_radlab,
             "system.shutdown": self.shutdown,
         }
 
@@ -422,6 +428,19 @@ class BridgeService(QObject):
                   "assessment": asdict(assessment), "session_notes": notes}
         saved_actions = self.state.complete_session(session["session_id"], answers, entry_id, result, actions)
         return {"session_id": session["session_id"], "entry_id": entry_id, **result, "actions": saved_actions}
+
+    def get_radlab(self, params):
+        """Verified NASA radiation dataset; `refresh` retrieves it from NASA again.
+
+        The download runs on its own thread so a slow network never delays
+        sensor events; its result arrives as a `nasa.radlab.updated` event.
+        """
+        if not params.get("refresh"):
+            return self.radlab.cached()
+        if self._radlab_refresh is None or not self._radlab_refresh.is_alive():
+            self._radlab_refresh = Thread(target=lambda: self.emit_event("nasa.radlab.updated", self.radlab.refresh()), daemon=True)
+            self._radlab_refresh.start()
+        return {"refreshing": True}
 
     def list_actions(self, _params):
         return {"actions": self.state.list_actions()}
