@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell } = require("electron");
+const { app, BrowserWindow, ipcMain, nativeImage, shell } = require("electron");
 const { spawn } = require("node:child_process");
 const { createInterface } = require("node:readline");
 const fs = require("node:fs");
@@ -141,8 +141,12 @@ ipcMain.handle("external:nasa", async (event, value) => {
   return true;
 });
 
+const APP_ICON = path.join(__dirname, "../build/icon.png");
+
 async function createWindow() {
   await bridge.start();
+  // Packaged builds take the icon from electron-builder; in development set it explicitly.
+  if (!app.isPackaged && process.platform === "darwin" && fs.existsSync(APP_ICON)) app.dock.setIcon(nativeImage.createFromPath(APP_ICON));
   mainWindow = new BrowserWindow({
     width: 1440,
     height: 920,
@@ -150,6 +154,7 @@ async function createWindow() {
     minHeight: 680,
     show: false,
     backgroundColor: "#050814",
+    icon: fs.existsSync(APP_ICON) ? APP_ICON : undefined,
     titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "default",
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),

@@ -32,7 +32,7 @@ export function AppShell({ page, setPage, mission, connected, backendReady, disc
     <div className="cosmic-app relative min-h-screen text-space-white" data-mission={mission}>
       <header className="space-navbar app-drag-region">
         <button type="button" className="app-no-drag brand-lockup" onClick={() => setPage("sensor")} aria-label="AstroLife telemetry home">
-          <span className="brand-orbit"><span>A</span></span>
+          <img className="brand-mark" src="./logo.svg" alt="" width={38} height={38} draggable={false} />
           <span className="brand-copy"><strong>ASTROLIFE</strong><small>CREW HEALTH INTELLIGENCE</small></span>
         </button>
 

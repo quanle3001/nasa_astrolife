@@ -183,9 +183,7 @@ input, textarea { caret-color: var(--color-space-cyan); }
 
 .space-navbar { position: fixed; z-index: var(--layer-nav); top: var(--nav-offset); left: var(--page-gutter); right: var(--page-gutter); height: var(--nav-height); display: grid; grid-template-columns: minmax(210px,1fr) auto minmax(210px,1fr); align-items: center; border: 1px solid var(--panel-border); border-radius: 20px; background: rgba(3,7,17,.15); box-shadow: 0 10px 40px rgba(0,0,0,.2), inset 0 1px rgba(255,255,255,.04); backdrop-filter: blur(12px); padding: 0 16px 0 74px; }
 .brand-lockup { display: flex; align-items: center; justify-self: start; gap: 11px; border: 0; border-radius: var(--radius-md); background: transparent; color: white; text-align: left; }
-.brand-orbit { position: relative; display: grid; width: 36px; height: 36px; place-items: center; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #9fe9f2, #2f6fd8 58%, #0a1730 60%); box-shadow: 0 6px 16px rgba(59,130,246,.3); font-weight: 900; color: #fff; }
-.brand-orbit::before,.brand-orbit::after { content:""; position:absolute; inset: -5px 2px; border: 1px solid rgba(159,233,242,.45); border-radius: 50%; transform: rotate(48deg); }
-.brand-orbit::after { transform: rotate(-48deg); }
+.brand-mark { width:38px; height:38px; flex:none; filter:drop-shadow(0 6px 14px rgba(47,111,228,.35)); }
 .brand-copy { display:flex; flex-direction:column; gap: 2px; }
 .brand-copy strong { font-size: 14px; letter-spacing: .16em; color: var(--color-space-white); }
 .brand-copy small { color: var(--color-space-subtle); font-size: var(--text-label); font-weight: 700; letter-spacing: .14em; }

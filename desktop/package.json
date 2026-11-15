@@ -61,6 +61,6 @@
       { "from": "../software", "to": "software", "filter": ["astrotip/**/*", "resources/**/*"] },
       { "from": "sidecar-dist/astrotip-backend", "to": "astrotip-backend" }
     ],
-    "mac": { "category": "public.app-category.medical", "target": ["dir"] }
+    "mac": { "category": "public.app-category.medical", "target": ["dir"], "icon": "build/icon.png" }
   }
 }
