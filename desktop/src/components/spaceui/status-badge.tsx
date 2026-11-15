@@ -2,8 +2,8 @@
  * StatusBadge — adapted from Space UI (https://github.com/usespaceui/ui,
  * src/registry/components/spaceui/status-badge). MIT License, Copyright (c) 2026 Space UI.
  *
- * Adaptation for AstroTip: inline mode only, status set reduced to the states
- * the console reports, colors mapped to AstroTip tokens, and the ping
+ * Adaptation for AstroLife: inline mode only, status set reduced to the states
+ * the console reports, colors mapped to AstroLife tokens, and the ping
  * animation runs only for a live link and stops under reduced motion.
  */
 import { cva } from "class-variance-authority";

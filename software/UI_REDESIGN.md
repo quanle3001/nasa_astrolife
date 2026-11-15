@@ -1,6 +1,6 @@
-# AstroTip UI migration notes
+# AstroLife UI migration notes
 
-AstroTip's primary experience now lives in `desktop/`: a React + TypeScript UI
+AstroLife's primary experience now lives in `desktop/`: a React + TypeScript UI
 hosted in Electron, with the existing Python application running as a private
 child-process backend. See `desktop/README.md` for the current design,
 architecture, run instructions, tests, packaging, NASA provenance, and licenses.

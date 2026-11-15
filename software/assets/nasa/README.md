@@ -4,8 +4,8 @@ These assets are decorative mission-context imagery obtained through the NASA
 Image and Video Library API. `media_manifest.json` records the NASA asset ID,
 classification, source page, credit, original asset URL, and metadata URL.
 
-NASA does not endorse AstroTip. The application does not use NASA insignia or
-logotypes as AstroTip branding. Refresh the curated offline images with:
+NASA does not endorse AstroLife. The application does not use NASA insignia or
+logotypes as AstroLife branding. Refresh the curated offline images with:
 
 ```bash
 python software/scripts/fetch_nasa_media.py

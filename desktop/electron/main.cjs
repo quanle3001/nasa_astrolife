@@ -34,7 +34,7 @@ class PythonBridge {
     if (this.child) return this.ready;
     const { softwareRoot, candidates } = this.paths();
     const python = candidates.find((candidate) => !candidate.includes(path.sep) || fs.existsSync(candidate));
-    if (!python) throw new Error("No AstroTip Python runtime is available.");
+    if (!python) throw new Error("No AstroLife Python runtime is available.");
     const packagedSidecar = app.isPackaged && path.basename(python) === "astrotip-backend";
     const args = packagedSidecar ? [] : ["-m", "astrotip.bridge.service"];
     this.child = spawn(python, args, {
@@ -44,7 +44,7 @@ class PythonBridge {
     });
     const lines = createInterface({ input: this.child.stdout });
     this.ready = new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error("AstroTip backend startup timed out.")), 15000);
+      const timeout = setTimeout(() => reject(new Error("AstroLife backend startup timed out.")), 15000);
       lines.on("line", (line) => {
         let message;
         try { message = JSON.parse(line); } catch { return; }
@@ -67,7 +67,7 @@ class PythonBridge {
         this.child = null;
         for (const pending of this.pending.values()) {
           clearTimeout(pending.timeout);
-          pending.reject(new Error(`AstroTip backend stopped (${code ?? "unknown"}).`));
+          pending.reject(new Error(`AstroLife backend stopped (${code ?? "unknown"}).`));
         }
         this.pending.clear();
         if (mainWindow && !mainWindow.isDestroyed()) {
@@ -81,7 +81,7 @@ class PythonBridge {
 
   async call(method, params = {}, timeoutMs = 8000) {
     await this.start();
-    if (!this.child?.stdin.writable) throw new Error("AstroTip backend is unavailable.");
+    if (!this.child?.stdin.writable) throw new Error("AstroLife backend is unavailable.");
     const id = `desktop-${this.nextId++}`;
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {

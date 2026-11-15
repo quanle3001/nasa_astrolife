@@ -1,12 +1,12 @@
-# AstroTip — Astronaut Health Monitoring System
+# AstroLife — Astronaut Health Monitoring System
 
-AstroTip is an offline-first, multimodal astronaut health-monitoring prototype developed for the **2026 NASA Space Apps Challenge**.
+AstroLife is an offline-first, multimodal astronaut health-monitoring prototype developed for the **2026 NASA Space Apps Challenge**.
 
 The project combines an ESP32-based fingertip sensor with a native Python desktop application to help astronauts monitor health indicators, review trends, and eventually receive NASA-informed health guidance.
 
 ## Project Overview
 
-AstroTip is designed to support multiple health data sources:
+AstroLife is designed to support multiple health data sources:
 
 - **Wearable sensor:** MAX30102 for optical PPG readings, heart-rate estimation, and estimated blood oxygen saturation (SpO₂).
 - **Manual health measurements:** Blood pressure, body temperature, blood glucose, and other indicators.
@@ -122,4 +122,4 @@ On macOS, if `pio` is not recognized, use the PlatformIO Core CLI terminal in VS
 
 ## Important Notice
 
-AstroTip is an educational engineering prototype and is **not a certified medical device**. Heart-rate and SpO₂ estimates have not yet been validated against reference medical equipment. Its future assessment features are intended for decision support, not autonomous medical diagnosis or treatment.
+AstroLife is an educational engineering prototype and is **not a certified medical device**. Heart-rate and SpO₂ estimates have not yet been validated against reference medical equipment. Its future assessment features are intended for decision support, not autonomous medical diagnosis or treatment.

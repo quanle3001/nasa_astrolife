@@ -1,9 +1,9 @@
 # Third-party notices
 
-AstroTip includes or adapts the following open-source software. Package lockfile
+AstroLife includes or adapts the following open-source software. Package lockfile
 versions are authoritative for the installed dependency graph.
 
-| Project | Use in AstroTip | License |
+| Project | Use in AstroLife | License |
 |---|---|---|
 | Space Portfolio (`sanidhyy/space-portfolio`) | Main visual reference; `star-background.tsx` adapts its rotating point-cloud concept, and `public/videos/blackhole.webm` is reused from the project with new layout and reduced-motion behavior. Copyright © 2024 Sanidhya Kumar Verma | MIT |
 | shadcn/ui | Local button/card composition conventions | MIT |
@@ -17,7 +17,7 @@ versions are authoritative for the installed dependency graph.
 | Electron | Native desktop host | MIT |
 
 The original copyright and license texts remain available through each installed
-package. AstroTip's NASA media (images and preview clips) follows NASA's media usage
+package. AstroLife's NASA media (images and preview clips) follows NASA's media usage
 guidelines and retains asset IDs, credits and classification in
 `software/assets/nasa/media_manifest.json`. See `docs/ui-components.md`.
 

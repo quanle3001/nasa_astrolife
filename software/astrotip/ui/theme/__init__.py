@@ -1,10 +1,10 @@
-"""AstroTip visual system."""
+"""AstroLife visual system."""
 
 from astrotip.ui.theme.styles import APP_STYLESHEET
 
 
 def apply_base_theme(app):
-    """Apply Qt-Material's maintained widget baseline before AstroTip QSS."""
+    """Apply Qt-Material's maintained widget baseline before AstroLife QSS."""
     try:
         from qt_material import apply_stylesheet
     except ImportError:

@@ -1,4 +1,4 @@
-"""AstroTip's offline, evidence-linked crew health workspace."""
+"""AstroLife's offline, evidence-linked crew health workspace."""
 
 from PySide6.QtCore import QEasingCurve, QParallelAnimationGroup, QPropertyAnimation, QSize, Qt
 from PySide6.QtWidgets import (
@@ -37,7 +37,7 @@ class AstroTipWindow(QMainWindow):
         self.latest_checkin = None
         self.latest_assessment = None
         self._sidebar_collapsed = False
-        self.setWindowTitle("AstroTip · Crew health console")
+        self.setWindowTitle("AstroLife · Crew health console")
         self.resize(1320, 880)
         self.setMinimumSize(900, 640)
         self.setStyleSheet(APP_STYLESHEET)
@@ -76,7 +76,7 @@ class AstroTipWindow(QMainWindow):
         self.brand_mark = label("A", "brandMark", False)
         self.brand_mark.setAlignment(Qt.AlignmentFlag.AlignCenter)
         brand_row.addWidget(self.brand_mark)
-        self.brand_title = label("ASTROTIP", "brand", False)
+        self.brand_title = label("ASTROLIFE", "brand", False)
         brand_row.addWidget(self.brand_title, 1)
         self.sidebar_toggle = QPushButton("‹")
         self.sidebar_toggle.setObjectName("sidebarToggle")
@@ -192,7 +192,7 @@ class AstroTipWindow(QMainWindow):
         top.setContentsMargins(17, 10, 14, 10)
         titles = QVBoxLayout()
         titles.setSpacing(1)
-        titles.addWidget(label("ASTROTIP / CREW MEDICAL", "microLabel", False))
+        titles.addWidget(label("ASTROLIFE / CREW MEDICAL", "microLabel", False))
         self.current_page_label = label("Sensor monitor", "sectionTitle", False)
         titles.addWidget(self.current_page_label)
         top.addLayout(titles, 1)

@@ -224,7 +224,7 @@ class MissionPreviewDialog(QDialog):
         super().__init__(parent)
         presentation = MISSION_PRESENTATION[mission]
         self.setObjectName("missionPreview")
-        self.setWindowTitle(f"AstroTip · {presentation['title']} mission briefing")
+        self.setWindowTitle(f"AstroLife · {presentation['title']} mission briefing")
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         self.resize(980, 620)
         self.setMinimumSize(760, 500)
@@ -259,7 +259,7 @@ class MissionPreviewDialog(QDialog):
             f"<b>Credit:</b> NASA / {escape(media.get('credit', 'NASA'))}<br>"
             f"<b>Date:</b> {escape(media.get('date_created', 'Not recorded'))}</p>"
             "<p style='color:#8FA3BA'>Mission imagery is decorative and does not affect health assessment rules. "
-            "NASA does not endorse AstroTip.</p>"
+            "NASA does not endorse AstroLife.</p>"
         )
         copy.addWidget(details, 1)
         actions = QHBoxLayout()

@@ -31,9 +31,9 @@ export function AppShell({ page, setPage, mission, connected, backendReady, disc
   return (
     <div className="cosmic-app relative min-h-screen text-space-white" data-mission={mission}>
       <header className="space-navbar app-drag-region">
-        <button type="button" className="app-no-drag brand-lockup" onClick={() => setPage("sensor")} aria-label="AstroTip telemetry home">
+        <button type="button" className="app-no-drag brand-lockup" onClick={() => setPage("sensor")} aria-label="AstroLife telemetry home">
           <span className="brand-orbit"><span>A</span></span>
-          <span className="brand-copy"><strong>ASTROTIP</strong><small>CREW HEALTH INTELLIGENCE</small></span>
+          <span className="brand-copy"><strong>ASTROLIFE</strong><small>CREW HEALTH INTELLIGENCE</small></span>
         </button>
 
         <nav className="nav-capsule app-no-drag" aria-label="Primary navigation">
@@ -65,7 +65,7 @@ export function AppShell({ page, setPage, mission, connected, backendReady, disc
         {children}
         <footer className="space-footer">
           <p className="space-footer-disclaimer">{disclaimer}</p>
-          <p className="space-footer-tagline"><Sparkles className="size-3" /> AstroTip educational prototype · Local-first crew wellness interface</p>
+          <p className="space-footer-tagline"><Sparkles className="size-3" /> AstroLife educational prototype · Local-first crew wellness interface</p>
           {onShowShortcuts && <button type="button" className="footer-shortcuts" onClick={onShowShortcuts} aria-keyshortcuts="Shift+?"><Keyboard className="size-3.5" /> Keyboard shortcuts <kbd className="kbd">?</kbd></button>}
         </footer>
       </main>

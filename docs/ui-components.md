@@ -1,11 +1,11 @@
-# AstroTip UI components, sources and design system
+# AstroLife UI components, sources and design system
 
 This document records which open-source UI ecosystems were researched for the
-AstroTip desktop interface (`desktop/`), what was reused or adapted, where it
+AstroLife desktop interface (`desktop/`), what was reused or adapted, where it
 came from, and under which license. It also documents the design tokens and
 the NASA media rules the renderer follows.
 
-AstroTip's architecture is unchanged: React + TypeScript + Tailwind v4 in
+AstroLife's architecture is unchanged: React + TypeScript + Tailwind v4 in
 Electron, with the existing Python modules (rules, serial reader, SQLite) as a
 private child-process backend. No health logic, thresholds, firmware or storage
 behavior is affected by anything below.
@@ -15,13 +15,13 @@ behavior is affected by anything below.
 Each ecosystem was inspected at source level (repository tree, registry
 metadata, component code and license) rather than from screenshots alone.
 
-| Ecosystem | License | What it offers | Decision for AstroTip |
+| Ecosystem | License | What it offers | Decision for AstroLife |
 |---|---|---|---|
-| **Space UI** — `usespaceui/ui` ([spaceui.one](https://www.spaceui.one/)) | MIT | ~90 registry components on Motion + Tailwind + cva: Interactive Grid Hero (ProximityGrid), Frost Blurred, Status Badge, Timeline, Data Grid, Dirt/Dither carousels, Morphing Area, Glass/Squircle buttons, shaders | **Adopted (adapted):** ProximityGrid, FrostBlurred, StatusBadge. Same stack as AstroTip (`motion`, `cva`, `cn`), no new dependencies. |
+| **Space UI** — `usespaceui/ui` ([spaceui.one](https://www.spaceui.one/)) | MIT | ~90 registry components on Motion + Tailwind + cva: Interactive Grid Hero (ProximityGrid), Frost Blurred, Status Badge, Timeline, Data Grid, Dirt/Dither carousels, Morphing Area, Glass/Squircle buttons, shaders | **Adopted (adapted):** ProximityGrid, FrostBlurred, StatusBadge. Same stack as AstroLife (`motion`, `cva`, `cn`), no new dependencies. |
 | **Space Portfolio** — `sanidhyy/space-portfolio` | MIT | R3F star field, black-hole hero video, translucent navbar, layered hero composition | **Primary atmosphere reference.** Starfield and black-hole video already reused; surface tinting, navbar transparency and crown placement now follow its values (see §3). |
 | **AEON / SPACE** — `skybird-dev/ropiaspace` | `package.json` says MIT; no LICENSE file | Astro 6 site: cinematic hero, mission cards, stats, launch countdown | **Design reference only.** No code copied: there is no license text or copyright notice to retain, and its components are Astro-first. |
 | **Living Planet** — `larrybuckalew/living-planet` | MIT | three.js NASA-textured globe, day/night terminator, lazy globe loading | **Not integrated.** A second WebGL canvas on top of the existing starfield would add GPU cost for a decorative effect; the LEO hero uses a real ISS Earth-limb photograph instead. Its lazy-loading pattern matches what the starfield already does. |
-| **Spacedrive SpaceUI** — `spacedriveapp/spaceui` | MIT | Desktop design system: tokens (dark/midnight/noir themes), Radix-based primitives, Resizable, Tabs, Toast, forms | **Pattern reference.** Its token layering (raw colors → semantic theme variables) informed AstroTip's token structure. Packages were not installed; they assume Spacedrive's own Tailwind preset. |
+| **Spacedrive SpaceUI** — `spacedriveapp/spaceui` | MIT | Desktop design system: tokens (dark/midnight/noir themes), Radix-based primitives, Resizable, Tabs, Toast, forms | **Pattern reference.** Its token layering (raw colors → semantic theme variables) informed AstroLife's token structure. Packages were not installed; they assume Spacedrive's own Tailwind preset. |
 | **Magic UI** — `magicuidesign/magicui` | MIT | Border Beam, Shine Border, Particles, animated lists | **Kept:** Border Beam (already adapted; now correctly masked to a ring). |
 | **shadcn/ui**, **Radix UI** | MIT | Local primitive conventions; accessible Dialog/Tooltip/Slot | **Kept** (already in use). |
 | **React Bits** — `DavidHDev/react-bits` | MIT + Commons Clause | Animated text, backgrounds, Galaxy/Hyperspeed WebGL | **Not used.** The Commons Clause restricts selling the software; most relevant pieces are full-screen WebGL/OGL backgrounds that would compete with the starfield. |
@@ -43,9 +43,9 @@ metadata, component code and license) rather than from screenshots alone.
 All adapted files keep a header naming the source repository, path, license
 and what changed.
 
-| AstroTip file | Source | License | Adaptation |
+| AstroLife file | Source | License | Adaptation |
 |---|---|---|---|
-| `desktop/src/components/spaceui/proximity-grid.tsx` | Space UI — `src/registry/blocks/interactive-grid-hero/interactive-grid-hero-1/proximity-grid.tsx` | MIT, © 2026 Space UI | AstroTip cell token color, radial edge fade, disabled under reduced motion, no min-height/background so it sits behind the hero viewport. Idle cost is zero (Motion values update only on pointer move). |
+| `desktop/src/components/spaceui/proximity-grid.tsx` | Space UI — `src/registry/blocks/interactive-grid-hero/interactive-grid-hero-1/proximity-grid.tsx` | MIT, © 2026 Space UI | AstroLife cell token color, radial edge fade, disabled under reduced motion, no min-height/background so it sits behind the hero viewport. Idle cost is zero (Motion values update only on pointer move). |
 | `desktop/src/components/spaceui/frost-blurred.tsx` | Space UI — `src/registry/components/spaceui/frost-blurred` | MIT, © 2026 Space UI | Tint uses `--color-space-black` instead of shadcn `--background`. Used on mission-card captions. |
 | `desktop/src/components/spaceui/status-badge.tsx` | Space UI — `src/registry/components/spaceui/status-badge` | MIT, © 2026 Space UI | Inline mode only; statuses reduced to online/offline/warning/info; token colors; ping only for a live link and off under reduced motion; `role="status"`. |
 | `desktop/src/components/effects/border-beam.tsx` + `.border-beam` CSS | Magic UI — Border Beam | MIT, © Magic UI | Conic gradient masked to a 1.5px ring with `mask-composite: exclude`. |
@@ -122,7 +122,7 @@ Rules enforced by the code:
 - One clip plays at a time (hover/focus), offscreen clips pause, and the
   black-hole crown pauses while a clip plays.
 
-NASA does not endorse AstroTip, and NASA insignia are not used as branding.
+NASA does not endorse AstroLife, and NASA insignia are not used as branding.
 
 ## 5. Design review: Impeccable and UI UX Pro Max
 

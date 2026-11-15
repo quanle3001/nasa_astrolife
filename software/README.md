@@ -1,6 +1,6 @@
-# AstroTip — Desktop Application
+# AstroLife — Desktop Application
 
-AstroTip's primary desktop interface is developed with **React, TypeScript, and
+AstroLife's primary desktop interface is developed with **React, TypeScript, and
 Electron**. It is an offline-first interface for collecting, visualizing,
 storing, and analyzing astronaut health indicators. The existing Python modules
 remain the source of truth for assessment rules, ESP32 serial input, and SQLite

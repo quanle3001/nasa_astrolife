@@ -21,7 +21,7 @@ describe("MissionSelector", () => {
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.getByText("iss058e005282")).toBeInTheDocument();
     expect(screen.getByText("NASA / JSC")).toBeInTheDocument();
-    expect(screen.getByText(/NASA does not endorse AstroTip/i)).toBeInTheDocument();
+    expect(screen.getByText(/NASA does not endorse AstroLife/i)).toBeInTheDocument();
   });
 
   it("supports arrow-key selection with a single tab stop", () => {

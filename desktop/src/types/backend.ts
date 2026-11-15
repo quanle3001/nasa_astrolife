@@ -60,7 +60,7 @@ export interface BackendEvent {
   payload: Record<string, unknown> & Partial<AssessmentBundle>;
 }
 
-export interface AstroTipDesktopApi {
+export interface AstroLifeDesktopApi {
   ping: () => Promise<{ service: string; protocol: number; offline: boolean }>;
   getConfig: () => Promise<AppConfig>;
   listPorts: () => Promise<SerialPort[]>;
@@ -74,5 +74,5 @@ export interface AstroTipDesktopApi {
 }
 
 declare global {
-  interface Window { astrotip?: AstroTipDesktopApi }
+  interface Window { astrotip?: AstroLifeDesktopApi }
 }

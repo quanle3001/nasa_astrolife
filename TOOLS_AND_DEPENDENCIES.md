@@ -1,4 +1,4 @@
-# AstroTip - Developer tools and library checklist
+# AstroLife - Developer tools and library checklist
 
 ## Required now
 

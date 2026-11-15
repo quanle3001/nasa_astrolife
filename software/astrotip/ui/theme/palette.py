@@ -1,4 +1,4 @@
-"""Color tokens for the AstroTip mission-control interface."""
+"""Color tokens for the AstroLife mission-control interface."""
 
 DEEP_SPACE = "#070C18"
 MIDNIGHT = "#0B1426"

@@ -75,7 +75,7 @@ TLS_CONTEXT = tls_context()
 
 
 def get_json(url: str) -> dict:
-    request = Request(url, headers={"User-Agent": "AstroTip-NASA-media-cache/1.0"})
+    request = Request(url, headers={"User-Agent": "AstroLife-NASA-media-cache/1.0"})
     with urlopen(request, timeout=30, context=TLS_CONTEXT) as response:
         return json.load(response)
 
@@ -88,7 +88,7 @@ def safe_url(url: str) -> str:
 
 def download(url: str, target: Path, *, max_bytes: int | None = None, content_type: str | None = None) -> int:
     target.parent.mkdir(parents=True, exist_ok=True)
-    request = Request(safe_url(url), headers={"User-Agent": "AstroTip-NASA-media-cache/1.0"})
+    request = Request(safe_url(url), headers={"User-Agent": "AstroLife-NASA-media-cache/1.0"})
     written = 0
     with urlopen(request, timeout=60, context=TLS_CONTEXT) as response:
         served_type = response.headers.get_content_type()
@@ -222,7 +222,7 @@ def main() -> int:
                 item["video"] = old[item["mission"]]
     payload = {
         "schema_version": 2,
-        "notice": "Decorative NASA media. NASA does not endorse AstroTip.",
+        "notice": "Decorative NASA media. NASA does not endorse AstroLife.",
         "api": API_ROOT,
         "assets": sorted(retained + assets, key=lambda item: item["mission"]),
     }

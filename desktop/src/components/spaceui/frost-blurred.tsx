@@ -3,8 +3,8 @@
  * src/registry/components/spaceui/frost-blurred). MIT License, Copyright (c) 2026 Space UI.
  *
  * Stacked, masked backdrop-filter layers that progressively frost one edge of
- * a media surface. AstroTip uses it so mission captions stay legible without
- * darkening the whole NASA photograph. Adaptation: tint uses the AstroTip
+ * a media surface. AstroLife uses it so mission captions stay legible without
+ * darkening the whole NASA photograph. Adaptation: tint uses the AstroLife
  * space-black token instead of shadcn's --background.
  */
 import * as React from "react";

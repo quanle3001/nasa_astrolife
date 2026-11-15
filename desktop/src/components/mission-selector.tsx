@@ -148,7 +148,7 @@ function MediaPreview({ media }: { media: MissionMedia }) {
             <PlayCircle className="size-4" /> {showClip ? "Show still image" : video.is_footage ? "Show NASA footage" : "Show NASA visualization"}
           </Button>
         )}
-        <p className="mt-5 text-xs leading-5 text-space-subtle">Decorative mission context. NASA does not endorse AstroTip.</p>
+        <p className="mt-5 text-xs leading-5 text-space-subtle">Decorative mission context. NASA does not endorse AstroLife.</p>
         <Button variant="primary" className="mt-auto" onClick={() => window.astrotip?.openNasaSource(showClip && video ? video.source_url : media.source_url)}>
           Open NASA source <ExternalLink className="size-4" />
         </Button>

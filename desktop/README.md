@@ -1,6 +1,6 @@
-# AstroTip React desktop
+# AstroLife React desktop
 
-AstroTip's primary interface is a React + TypeScript mission-control UI hosted
+AstroLife's primary interface is a React + TypeScript mission-control UI hosted
 inside Electron. Electron starts the existing Python backend as a private child
 process; it does not replace the health rules, serial reader, SQLite storage, or
 firmware.
@@ -59,7 +59,7 @@ Build an unpacked macOS application containing a one-file Python sidecar:
 cd desktop
 python -m pip install -r ../software/requirements-dev.txt
 npm run package:dir
-open release/mac-arm64/AstroTip.app
+open release/mac-arm64/AstroLife.app
 ```
 
 The sidecar is created by PyInstaller and copied into the app's Resources
@@ -119,7 +119,7 @@ credits, classification and source links; `src/lib/missions.ts` derives from it
 and falls back to the still image when a file is missing. Clips are labelled
 "Footage" or "Visualization", play muted one at a time on hover/focus, pause
 offscreen, and never autoplay under reduced motion. The Apollo image is labelled
-as a historical reference. NASA does not endorse AstroTip, and NASA marks are
+as a historical reference. NASA does not endorse AstroLife, and NASA marks are
 not used as app branding.
 
 Refresh the cache (network required; the app itself never downloads media):

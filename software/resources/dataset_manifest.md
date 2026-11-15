@@ -1,6 +1,6 @@
 # NASA guidance catalog
 
-Reviewed against NASA's public pages on **2026-11-14**. This is a curated, offline educational catalog; it is not raw patient data, a trained model, or a live NASA feed. No NASA endorsement or clinical validation of AstroTip is implied.
+Reviewed against NASA's public pages on **2026-11-14**. This is a curated, offline educational catalog; it is not raw patient data, a trained model, or a live NASA feed. No NASA endorsement or clinical validation of AstroLife is implied.
 
 ## Sources and scope
 
@@ -26,7 +26,7 @@ The catalog covers all five hazards and groups the 17 entries visible in the ris
 | `radiation` | Radiation-induced cancers, with related radiation effects discussed on that page |
 | `medical_support` | Inadequate systems operations support; injury from dynamic loads; distance-from-Earth context |
 
-These groups, their order, and hazard mappings are AstroTip's editorial organization, not an official NASA ranking or a claim that these are the entire Human Research Roadmap. NASA's overview explains that risk changes with mission destination. A normal fingertip reading must never suppress prevention topics or imply that unmeasured risks have been excluded.
+These groups, their order, and hazard mappings are AstroLife's editorial organization, not an official NASA ranking or a claim that these are the entire Human Research Roadmap. NASA's overview explains that risk changes with mission destination. A normal fingertip reading must never suppress prevention topics or imply that unmeasured risks have been excluded.
 
 The current check-in uses destination for broad planning reminders but does not calculate how risk changes with mission duration, phase, exposure history, or individual medical background. Longer-duration concerns are described in the catalog; they are not quantitative predictions.
 
@@ -36,7 +36,7 @@ The current check-in uses destination for broad planning reminders but does not 
 - **Mission protocol:** a conservative app prompt to use the trained crew's approved procedures or clinical review. The linked NASA source provides its rationale; the wording is not an official NASA procedure.
 - **Research:** the separate `research` list records investigation or unresolved questions. A research study is not a proven treatment. In particular, the catalog does not recommend self-prescribing supplements, medicines, cuffs, or pressure changes.
 
-Suggested monitoring fields and sensor limitations describe AstroTip's intended scope. They do not assert validation of the MAX30102 for astronaut diagnosis. SpO2 and pulse cannot assess radiation exposure, bone density, SANS, blood clots, decompression sickness, immunity, or mental health. Unknown or missing measurements are not normal results. Clinical alarm limits are not supplied by these NASA overview pages and must not be attributed to them.
+Suggested monitoring fields and sensor limitations describe AstroLife's intended scope. They do not assert validation of the MAX30102 for astronaut diagnosis. SpO2 and pulse cannot assess radiation exposure, bone density, SANS, blood clots, decompression sickness, immunity, or mental health. Unknown or missing measurements are not normal results. Clinical alarm limits are not supplied by these NASA overview pages and must not be attributed to them.
 
 ## Schema and maintenance
 

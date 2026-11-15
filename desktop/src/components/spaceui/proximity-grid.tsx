@@ -5,7 +5,7 @@
  *
  * Cells near the pointer round, inset and brighten. All work happens in Motion
  * values on pointer movement, so an idle grid costs no frames. Adaptations:
- * AstroTip cell color token, radial edge fade, disabled under reduced motion,
+ * AstroLife cell color token, radial edge fade, disabled under reduced motion,
  * and no min-height / background so it can sit behind hero media.
  */
 import { useCalmMotion } from "@/lib/motion-preference";

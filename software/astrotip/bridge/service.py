@@ -1,4 +1,4 @@
-"""Private JSON-lines bridge to AstroTip's existing Python backend.
+"""Private JSON-lines bridge to AstroLife's existing Python backend.
 
 The process accepts a small allowlist of structured methods over stdin and
 writes responses/events to stdout. It does not open a network port and never
@@ -96,7 +96,7 @@ class BridgeService(QObject):
             self.emit_message({
                 "id": request_id,
                 "ok": False,
-                "error": {"type": "BackendError", "message": "The local AstroTip backend could not complete the request."},
+                "error": {"type": "BackendError", "message": "The local AstroLife backend could not complete the request."},
             })
 
     def ping(self, _params):
