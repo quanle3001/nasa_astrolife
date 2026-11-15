@@ -232,6 +232,10 @@ select.control option { background: var(--color-space-surface); color: var(--col
 .viewport-card-oxygen { right:0; bottom:24%; }
 .viewport-card-link { right:3%; top:2%; min-width:0; }
 .viewport-link-state { font-family:var(--font-sans) !important; font-size:14px !important; letter-spacing:.08em; text-transform:uppercase; }
+.viewport-satellite { position:absolute; z-index:12; display:grid; width:34px; height:34px; place-items:center; border:1px solid rgba(255,255,255,.12); border-radius:var(--radius-md); background:rgba(10,17,31,.82); color:var(--color-space-silver); box-shadow:0 12px 30px rgba(0,0,0,.35); backdrop-filter:blur(12px); }
+.viewport-satellite-one { left:6%; bottom:8%; animation:drift 5.4s ease-in-out infinite; }
+.viewport-satellite-two { right:3%; top:22%; color:var(--color-space-cyan); animation:drift 4.7s .8s ease-in-out infinite reverse; }
+@keyframes drift { 50% { transform:translateY(-11px) rotate(5deg); } }
 
 .sensor-command-dock { display:grid; grid-template-columns:auto minmax(360px,1fr) minmax(180px,.5fr); align-items:center; gap:18px; overflow:hidden; border-radius:var(--radius-xl); padding:16px 18px; }
 .command-dock-title { display:flex; min-width:180px; align-items:center; gap:10px; color:var(--color-space-cyan); }
@@ -289,5 +293,5 @@ select.control option { background: var(--color-space-surface); color: var(--col
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
   .black-hole-crown video { display:none; }
-  .viewport-orbit-spin { animation:none !important; }
+  .viewport-orbit-spin,.viewport-satellite { animation:none !important; }
 }
