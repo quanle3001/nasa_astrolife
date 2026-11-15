@@ -95,15 +95,15 @@ export default function App() {
 
   if (!config) {
     return (
-      <div className="relative grid min-h-screen place-items-center overflow-hidden bg-[#050814] p-6 text-slate-100">
+      <div className="relative grid min-h-screen place-items-center overflow-hidden bg-space-black p-6 text-space-white">
         <Suspense fallback={null}><StarBackground reducedMotion={reducedMotion} /></Suspense><div className="mission-atmosphere" />
-        {startupError ? <div className="glass-panel relative z-10 max-w-lg rounded-3xl border border-rose-400/25 p-8 text-center"><AlertTriangle className="mx-auto size-10 text-rose-300" /><h1 className="mt-4 text-2xl font-semibold">Local backend unavailable</h1><p className="mt-3 text-sm leading-6 text-slate-400">{startupError}</p><Button className="mt-5" onClick={() => void start()}><RotateCcw className="size-4" /> Retry</Button></div> : <div className="relative z-10 text-center"><div className="mx-auto grid size-16 place-items-center rounded-2xl bg-cyan-300 text-2xl font-black text-slate-950">A</div><LoaderCircle className="mx-auto mt-6 size-5 animate-spin text-cyan-300" /><p className="mt-3 telemetry-label">Initializing local crew console</p></div>}
+        {startupError ? <div className="glass-panel relative z-10 max-w-lg rounded-3xl border border-rose-400/25 p-8 text-center"><AlertTriangle className="mx-auto size-10 text-rose-300" /><h1 className="mt-4 text-2xl font-semibold">Local backend unavailable</h1><p className="mt-3 text-sm leading-6 text-slate-400">{startupError}</p><Button className="mt-5" onClick={() => void start()}><RotateCcw className="size-4" /> Retry</Button></div> : <div className="relative z-10 text-center"><div className="mx-auto grid size-16 place-items-center rounded-2xl bg-space-cyan text-2xl font-black text-space-black">A</div><LoaderCircle className="mx-auto mt-6 size-5 animate-spin text-cyan-300" /><p className="mt-3 telemetry-label">Initializing local crew console</p></div>}
       </div>
     );
   }
 
   return (
-    <div className="relative isolate min-h-screen overflow-hidden bg-[#030014]">
+    <div className="relative isolate min-h-screen overflow-hidden bg-space-black">
       <div className="black-hole-crown" aria-hidden="true">
         <video autoPlay muted loop playsInline>
           <source src="./videos/blackhole.webm" type="video/webm" />

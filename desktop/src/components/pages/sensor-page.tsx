@@ -110,7 +110,7 @@ export function SensorPage({ state, onReview }: { state: SensorViewState; onRevi
 
       <section className="interpretation-grid">
         <Card className="interpretation-card">
-          <div className="flex items-center gap-2"><CircleGauge className="size-4 text-violet-300" /><span className="telemetry-label">Live interpretation</span></div>
+          <div className="flex items-center gap-2"><CircleGauge className="size-4 text-space-cyan" /><span className="telemetry-label">Live interpretation</span></div>
           {state.bundle ? (
             <div className="mt-5 flex flex-col gap-5 md:flex-row md:items-end">
               <div className="min-w-0 flex-1"><div className={cn("priority-badge", `priority-${state.bundle.assessment.level}`)}>{state.bundle.assessment.level}</div><h2 className="mt-3 text-2xl font-semibold text-white">{state.bundle.assessment.summary}</h2><p className="mt-2 text-sm text-slate-400">Fresh device-valid estimate; clinical accuracy remains unknown.</p></div>
