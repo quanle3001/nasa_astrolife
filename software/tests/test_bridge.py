@@ -1,0 +1,214 @@
+"""End-to-end checks for the private desktop JSON-lines bridge."""
+
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+from tempfile import TemporaryDirectory
+import unittest
+
+
+SOFTWARE_ROOT = Path(__file__).resolve().parents[1]
+
+
+class BridgeTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = TemporaryDirectory()
+        self.start_backend()
+
+    def start_backend(self):
+        env = os.environ.copy()
+        env["ASTROTIP_HISTORY_PATH"] = str(Path(self.temp.name) / "history.sqlite3")
+        self.process = subprocess.Popen(
+            [sys.executable, "-m", "astrotip.bridge.service"],
+            cwd=SOFTWARE_ROOT,
+            env=env,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            bufsize=1,
+        )
+        ready = json.loads(self.process.stdout.readline())
+        self.assertEqual(ready["event"], "backend.ready")
+
+    def stop_backend(self):
+        if self.process.poll() is None:
+            self.call("system.shutdown")
+            self.process.stdin.close()
+            self.process.wait(timeout=3)
+        for stream in (self.process.stdout, self.process.stderr):
+            stream.close()
+
+    def tearDown(self):
+        self.stop_backend()
+        self.temp.cleanup()
+
+    def ok(self, method, params=None):
+        response = self.call(method, params)
+        self.assertTrue(response["ok"], response)
+        return response["result"]
+
+    def call(self, method, params=None, request_id="test"):
+        request = {"id": request_id, "method": method, "params": params or {}}
+        self.process.stdin.write(json.dumps(request) + "\n")
+        self.process.stdin.flush()
+        while True:
+            response = json.loads(self.process.stdout.readline())
+            if response.get("id") == request_id:
+                return response
+
+    def test_ping_assessment_save_and_history_use_existing_python_logic(self):
+        self.assertTrue(self.call("system.ping")["result"]["offline"])
+        result = self.call("health.assess", {
+            "heart_rate": 72,
+            "spo2": 87.5,
+            "signal_quality": "poor",
+            "sleep_hours": None,
+            "symptoms": ["vision_changes"],
+            "exercise_completed": False,
+            "notes": "Bridge integration check",
+        })["result"]
+        self.assertEqual(result["assessment"]["level"], "urgent")
+        self.assertNotIn("mission", result["checkin"])
+        saved = self.call("health.save", {"assessment_id": result["assessment_id"]})
+        self.assertTrue(saved["result"]["saved"])
+        history = self.call("history.list")["result"]["entries"]
+        self.assertEqual(len(history), 1)
+        self.assertEqual(history[0]["assessment"]["level"], "urgent")
+
+    def test_bridge_rejects_unknown_methods_and_invalid_health_fields(self):
+        unknown = self.call("shell.execute", {"command": "anything"})
+        self.assertFalse(unknown["ok"])
+        invalid = self.call("health.assess", {"heart_rate": 70, "invented": True})
+        self.assertFalse(invalid["ok"])
+        self.assertIn("unsupported fields", invalid["error"]["message"])
+        # Mission context is presentation only and is rejected as a health field.
+        mission = self.call("health.assess", {"mission": "mars", "heart_rate": 70})
+        self.assertFalse(mission["ok"])
+
+    def test_guided_check_in_reaches_the_rules_and_survives_a_restart(self):
+        knowledge = self.ok("knowledge.get")
+        self.assertEqual(len(knowledge["catalog"]["hazards"]), 5)
+        self.assertEqual(knowledge["hrr_evidence"]["conditions"]["sleep"][0]["risk_id"], 100)
+        self.assertEqual(set(knowledge["mission_context"]["missions"]), {"leo", "lunar", "mars"})
+        study, = knowledge["osdr_studies"]["studies"]
+        self.assertEqual((study["accession"], study["condition_ids"]), ("OSD-104", ["fitness"]))
+        safety = {q["id"]: "no" for q in knowledge["registry"]["questions"] if q["domain"] == "safety"}
+        self.assertFalse(self.call("session.start")["ok"], "A mission must be chosen first")
+        profile = {"environment": "mars", "phase": "transit", "mission_day": 120, "eva_recent": False, "gravity_transition_recent": False}
+        self.assertEqual(self.ok("mission.save", {"profile": profile})["profile"], profile)
+        self.assertFalse(self.call("mission.save", {"profile": {"environment": "venus"}})["ok"])
+        session = self.ok("session.start")
+        answers = {**safety, "sleep.quality": "poorly", "sleep.hours": 4.5, "sleep.duration": "several_nights"}
+        self.ok("session.save", {"session_id": session["session_id"], "answers": answers, "position": "sleep.fatigue"})
+
+        # Interrupted: the backend restarts and the session is still there.
+        self.stop_backend()
+        self.start_backend()
+        current = self.ok("session.current")
+        self.assertEqual(current["mission"], profile)
+        self.assertEqual(current["open"]["session_id"], session["session_id"])
+        self.assertEqual(current["open"]["answers"], answers)
+        self.assertEqual(current["open"]["position"], "sleep.fatigue")
+
+        # A sensor measurement cannot be claimed when no reading exists.
+        no_sensor = self.call("session.submit", {"session_id": session["session_id"], "answers": answers, "measurement": {"use": "sensor"}})
+        self.assertFalse(no_sensor["ok"])
+        self.assertIn("No current sensor reading", no_sensor["error"]["message"])
+
+        result = self.ok("session.submit", {"session_id": session["session_id"], "answers": answers,
+                                           "measurement": {"use": "manual", "heart_rate": 72, "spo2": 91, "signal_quality": "good"}})
+        self.assertEqual(result["assessment"]["level"], "review")
+        self.assertEqual(result["checkin"]["sleep_hours"], 4.5)
+        self.assertEqual(result["checkin"]["symptoms"], ["poor_sleep"])
+        self.assertNotIn("mission", result["checkin"])
+        self.assertTrue(any(action["condition_id"] == "sleep" for action in result["actions"]))
+        # Each prompt carries the astronaut's own steps and the crew step, and both become follow-up actions.
+        sleep_finding = next(f for f in result["assessment"]["findings"] if f["condition_id"] == "sleep")
+        self.assertTrue(any("same time each day" in step for step in sleep_finding["self_care"]))
+        self.assertTrue(sleep_finding["actions"])
+        sleep_actions = [action["text"] for action in result["actions"] if action["condition_id"] == "sleep"]
+        self.assertEqual(sorted(sleep_actions), sorted([*sleep_finding["self_care"], *sleep_finding["actions"]]))
+        self.assertEqual([(i["id"], i["status"]) for i in result["assessment"]["indicators"]], [("heart_rate", "in_reference"), ("spo2", "review")])
+        self.assertEqual(knowledge["care_guidance"]["measurement"]["title"], "How to take a good fingertip reading")
+        self.assertFalse(self.call("session.remeasure", {"session_id": session["session_id"]})["ok"], "A submitted check-in cannot be re-measured")
+        # The result explains each prompt through the mission's NASA hazard and risk.
+        sleep_trace = next(entry for entry in result["evidence_trace"] if entry["condition_id"] == "sleep")
+        self.assertEqual(sleep_trace["hazards"][0]["title"], "Isolation and confinement")
+        self.assertEqual(sleep_trace["nasa_risks"][0]["risk_id"], 100)
+        self.assertEqual(sleep_trace["observations"][0]["answer"], "Poorly")
+        # Stored action ids, the history entry and the session tie the trace to what was saved.
+        tracing = sleep_trace["traceability"]
+        self.assertEqual(tracing["action_ids"], sorted(a["id"] for a in result["actions"] if a["condition_id"] == "sleep"))
+        self.assertTrue(tracing["action_ids"])
+        self.assertEqual((tracing["history_entry_id"], tracing["session_id"]), (result["entry_id"], session["session_id"]))
+        self.assertEqual(self.ok("session.current")["latest"]["result"]["evidence_trace"][0]["traceability"]["session_id"], session["session_id"])
+        trends = self.ok("history.trends")
+        self.assertEqual(trends["indicators"]["spo2"]["latest"], 91.0)
+        self.assertEqual(trends["indicators"]["spo2"]["points"][0]["source"], "manual")
+        plan = self.ok("mission.plan")
+        self.assertEqual(plan["mission_title"], "Mars / Deep Space")
+        self.assertEqual(plan["hazards"][0]["id"], "radiation")
+        other = self.ok("mission.plan", {"profile": {"environment": "leo", "phase": "orbit"}})
+        self.assertNotEqual([t["domain_id"] for t in plan["topics"]], [t["domain_id"] for t in other["topics"]])
+        self.assertIn("not treated as normal", " ".join(result["session_notes"]))
+        self.assertFalse(self.call("session.submit", {"session_id": session["session_id"], "answers": answers})["ok"])
+        done = self.ok("actions.update", {"id": result["actions"][0]["id"], "status": "done"})["action"]
+        self.assertEqual(done["status"], "done")
+
+        # Restart again: result, action state and health history all persist.
+        self.stop_backend()
+        self.start_backend()
+        current = self.ok("session.current")
+        self.assertIsNone(current["open"])
+        self.assertEqual(current["latest"]["result"]["assessment"]["level"], "review")
+        self.assertEqual({a["id"]: a["status"] for a in current["actions"]}[done["id"]], "done")
+        history = self.ok("history.list")["entries"]
+        self.assertEqual(len(history), 1)
+        self.assertEqual(history[0]["id"], result["entry_id"])
+        self.assertEqual(history[0]["checkin"]["spo2"], 91)
+
+    def test_urgent_safety_answer_returns_emergency_guidance_without_a_sensor(self):
+        # A recent EVA adds a required question later in the check-in; the safety preview must not wait for it.
+        self.ok("mission.save", {"profile": {"environment": "lunar", "phase": "surface", "eva_recent": True}})
+        session = self.ok("session.start")
+        preview = self.ok("session.preview", {"session_id": session["session_id"], "answers": {"safety.chest_pain": "yes"}})
+        self.assertTrue(preview["urgent"])
+        self.assertEqual(preview["assessment"]["level"], "urgent")
+        urgent = [f for f in preview["assessment"]["findings"] if f["level"] == "urgent"]
+        self.assertIn("emergency", urgent[0]["actions"][0].lower())
+        self.assertEqual(self.ok("history.list")["entries"], [], "A preview stores no health record")
+        calm = self.ok("session.preview", {"session_id": session["session_id"], "answers": {"safety.chest_pain": "no"}})
+        self.assertFalse(calm["urgent"])
+
+    def test_session_methods_reject_invalid_answers_and_measurements(self):
+        self.ok("mission.save", {"profile": {"environment": "leo", "phase": "orbit"}})
+        session = self.ok("session.start")
+        sid = session["session_id"]
+        for answers in ({"no.such.question": "yes"}, {"safety.chest_pain": "unsure"}, {"sleep.hours": 99}):
+            with self.subTest(answers=answers):
+                self.assertFalse(self.call("session.save", {"session_id": sid, "answers": answers})["ok"])
+        incomplete = self.call("session.submit", {"session_id": sid, "answers": {"sleep.quality": "well"}})
+        self.assertFalse(incomplete["ok"])
+        self.assertIn("required question", incomplete["error"]["message"])
+        safety = {q["id"]: "no" for q in self.ok("knowledge.get")["registry"]["questions"] if q["domain"] == "safety"}
+        bad = self.call("session.submit", {"session_id": sid, "answers": safety, "measurement": {"use": "manual", "spo2": 140}})
+        self.assertFalse(bad["ok"])
+        self.assertFalse(self.call("session.submit", {"session_id": sid, "answers": safety, "measurement": {"use": "guess"}})["ok"])
+        # The sensor reading is the expected input: omitting it needs a stated, known reason.
+        for missing in ({"use": "none"}, {"use": "none", "reason": "did not feel like it"}, None):
+            refused = self.call("session.submit", {"session_id": sid, "answers": safety, **({"measurement": missing} if missing else {})})
+            self.assertFalse(refused["ok"])
+            self.assertIn("say why no measurement", refused["error"]["message"])
+        none = self.ok("session.submit", {"session_id": sid, "answers": safety, "measurement": {"use": "none", "reason": "sensor_unavailable"}})
+        self.assertIn("Reason given: the sensor was not available or not working.", none["session_notes"])
+        self.assertIsNone(none["checkin"]["spo2"])
+        self.assertIsNone(none["checkin"]["heart_rate"])
+        self.assertEqual(none["assessment"]["level"], "info")
+        self.assertFalse(self.call("actions.update", {"id": "1", "status": "done"})["ok"])
+
+
+if __name__ == "__main__":
+    unittest.main()

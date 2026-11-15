@@ -1,10 +1,14 @@
 # NASA guidance catalog
 
-Reviewed against NASA's public pages on **2026-11-14**. This is a curated, offline educational catalog; it is not raw patient data, a trained model, or a live NASA feed. No NASA endorsement or clinical validation of Astro Life is implied.
+This file documents `nasa_sources.json`. Every NASA source used by the app, including the RadLab and OSDR API integrations and the Human Research Roadmap evidence reports, is listed in [`docs/NASA_DATA.md`](../../docs/NASA_DATA.md).
+
+Reviewed against NASA's public pages on **2026-11-14**. This is a curated, offline educational catalog; it is not raw patient data, a trained model, or a live NASA feed. No NASA endorsement or clinical validation of AstroLife is implied.
 
 ## Sources and scope
 
 The user-supplied [hazards overview](https://www.nasa.gov/hrp/hazards/), [risk overview](https://www.nasa.gov/hrp/risks/), and [research overview](https://www.nasa.gov/hrp/ongoing-hrp-research/) define the coverage. Individual risk pages linked from those overviews support the condition summaries and countermeasure context. All URLs, titles, and stable internal source IDs are stored in `nasa_sources.json`. Separate [MedlinePlus](https://medlineplus.gov/lab-tests/pulse-oximetry/) and [FDA](https://www.fda.gov/medical-devices/products-and-medical-procedures/pulse-oximeters) references support general pulse-oximetry guidance and limitations; they are not NASA flight standards.
+
+MedlinePlus [Pulse](https://medlineplus.gov/ency/article/003399.htm), [Healthy Sleep](https://medlineplus.gov/healthysleep.html) and [Dizziness](https://medlineplus.gov/ency/article/003093.htm), and the FDA's [Pulse Oximeter Basics](https://www.fda.gov/consumers/consumer-updates/pulse-oximeter-basics), were added on 2026-11-15. They support the general resting heart-rate reference (60 to 100 bpm), the measuring instructions and the plain self-care steps in `care_guidance.json`. They are general references, not NASA limits.
 
 [MedlinePlus emergency-recognition guidance](https://medlineplus.gov/ency/article/001927.htm) supports symptom-based escalation prompts. These general emergency signs are separate from NASA's descriptions of long-term spaceflight risks.
 
@@ -26,9 +30,9 @@ The catalog covers all five hazards and groups the 17 entries visible in the ris
 | `radiation` | Radiation-induced cancers, with related radiation effects discussed on that page |
 | `medical_support` | Inadequate systems operations support; injury from dynamic loads; distance-from-Earth context |
 
-These groups, their order, and hazard mappings are Astro Life's editorial organization, not an official NASA ranking or a claim that these are the entire Human Research Roadmap. NASA's overview explains that risk changes with mission destination. A normal fingertip reading must never suppress prevention topics or imply that unmeasured risks have been excluded.
+These groups, their order, and hazard mappings are AstroLife's editorial organization, not an official NASA ranking or a claim that these are the entire Human Research Roadmap. NASA's overview explains that risk changes with mission destination. A normal fingertip reading must never suppress prevention topics or imply that unmeasured risks have been excluded.
 
-The app does not ask for or assume a mission destination. Assessments use sensor readings and explicitly reported symptoms, sleep, exercise, and alerts. Destination-based planning reminders are not generated. NASA's discussion of mission differences remains background context in the catalog, not a personalized prediction. Older saved assessments retain their original contents; new check-ins do not store a mission field.
+The guided flow asks for a mission (low Earth orbit, lunar, or Mars / deep space) and stores it as a separate mission profile. The mission changes presentation only: the order of the five hazards, the order of question topics, and which NASA statements are shown first (`mission_context.json`). It is not an input to the assessment rules. Findings use sensor readings and explicitly reported symptoms, sleep, exercise, and alerts, and the same answers give the same findings on every mission. NASA's discussion of mission differences is context, not a personalized prediction. Check-ins do not store a mission field; older saved assessments that have one remain readable.
 
 ## Evidence labels
 
@@ -36,7 +40,7 @@ The app does not ask for or assume a mission destination. Assessments use sensor
 - **Mission protocol:** a conservative app prompt to use the trained crew's approved procedures or clinical review. The linked NASA source provides its rationale; the wording is not an official NASA procedure.
 - **Research:** the separate `research` list records investigation or unresolved questions. A research study is not a proven treatment. In particular, the catalog does not recommend self-prescribing supplements, medicines, cuffs, or pressure changes.
 
-Suggested monitoring fields and sensor limitations describe Astro Life's intended scope. They do not assert validation of the MAX30102 for astronaut diagnosis. SpO2 and pulse cannot assess radiation exposure, bone density, SANS, blood clots, decompression sickness, immunity, or mental health. Unknown or missing measurements are not normal results. Clinical alarm limits are not supplied by these NASA overview pages and must not be attributed to them.
+Suggested monitoring fields and sensor limitations describe AstroLife's intended scope. They do not assert validation of the MAX30102 for astronaut diagnosis. SpO2 and pulse cannot assess radiation exposure, bone density, SANS, blood clots, decompression sickness, immunity, or mental health. Unknown or missing measurements are not normal results. Clinical alarm limits are not supplied by these NASA overview pages and must not be attributed to them.
 
 ## Schema and maintenance
 

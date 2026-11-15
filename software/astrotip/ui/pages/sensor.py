@@ -11,6 +11,7 @@ from astrotip.analysis.optical_quality import OpticalSignalQuality
 from astrotip.inputs.sensor_serial import SerialReader, available_ports
 from astrotip.models.health_indicator import CheckIn
 from astrotip.ui.common import browser, label, live_guidance_html, simple_summary
+from astrotip.ui.icons import space_icon
 from astrotip.ui.optical_waveform import OpticalWaveform
 
 
@@ -53,9 +54,11 @@ class SensorPage(QWidget):
         self.ports.lineEdit().setPlaceholderText("Select or enter a COM port")
         controls.addWidget(self.ports, 1)
         self.refresh_button = QPushButton("Refresh ports")
+        self.refresh_button.setIcon(space_icon("fa6s.rotate"))
         self.refresh_button.clicked.connect(self.refresh_ports)
         controls.addWidget(self.refresh_button)
         self.connect_button = QPushButton("Connect")
+        self.connect_button.setIcon(space_icon("fa6s.plug"))
         self.connect_button.setObjectName("primaryButton")
         self.connect_button.clicked.connect(self.toggle_connection)
         controls.addWidget(self.connect_button)

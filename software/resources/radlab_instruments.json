@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "note": "Instrument ids are exactly as published by the NASA OSDR RadLab API. The descriptions are AstroLife's short summaries of public mission information; they were not returned by the API, and RadLab's own documentation was unavailable when this file was written. Instruments without a description are shown by id only.",
+  "instruments": {
+    "DosTel1": {"environment": "leo", "label": "DOSTEL 1 · International Space Station", "description": "Dosimetry telescope of the DOSIS 3D experiment in the ISS Columbus laboratory, in low Earth orbit."},
+    "Lidal": {"environment": "leo", "label": "LIDAL · International Space Station", "description": "Light Ion Detector for ALTEA, operated on the International Space Station in low Earth orbit."},
+    "CRaTER-D1D2": {"environment": "lunar", "label": "CRaTER · Lunar Reconnaissance Orbiter", "description": "Cosmic Ray Telescope for the Effects of Radiation on NASA's Lunar Reconnaissance Orbiter, in lunar orbit."},
+    "MSL-RAD-Surface": {"environment": "mars", "label": "RAD · Curiosity rover", "description": "Radiation Assessment Detector on NASA's Mars Science Laboratory Curiosity rover, on the surface of Mars."},
+    "Liulin-MO-AB-Orbit": {"environment": "mars", "label": "Liulin-MO (AB) · Trace Gas Orbiter", "description": "Liulin-MO dosimeter on the ExoMars Trace Gas Orbiter, in orbit around Mars."},
+    "Liulin-MO-CD-Orbit": {"environment": "mars", "label": "Liulin-MO (CD) · Trace Gas Orbiter", "description": "Liulin-MO dosimeter on the ExoMars Trace Gas Orbiter, in orbit around Mars."}
+  },
+  "preferred": {"leo": "DosTel1", "lunar": "CRaTER-D1D2", "mars": "MSL-RAD-Surface"}
+}

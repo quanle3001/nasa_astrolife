@@ -8,6 +8,8 @@ from PySide6.QtWidgets import (
 
 from astrotip.models.health_indicator import CheckIn, SYMPTOMS
 from astrotip.ui.common import label
+from astrotip.ui.icons import space_icon
+from astrotip.ui.widgets.mission_gallery import MissionGallery
 
 
 class CheckinPage(QWidget):
@@ -16,6 +18,8 @@ class CheckinPage(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.addWidget(label("CREW DAILY LOG", "eyebrow", False))
         layout.addWidget(label("Daily health check-in", "pageTitle"))
         layout.addWidget(label(
             "Record what you know. Leave missing readings blank; unreported symptoms are not ruled out.",
@@ -25,6 +29,10 @@ class CheckinPage(QWidget):
         scroll.setWidgetResizable(True)
         content = QWidget()
         body = QVBoxLayout(content)
+        body.setContentsMargins(2, 5, 8, 8)
+        # Decorative mission context only: it never enters the CheckIn or the rules.
+        self.mission_gallery = MissionGallery()
+        body.addWidget(self.mission_gallery)
         context = QGroupBox("Health observations")
         form = QFormLayout(context)
         self.heart_rate = QLineEdit()
@@ -76,6 +84,7 @@ class CheckinPage(QWidget):
         footer = QHBoxLayout()
         footer.addWidget(label("Assessment stays in memory until you choose Save to history.", "subtitle"), 1)
         self.submit_button = QPushButton("Review health priorities")
+        self.submit_button.setIcon(space_icon("fa6s.satellite-dish", color="#07131C", active="#07131C"))
         self.submit_button.setObjectName("primaryButton")
         self.submit_button.clicked.connect(self.submit)
         footer.addWidget(self.submit_button)

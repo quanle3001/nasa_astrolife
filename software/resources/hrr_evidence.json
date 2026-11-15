@@ -1,0 +1,153 @@
+{
+ "schema_version": 1,
+ "reviewed_on": "2026-11-15",
+ "source_url": "https://humanresearchroadmap.nasa.gov/evidence/",
+ "note": "NASA Human Research Program evidence reports from the Human Research Roadmap, matched to AstroLife's health topics. Risk titles and report links are copied from the Roadmap's Evidence page as retrieved on the review date. The reports explain the state of research for a risk; they do not define a diagnosis, a clinical threshold or a treatment for an individual.",
+ "conditions": {
+  "hypoxia": [
+   {
+    "risk_id": 173,
+    "risk_title": "Risk of Reduced Crew Health and Performance Due to Hypoxia",
+    "risk_url": "https://humanresearchroadmap.nasa.gov/Risks/?i=173",
+    "report_title": "Evidence Report",
+    "report_url": "https://humanresearchroadmap.nasa.gov/evidence/reports/Evidence%20Report%20Hypoxia%20and%20DCS_FINAL_1-8-2024.pdf"
+   }
+  ],
+  "cardiovascular": [
+   {
+    "risk_id": 179,
+    "risk_title": "Risk of Cardiovascular Adaptations Contributing to Adverse Mission Performance and Health Outcomes",
+    "risk_url": "https://humanresearchroadmap.nasa.gov/Risks/?i=179",
+    "report_title": "Evidence Report",
+    "report_url": "https://humanresearchroadmap.nasa.gov/evidence/reports/Cardio%20Risk%20EB%202022%20FINAL_4-3-2023.pdf"
+   }
+  ],
+  "fitness": [
+   {
+    "risk_id": 180,
+    "risk_title": "Risk of Mission Performance Decrements and Adverse Health Outcomes Resulting from Reduced Cardiorespiratory and Musculoskeletal Fitness",
+    "risk_url": "https://humanresearchroadmap.nasa.gov/Risks/?i=180",
+    "report_title": "Evidence Report",
+    "report_url": "https://humanresearchroadmap.nasa.gov/evidence/reports/Evidence%20report%20aerobic%20and%20muscle_FINAL%204-3-2024.pdf"
+   }
+  ],
+  "bone": [
+   {
+    "risk_id": 77,
+    "risk_title": "Risk of Bone Fracture due to Spaceflight-induced Changes to Bone",
+    "risk_url": "https://humanresearchroadmap.nasa.gov/Risks/?i=77",
+    "report_title": "Evidence Report",
+    "report_url": "https://humanresearchroadmap.nasa.gov/evidence/reports/Bone%20Fracture%20Evidence%20Report_07-18-2024.pdf"
+   }
+  ],
+  "sans": [
+   {
+    "risk_id": 105,
+    "risk_title": "Risk of Spaceflight Associated Neuro-ocular Syndrome (SANS)",
+    "risk_url": "https://humanresearchroadmap.nasa.gov/Risks/?i=105",
+    "report_title": "Evidence Report",
+    "report_url": "https://humanresearchroadmap.nasa.gov/evidence/reports/SANS%20EB%202022%20FINAL_8-15-22.pdf"
+   }
+  ],
+  "vestibular": [
+   {
+    "risk_id": 88,
+    "risk_title": "Risk of Altered Sensorimotor/Vestibular Function Impacting Critical Mission Tasks, Human Health, and Long-Term Health",
+    "risk_url": "https://humanresearchroadmap.nasa.gov/Risks/?i=88",
+    "report_title": "Evidence Report",
+    "report_url": "https://humanresearchroadmap.nasa.gov/evidence/reports/SM%20Evidence%20Report%202022_FINAL%206-13-2023.pdf"
+   }
+  ],
+  "sleep": [
+   {
+    "risk_id": 100,
+    "risk_title": "Risk of Performance Decrements and Adverse Health Outcomes Resulting from Sleep Loss, Circadian Desynchronization, and Work Overload",
+    "risk_url": "https://humanresearchroadmap.nasa.gov/Risks/?i=100",
+    "report_title": "Evidence Report",
+    "report_url": "https://humanresearchroadmap.nasa.gov/evidence/reports/Sleep.pdf"
+   }
+  ],
+  "behavioral": [
+   {
+    "risk_id": 99,
+    "risk_title": "Risk of Adverse Cognitive or Behavioral Changes and Psychiatric Disorders Leading to In-mission Health and Performance and Long-term Health Effects",
+    "risk_url": "https://humanresearchroadmap.nasa.gov/Risks/?i=99",
+    "report_title": "Evidence Report",
+    "report_url": "https://humanresearchroadmap.nasa.gov/evidence/reports/HRP-ER-BMED-HFBP-20250210.pdf"
+   },
+   {
+    "risk_id": 101,
+    "risk_title": "Risk of In-Mission Performance and Behavioral Health Decrements Due to Inadequate Cooperation, Coordination, Communication, and Psychosocial Adaptation within a Team",
+    "risk_url": "https://humanresearchroadmap.nasa.gov/Risks/?i=101",
+    "report_title": "Evidence Report",
+    "report_url": "https://humanresearchroadmap.nasa.gov/evidence/reports/Team%202022%20-Evidence%20Report%20FINAL_5-9-2024.pdf"
+   }
+  ],
+  "immune": [
+   {
+    "risk_id": 85,
+    "risk_title": "Risk of In Mission Impacts, Adverse Health Events or Long-Term Health Impacts due to Altered Immune Response",
+    "risk_url": "https://humanresearchroadmap.nasa.gov/Risks/?i=85",
+    "report_title": "Evidence Report",
+    "report_url": "https://humanresearchroadmap.nasa.gov/evidence/reports/IMMUNE%20EB%20Update%202021%20v02%20FINAL_6-15-22.pdf"
+   },
+   {
+    "risk_id": 80,
+    "risk_title": "Risk of Adverse In-Mission and Long-Term Health Effects and Performance Effects Due to Host-Microorganism Interactions",
+    "risk_url": "https://humanresearchroadmap.nasa.gov/Risks/?i=80",
+    "report_title": "Evidence Report",
+    "report_url": "https://humanresearchroadmap.nasa.gov/evidence/reports/Host_Micro%20EB_Final%207-6-22.pdf"
+   }
+  ],
+  "nutrition": [
+   {
+    "risk_id": 176,
+    "risk_title": "Risk of Performance Decrement and Crew Illness Due to Inadequate Food and Nutrition",
+    "risk_url": "https://humanresearchroadmap.nasa.gov/Risks/?i=176",
+    "report_title": "Evidence Report-Food",
+    "report_url": "https://humanresearchroadmap.nasa.gov/evidence/other/Food%20HRP-Evidence%20Report%20FINAL_4-15-24.pdf"
+   }
+  ],
+  "eva": [
+   {
+    "risk_id": 84,
+    "risk_title": "Risk of Mission Impacting Injury and Compromised Performance and Long-Term Health Effects due to EVA Operations",
+    "risk_url": "https://humanresearchroadmap.nasa.gov/Risks/?i=84",
+    "report_title": "Evidence Report-EVA",
+    "report_url": "https://humanresearchroadmap.nasa.gov/evidence/other/EVA%20Injury%20Evidence%20Report%20FINAL_6-14-2023.pdf"
+   },
+   {
+    "risk_id": 168,
+    "risk_title": "Risk of Mission Impacts and Long-Term Health Issues due to Decompression Sickness",
+    "risk_url": "https://humanresearchroadmap.nasa.gov/Risks/?i=168",
+    "report_title": "Evidence Report",
+    "report_url": "https://humanresearchroadmap.nasa.gov/evidence/reports/Evidence%20Report%20Hypoxia%20and%20DCS_FINAL_1-8-2024.pdf"
+   }
+  ],
+  "radiation": [
+   {
+    "risk_id": 96,
+    "risk_title": "Risk of Radiation Carcinogenesis",
+    "risk_url": "https://humanresearchroadmap.nasa.gov/Risks/?i=96",
+    "report_title": "Evidence Report",
+    "report_url": "https://humanresearchroadmap.nasa.gov/evidence/reports/HRP-ER-CANCER-SR-20260811.pdf"
+   }
+  ],
+  "medical_support": [
+   {
+    "risk_id": 95,
+    "risk_title": "Risk of Adverse Health Outcomes and Decrements in Performance Due to Medical Conditions that occur in Mission, as well as Long Term Health Outcomes Due to Mission Exposures",
+    "risk_url": "https://humanresearchroadmap.nasa.gov/Risks/?i=95",
+    "report_title": "Evidence Report",
+    "report_url": "https://humanresearchroadmap.nasa.gov/evidence/reports/Medical.pdf"
+   },
+   {
+    "risk_id": 167,
+    "risk_title": "Risk of In-Mission Injury and Performance Decrements and Long-term Health Effects due to Dynamic Loads",
+    "risk_url": "https://humanresearchroadmap.nasa.gov/Risks/?i=167",
+    "report_title": "Evidence Report",
+    "report_url": "https://humanresearchroadmap.nasa.gov/evidence/reports/OP%20Dynamic%20Loads%20EB%20FINAL_11-30-22.pdf"
+   }
+  ]
+ }
+}

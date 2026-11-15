@@ -56,7 +56,8 @@ bool readSample(int index)
     // Restart the measurement rather than calculate on silently dropped data.
     if (collected >= STORAGE_SIZE)
     {
-      while (sensor.available()) sensor.nextSample();
+      while (sensor.available())
+        sensor.nextSample();
       sensor.clearFIFO();
       Serial.println("ERROR: Sample backlog; collecting a fresh measurement.");
       return false;
@@ -79,14 +80,11 @@ bool readSample(int index)
   // These are raw optical counts, regardless of finger/algorithm validity.
   const uint32_t sampledAt = millis();
   sampleTimes[index] = sampledAt;
-  Serial.print("PPG,");
-  Serial.print(sampleSequence++);
-  Serial.print(',');
-  Serial.print(sampledAt);
-  Serial.print(',');
-  Serial.print(lastRed);
-  Serial.print(',');
-  Serial.println(lastIR);
+  Serial.printf("PPG,%lu,%lu,%lu,%lu\n",
+                static_cast<unsigned long>(sampleSequence++),
+                static_cast<unsigned long>(sampledAt),
+                static_cast<unsigned long>(lastRed),
+                static_cast<unsigned long>(lastIR));
   return true;
 }
 
@@ -227,7 +225,8 @@ void loop()
   if (!initialized)
   {
     sensor.clearFIFO();
-    while (sensor.available()) sensor.nextSample();
+    while (sensor.available())
+      sensor.nextSample();
     const uint32_t start = millis();
     for (int i = 0; i < SAMPLE_COUNT; ++i)
     {

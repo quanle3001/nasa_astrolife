@@ -1,6 +1,7 @@
 """Headless desktop checks for the check-in, priorities, and saved-history flow."""
 
 import importlib.util
+import json
 import os
 from pathlib import Path
 import sys
@@ -176,12 +177,33 @@ class DesktopFlowTests(unittest.TestCase):
         self.assertEqual(saved["checkin"]["sensor_received_at"], "2026-11-14T20:00:00+00:00")
 
     def test_background_research_is_not_presented_as_a_sensor_result(self):
-        self.window.run_assessment(CheckIn(spo2=98, heart_rate=72))
+        self.window.run_assessment(CheckIn(spo2=98, heart_rate=112))
         content = self.window.assessment_page.content.toPlainText()
         self.assertIn("Suggested next steps", content)
         self.assertNotIn("B-Complex", content)
         self.assertNotIn("Radiation-induced", content)
         self.assertNotIn("Research in progress", content)
+
+    def test_mission_cards_are_decorative_context_with_offline_assets(self):
+        form = self.window.checkin_page
+        gallery = form.mission_gallery
+        gallery.cards["mars"].selected.emit("mars")
+        self.app.processEvents()
+        self.assertTrue(gallery.cards["mars"]._selected)
+        self.assertEqual(self.window.sidebar_mission.text(), "Mars / deep space")
+        gallery.cards["lunar"].selected.emit("lunar")
+        self.app.processEvents()
+        self.assertTrue(gallery.cards["lunar"]._selected)
+        self.assertFalse(gallery.cards["mars"]._selected)
+        # The selected mission is presentation only and never enters the check-in.
+        self.assertFalse(hasattr(form.collect_checkin(), "mission"))
+        manifest_path = Path(__file__).resolve().parents[1] / "assets" / "nasa" / "media_manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual({item["mission"] for item in manifest["assets"]}, {"leo", "lunar", "mars"})
+        for item in manifest["assets"]:
+            self.assertTrue((manifest_path.parent / item["local_path"]).is_file())
+            self.assertTrue(item["nasa_id"])
+            self.assertTrue(item["source_url"].startswith("https://images.nasa.gov/"))
 
 
 if __name__ == "__main__":

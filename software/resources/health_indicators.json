@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "note": "Health indicators AstroLife can actually collect, and the NASA catalog risks each one relates to. An indicator is collected because a risk it relates to belongs to a hazard of the mission. Relating an indicator to a risk never means the indicator can diagnose or rule out that risk.",
+  "indicators": [
+    {"id": "heart_rate", "label": "Heart rate", "unit": "bpm", "source": "sensor", "checkin_field": "heart_rate", "condition_ids": ["cardiovascular"],
+     "why": "NASA's cardiovascular adaptation risk concerns how circulation changes in altered gravity; a resting pulse is a basic observation the crew can log."},
+    {"id": "spo2", "label": "Estimated blood oxygen (SpO2)", "unit": "%", "source": "sensor", "checkin_field": "spo2", "condition_ids": ["hypoxia"],
+     "why": "NASA's hypoxia risk concerns reduced oxygen availability in closed, reduced-pressure environments; SpO2 is the related observation a fingertip sensor can estimate."},
+    {"id": "sleep_hours", "label": "Sleep duration", "unit": "hours", "source": "question", "checkin_field": "sleep_hours", "question_ids": ["sleep.hours"], "condition_ids": ["sleep"],
+     "why": "NASA's sleep loss and circadian risk is tracked through reported sleep."},
+    {"id": "exercise_completed", "label": "Prescribed exercise session", "unit": "", "source": "question", "checkin_field": "exercise_completed", "question_ids": ["strength.exercise"], "condition_ids": ["fitness", "bone"],
+     "why": "Exercise is NASA's main countermeasure for muscle, fitness and bone changes in altered gravity."}
+  ]
+}

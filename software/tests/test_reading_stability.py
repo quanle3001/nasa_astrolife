@@ -1,4 +1,4 @@
-"""Display stabilization must never replace the underlying alert estimates."""
+"""Stable measurement windows reject disagreement and aggregate agreeing reports."""
 
 from pathlib import Path
 import sys

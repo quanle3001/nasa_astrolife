@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "version": "2026.11.1",
+  "note": "Every answer maps only to observation keys and fields that the existing assessment rules already understand. No question introduces a clinical cut-off. 'Unsure' and skipped answers are recorded as not assessed, never as 'no'.",
+  "domains": [
+    {"id": "safety", "title": "Safety screen", "hazard_ids": [], "condition_ids": []},
+    {"id": "sleep", "title": "Sleep and fatigue", "hazard_ids": ["isolation", "environment"], "condition_ids": ["sleep"]},
+    {"id": "wellbeing", "title": "Mood and teamwork", "hazard_ids": ["isolation", "distance"], "condition_ids": ["behavioral"]},
+    {"id": "balance", "title": "Balance and vision", "hazard_ids": ["gravity"], "condition_ids": ["vestibular", "sans"], "promote_if": {"mission": {"field": "gravity_transition_recent", "equals": true}}},
+    {"id": "heart", "title": "Heart and circulation", "hazard_ids": ["gravity"], "condition_ids": ["cardiovascular"]},
+    {"id": "strength", "title": "Strength and exercise", "hazard_ids": ["gravity"], "condition_ids": ["fitness", "bone"]},
+    {"id": "eva", "title": "After your EVA", "hazard_ids": ["environment", "gravity"], "condition_ids": ["eva"], "promote_if": {"mission": {"field": "eva_recent", "equals": true}}},
+    {"id": "illness", "title": "Illness and nutrition", "hazard_ids": ["environment", "distance"], "condition_ids": ["immune", "nutrition"]}
+  ],
+  "questions": [
+    {"id": "safety.chest_pain", "domain": "safety", "text": "Chest pain or tightness", "input": "boolean", "required": true, "urgent": true, "maps_to": {"symptoms": {"yes": ["chest_pain"]}}, "evidence_ids": ["medlineplus_emergencies"]},
+    {"id": "safety.breathing", "domain": "safety", "text": "Difficulty breathing", "input": "boolean", "required": true, "urgent": true, "maps_to": {"symptoms": {"yes": ["breathing_difficulty"]}}, "evidence_ids": ["medlineplus_emergencies"]},
+    {"id": "safety.fainting", "domain": "safety", "text": "Fainting or loss of consciousness", "input": "boolean", "required": true, "urgent": true, "maps_to": {"symptoms": {"yes": ["fainting"]}}, "evidence_ids": ["medlineplus_emergencies"]},
+    {"id": "safety.confusion", "domain": "safety", "text": "New confusion", "input": "boolean", "required": true, "urgent": true, "maps_to": {"symptoms": {"yes": ["confusion"]}}, "evidence_ids": ["medlineplus_emergencies"]},
+    {"id": "safety.vision_loss", "domain": "safety", "text": "Sudden loss of vision", "input": "boolean", "required": true, "urgent": true, "maps_to": {"symptoms": {"yes": ["sudden_vision_loss"]}}, "evidence_ids": ["medlineplus_emergencies"]},
+    {"id": "safety.neurological", "domain": "safety", "text": "Sudden new dizziness, weakness or change in vision", "input": "boolean", "required": true, "urgent": true, "maps_to": {"symptoms": {"yes": ["sudden_neurological"]}}, "evidence_ids": ["medlineplus_emergencies"]},
+    {"id": "safety.eva", "domain": "safety", "text": "New symptoms after an EVA or pressure change", "input": "boolean", "required": true, "urgent": true, "maps_to": {"symptoms": {"yes": ["eva_symptoms"]}}, "evidence_ids": ["eva", "decompression"]},
+    {"id": "safety.radiation_alert", "domain": "safety", "text": "A radiation or dosimeter alert is active", "input": "boolean", "required": true, "urgent": true, "maps_to": {"symptoms": {"yes": ["radiation_alert"]}}, "evidence_ids": ["radiation_hazard"]},
+    {"id": "safety.cabin_alert", "domain": "safety", "text": "A cabin air, CO2 or contamination alert is active", "input": "boolean", "required": true, "urgent": true, "maps_to": {"symptoms": {"yes": ["environmental_alert"]}}, "evidence_ids": ["hypoxia"]},
+
+    {"id": "sleep.quality", "domain": "sleep", "text": "How well have you been sleeping?", "input": "scale", "required": false, "allow_unsure": true, "allow_skip": true,
+     "options": [{"value": "well", "label": "Well"}, {"value": "okay", "label": "Okay"}, {"value": "poorly", "label": "Poorly"}],
+     "maps_to": {"symptoms": {"poorly": ["poor_sleep"]}}, "evidence_ids": ["sleep"]},
+    {"id": "sleep.hours", "domain": "sleep", "parent": "sleep.quality", "text": "About how many hours did you sleep in the last 24 hours?", "input": "number", "required": false, "allow_skip": true,
+     "validation": {"min": 0, "max": 24, "unit": "hours"}, "show_if": {"answer": {"question": "sleep.quality", "in": ["poorly"]}},
+     "maps_to": {"field": "sleep_hours"}, "evidence_ids": ["sleep"]},
+    {"id": "sleep.duration", "domain": "sleep", "parent": "sleep.quality", "text": "How long has your sleep been poor?", "input": "choice", "required": false, "allow_skip": true,
+     "options": [{"value": "one_night", "label": "Just last night"}, {"value": "several_nights", "label": "Several nights"}, {"value": "over_a_week", "label": "More than a week"}],
+     "show_if": {"answer": {"question": "sleep.quality", "in": ["poorly"]}}, "note_label": "Poor sleep for", "evidence_ids": ["sleep"]},
+    {"id": "sleep.fatigue", "domain": "sleep", "text": "Are you feeling fatigued or sleepy during the day?", "input": "boolean", "required": false, "allow_unsure": true, "allow_skip": true,
+     "maps_to": {"symptoms": {"yes": ["fatigue"]}}, "evidence_ids": ["sleep"]},
+
+    {"id": "wellbeing.mood", "domain": "wellbeing", "text": "Have you felt low, anxious or isolated?", "input": "boolean", "required": false, "allow_unsure": true, "allow_skip": true,
+     "maps_to": {"symptoms": {"yes": ["mood_concern"]}}, "evidence_ids": ["behavioral"]},
+    {"id": "wellbeing.mood_duration", "domain": "wellbeing", "parent": "wellbeing.mood", "text": "How long have you felt this way?", "input": "choice", "required": false, "allow_skip": true,
+     "options": [{"value": "today", "label": "Today"}, {"value": "several_days", "label": "Several days"}, {"value": "over_a_week", "label": "More than a week"}],
+     "show_if": {"answer": {"question": "wellbeing.mood", "in": ["yes"]}}, "note_label": "Low mood, anxiety or isolation for", "evidence_ids": ["behavioral"]},
+    {"id": "wellbeing.team", "domain": "wellbeing", "text": "Is there team tension or a communication problem you want noted?", "input": "boolean", "required": false, "allow_unsure": true, "allow_skip": true,
+     "maps_to": {"symptoms": {"yes": ["team_conflict"]}}, "evidence_ids": ["teamwork"]},
+
+    {"id": "balance.dizziness", "domain": "balance", "text": "Have you experienced dizziness, motion sickness or balance problems?", "input": "boolean", "required": false, "allow_unsure": true, "allow_skip": true,
+     "maps_to": {"symptoms": {"yes": ["dizziness"]}}, "evidence_ids": ["vestibular"]},
+    {"id": "balance.when", "domain": "balance", "parent": "balance.dizziness", "text": "When did it happen?", "input": "choice", "required": false, "allow_skip": true,
+     "options": [{"value": "now", "label": "It is happening now"}, {"value": "today", "label": "Earlier today"}, {"value": "past_days", "label": "In the past few days"}],
+     "show_if": {"answer": {"question": "balance.dizziness", "in": ["yes"]}}, "note_label": "Dizziness occurred", "evidence_ids": ["vestibular"]},
+    {"id": "balance.transition", "domain": "balance", "parent": "balance.dizziness", "text": "Did it follow a gravity transition such as launch, landing, docking or an EVA?", "input": "boolean", "required": false, "allow_unsure": true, "allow_skip": true,
+     "show_if": {"answer": {"question": "balance.dizziness", "in": ["yes"]}}, "note_label": "Dizziness followed a gravity transition", "evidence_ids": ["vestibular"]},
+    {"id": "balance.vision", "domain": "balance", "text": "Have you noticed new blurred vision or other eye changes?", "input": "boolean", "required": false, "allow_unsure": true, "allow_skip": true,
+     "maps_to": {"symptoms": {"yes": ["vision_changes"]}}, "evidence_ids": ["sans"]},
+
+    {"id": "heart.palpitations", "domain": "heart", "text": "Have you felt a racing or irregular heartbeat?", "input": "boolean", "required": false, "allow_unsure": true, "allow_skip": true,
+     "maps_to": {"symptoms": {"yes": ["palpitations"]}}, "evidence_ids": ["cardiovascular"]},
+
+    {"id": "strength.exercise", "domain": "strength", "text": "Did you complete your prescribed exercise session?", "input": "choice", "required": false, "allow_skip": true,
+     "options": [{"value": "completed", "label": "Completed"}, {"value": "missed", "label": "Missed"}, {"value": "not_scheduled", "label": "None scheduled"}],
+     "maps_to": {"field": "exercise_completed", "values": {"completed": true, "missed": false}}, "evidence_ids": ["fitness"]},
+    {"id": "strength.weakness", "domain": "strength", "text": "Have you noticed reduced strength or exercise capacity?", "input": "boolean", "required": false, "allow_unsure": true, "allow_skip": true,
+     "maps_to": {"symptoms": {"yes": ["muscle_weakness"]}}, "evidence_ids": ["fitness"]},
+    {"id": "strength.bone_pain", "domain": "strength", "text": "Do you have bone or back pain?", "input": "boolean", "required": false, "allow_unsure": true, "allow_skip": true,
+     "maps_to": {"symptoms": {"yes": ["bone_pain"]}}, "evidence_ids": ["bone"]},
+
+    {"id": "eva.new_symptoms", "domain": "eva", "text": "Since your recent EVA or pressure change, have you noticed any new symptoms?", "input": "boolean", "required": true, "urgent": true,
+     "show_if": {"mission": {"field": "eva_recent", "equals": true}},
+     "maps_to": {"symptoms": {"yes": ["eva_symptoms"]}}, "evidence_ids": ["eva", "decompression"]},
+
+    {"id": "illness.infection", "domain": "illness", "text": "Do you have a fever, rash or other infection concern?", "input": "boolean", "required": false, "allow_unsure": true, "allow_skip": true,
+     "maps_to": {"symptoms": {"yes": ["fever_or_infection"]}}, "evidence_ids": ["immune"]},
+    {"id": "illness.intake", "domain": "illness", "text": "Have you been eating or drinking less than planned?", "input": "boolean", "required": false, "allow_unsure": true, "allow_skip": true,
+     "maps_to": {"symptoms": {"yes": ["poor_intake"]}}, "evidence_ids": ["nutrition"]}
+  ]
+}

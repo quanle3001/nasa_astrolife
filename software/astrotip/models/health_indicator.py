@@ -42,7 +42,8 @@ class CheckIn:
     sensor_received_at: str = ""
 
     def __post_init__(self):
-        if self.input_source not in {"manual", "sensor"}:
+        # "simulated" marks demo data so it can never be mistaken for a real measurement.
+        if self.input_source not in {"manual", "sensor", "simulated"}:
             raise ValueError("Unknown reading source.")
         if self.signal_quality not in {"unknown", "good", "poor"}:
             raise ValueError("Choose a valid signal quality.")
@@ -73,8 +74,11 @@ class Finding:
     condition_id: str
     level: str
     reason: str
+    #: Steps that involve the crew medical officer, a clinician or a mission procedure.
     actions: tuple[str, ...] = ()
     source_ids: tuple[str, ...] = ()
+    #: Simple, sourced steps the astronaut can take themselves. Empty for urgent prompts.
+    self_care: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -85,3 +89,5 @@ class Assessment:
     data_notes: tuple[str, ...]
     created_at: str
     catalog_reviewed_on: str = ""
+    #: Status of each measured indicator against a cited general reference (see rules.indicator_status).
+    indicators: tuple[dict, ...] = ()

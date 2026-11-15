@@ -72,15 +72,15 @@ def browser():
     widget.setOpenExternalLinks(True)
     widget.setReadOnly(True)
     widget.document().setDefaultStyleSheet(
-        "body { color: #e5edf8; font-family: 'Segoe UI'; font-size: 11pt; }"
-        "h1 { font-size: 23pt; color: #ffffff; }"
-        "h2 { font-size: 17pt; color: #ffffff; margin-top: 22px; }"
-        "h3 { font-size: 12pt; color: #9ee5d3; margin-top: 18px; }"
+        "body { color: #dbe7f3; font-family: 'Avenir Next', 'Segoe UI'; font-size: 10.5pt; }"
+        "h1 { font-size: 23pt; color: #f2f7ff; }"
+        "h2 { font-size: 17pt; color: #f2f7ff; margin-top: 22px; }"
+        "h3 { font-size: 11pt; color: #68dec8; margin-top: 18px; letter-spacing: 1px; }"
         "p { line-height: 140%; margin-top: 8px; margin-bottom: 12px; }"
-        "a { color: #90c6ff; }"
+        "a { color: #78afff; }"
         "li { margin-bottom: 8px; }"
-        "hr { color: #2c425c; }"
-        ".muted { color: #adbed4; }"
+        "hr { color: #284361; }"
+        ".muted { color: #91a6be; }"
     )
     return widget
 

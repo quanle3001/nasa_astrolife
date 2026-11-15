@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "reviewed_on": "2026-11-14",
+  "note": "All five NASA hazards apply to every mission. The order per mission is AstroLife's presentation choice, backed by the cited NASA statements. It is not a NASA ranking, not a probability, and it never changes assessment findings.",
+  "phases": [
+    {"id": "transit", "title": "In transit"},
+    {"id": "orbit", "title": "In orbit or habitat"},
+    {"id": "surface", "title": "Surface operations"},
+    {"id": "return", "title": "Return and recovery"}
+  ],
+  "hazards": {
+    "radiation": {
+      "summary": "Ionizing radiation from galactic cosmic rays and solar storms. It cannot be seen or felt.",
+      "why_it_matters": "NASA describes radiation exposure as increasing cancer risk and as one of the most hazardous aspects of spaceflight.",
+      "observations": ["Mission dosimeter or space-weather alerts", "Following the shelter procedure when an alert is active"],
+      "limits": "AstroLife does not measure radiation. A fingertip sensor cannot detect dose.",
+      "source_ids": ["hazards", "radiation_hazard"]
+    },
+    "isolation": {
+      "summary": "Living and working with a small group in a confined space for a long time.",
+      "why_it_matters": "NASA notes behavioral responses in isolated, confined groups; crews are selected, trained and supported to work as a team for months or years.",
+      "observations": ["Sleep quality and schedule", "Mood, anxiety or feeling isolated", "Team tension or communication problems"],
+      "limits": "Self-reports are observations, not a mental-health assessment.",
+      "source_ids": ["hazards"]
+    },
+    "distance": {
+      "summary": "Instructions, supplies and medical care become harder to receive from Earth the farther a crew travels.",
+      "why_it_matters": "Crews need planning and self-sufficiency, including handling medical events with limited support from Earth.",
+      "observations": ["Food and fluid intake", "Any concern you would normally raise with the medical team"],
+      "limits": "AstroLife cannot replace the crew medical officer or mission medical procedures.",
+      "source_ids": ["hazards", "distance_hazard"]
+    },
+    "gravity": {
+      "summary": "The body adjusts to each new gravity level: weightlessness, the Moon, Mars, and Earth again on return.",
+      "why_it_matters": "NASA lists muscles, bones, the inner ear and organs as adjusting to new gravitational loads.",
+      "observations": ["Dizziness or balance problems", "Vision changes", "Strength, exercise sessions, bone or back pain", "Racing or irregular heartbeat"],
+      "limits": "Pulse and oxygen estimates cannot measure bone density, muscle strength or eye changes.",
+      "source_ids": ["hazards"]
+    },
+    "environment": {
+      "summary": "A spacecraft is a closed habitat: temperature, pressure, lighting, noise, microbes and air quality all matter.",
+      "why_it_matters": "NASA notes that microbes transfer more easily in closed habitats and that stress hormones and the immune system can change.",
+      "observations": ["Fever, rash or infection concern", "Cabin air, CO2 or contamination alerts", "Breathing difficulty", "Sleep disruption"],
+      "limits": "SpO2 cannot detect elevated cabin CO2 or contamination.",
+      "source_ids": ["hazards", "hostile_environment_hazard"]
+    }
+  },
+  "missions": {
+    "leo": {
+      "title": "Low Earth Orbit",
+      "phases": ["orbit", "return"],
+      "hazard_order": ["gravity", "environment", "isolation", "radiation", "distance"],
+      "emphasis": {
+        "gravity": {"rationale": "NASA says the whole body must adjust to the gravity encountered on the space station, and again on Earth after return.", "source_ids": ["hazards"]},
+        "environment": {"rationale": "NASA notes that micro-organisms transfer more easily from person to person in closed habitats such as the space station.", "source_ids": ["hostile_environment_hazard"]}
+      }
+    },
+    "lunar": {
+      "title": "Lunar Mission",
+      "phases": ["transit", "orbit", "surface", "return"],
+      "hazard_order": ["radiation", "gravity", "distance", "environment", "isolation"],
+      "emphasis": {
+        "radiation": {"rationale": "A lunar mission leaves low Earth orbit. NASA describes ionizing radiation outside Earth's protective magnetic field and atmosphere as a serious risk to astronauts.", "source_ids": ["radiation_hazard"]},
+        "gravity": {"rationale": "NASA lists the Moon among the new gravity levels the body must adjust to, in addition to the spacecraft and the return to Earth.", "source_ids": ["hazards"]},
+        "distance": {"rationale": "NASA describes a lunar trip as about three days from Earth, so support is farther away than in low Earth orbit.", "source_ids": ["distance_hazard"]}
+      }
+    },
+    "mars": {
+      "title": "Mars / Deep Space",
+      "phases": ["transit", "orbit", "surface", "return"],
+      "hazard_order": ["radiation", "distance", "isolation", "gravity", "environment"],
+      "emphasis": {
+        "radiation": {"rationale": "NASA states that outside Earth's protective magnetic field and atmosphere, ionizing radiation will pose a serious risk to astronauts travelling to Mars.", "source_ids": ["radiation_hazard"]},
+        "distance": {"rationale": "NASA gives Mars as about 140 million miles from Earth on average, a mission of roughly three years, with a communication delay of up to 20 minutes one way.", "source_ids": ["distance_hazard"]},
+        "isolation": {"rationale": "NASA notes crews must work effectively as a team for months or years in space.", "source_ids": ["hazards"]},
+        "gravity": {"rationale": "NASA says astronauts on Mars would live in three-eighths of Earth's gravity for up to two years.", "source_ids": ["hazards"]}
+      }
+    }
+  }
+}
