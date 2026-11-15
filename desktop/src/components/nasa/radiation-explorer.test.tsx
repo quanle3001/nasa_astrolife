@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import catalog from "../../../../software/resources/nasa_sources.json";
+import hrrEvidence from "../../../../software/resources/hrr_evidence.json";
 import missionContext from "../../../../software/resources/mission_context.json";
 import instrumentNotes from "../../../../software/resources/radlab_instruments.json";
 import registry from "../../../../software/resources/question_registry.json";
@@ -18,7 +19,7 @@ vi.mock("uplot", () => ({ default: class { setSize = vi.fn(); destroy = vi.fn();
 vi.mock("uplot/dist/uPlot.min.css", () => ({}));
 const { RadiationExplorer } = await import("@/components/nasa/radiation-explorer");
 
-const knowledge = { catalog, mission_context: missionContext, registry } as unknown as Knowledge;
+const knowledge = { catalog, mission_context: missionContext, registry, hrr_evidence: hrrEvidence } as unknown as Knowledge;
 const series = (values: number[]) => ({ timestamps: values.map((_value, index) => `2023-01-01T0${index}:00:00`), values });
 const result = (fields: Partial<RadLabResult> = {}): RadLabResult => ({
   available: true, origin: "bundled_snapshot", error: null,

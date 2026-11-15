@@ -1,7 +1,7 @@
 import { Activity, BookOpen, ClipboardList, ListChecks, TrendingUp } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { FALLBACK_URGENT_ACTION, UrgentPanel } from "@/components/flow/urgent-panel";
-import { FlowPage, LEVEL_LABELS, measurementKind, ProvenanceBadge, SourceList } from "@/components/flow/common";
+import { EvidenceReports, FlowPage, LEVEL_LABELS, measurementKind, ProvenanceBadge, SourceList } from "@/components/flow/common";
 import { PointerGlow } from "@/components/effects/interactive";
 import { Card } from "@/components/ui/card";
 import { api } from "@/lib/api";
@@ -128,6 +128,7 @@ export function FindingsPage({ result, entryId, config, knowledge, onNext, onExi
                 {condition.research[0] && <p className="research-line">Research: {condition.research[0].text}</p>}
                 <p className="limit-line">Limit: {condition.limitations}</p>
                 <SourceList ids={[...condition.source_ids, ...finding.source_ids]} sources={catalog.sources} />
+                <EvidenceReports reports={knowledge.hrr_evidence.conditions[condition.id]} />
               </article>
             );
           })}

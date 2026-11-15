@@ -8,6 +8,7 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from astrotip.analysis.hrr_evidence import load_hrr_evidence, validate_hrr_evidence
 from astrotip.analysis.mission_context import load_mission_context, validate_mission_context, validate_profile
 from astrotip.analysis.nasa_guidance import load_catalog
 from astrotip.analysis.rules import assess
@@ -68,6 +69,32 @@ class MissionContextTests(Base):
                     {"mission_day": 2.5}, {"mission_day": True}, {"eva_recent": "yes"}, {"risk_score": 3}):
             with self.subTest(bad=bad), self.assertRaises(ValueError):
                 self.profile(**bad)
+
+
+class EvidenceReportTests(Base):
+    def test_every_health_topic_has_a_human_research_roadmap_evidence_report(self):
+        evidence = load_hrr_evidence(self.catalog)
+        self.assertEqual(set(evidence["conditions"]), {c["id"] for c in self.catalog["conditions"]})
+        for reports in evidence["conditions"].values():
+            for report in reports:
+                self.assertTrue(report["report_url"].startswith("https://humanresearchroadmap.nasa.gov/evidence/"))
+                self.assertTrue(report["report_url"].lower().endswith(".pdf"))
+                self.assertEqual(report["risk_url"], f"https://humanresearchroadmap.nasa.gov/Risks/?i={report['risk_id']}")
+                self.assertTrue(report["risk_title"].startswith("Risk of"))
+        self.assertIn("do not define a diagnosis", evidence["note"])
+
+    def test_evidence_list_rejects_missing_topics_and_foreign_links(self):
+        evidence = load_hrr_evidence(self.catalog)
+        def broken(change):
+            data = copy.deepcopy(evidence)
+            change(data)
+            with self.assertRaises(ValueError):
+                validate_hrr_evidence(data, self.catalog)
+        broken(lambda d: d["conditions"].pop("sleep"))
+        broken(lambda d: d["conditions"].update(sleep=[]))
+        broken(lambda d: d["conditions"]["sleep"][0].update(report_url="https://example.com/Sleep.pdf"))
+        broken(lambda d: d["conditions"]["sleep"][0].update(risk_url="https://humanresearchroadmap.nasa.gov/Risks/?i=1"))
+        broken(lambda d: d["conditions"]["sleep"][0].update(risk_id="100"))
 
 
 class RegistryTests(Base):

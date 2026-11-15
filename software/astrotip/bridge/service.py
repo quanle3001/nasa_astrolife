@@ -17,6 +17,7 @@ from uuid import uuid4
 
 from PySide6.QtCore import QCoreApplication, QObject, QTimer, Signal, Slot
 
+from astrotip.analysis.hrr_evidence import load_hrr_evidence
 from astrotip.analysis.mission_context import load_mission_context, validate_profile
 from astrotip.analysis.nasa_guidance import load_catalog
 from astrotip.analysis.optical_quality import OpticalSignalQuality
@@ -78,6 +79,7 @@ class BridgeService(QObject):
         self.history = HistoryStore(Path(history_path)) if history_path else HistoryStore()
         self.mission_context = load_mission_context(self.catalog)
         self.registry = load_registry(self.catalog)
+        self.hrr_evidence = load_hrr_evidence(self.catalog)
         self.state = AppStateStore(self.history.path)
         # A dataset retrieved on this computer is kept next to the health history.
         self.radlab = RadLabService(self.history.path.parent / "nasa_cache" / BUNDLED_CACHE.name, fetcher=radlab_fetcher)
@@ -323,7 +325,8 @@ class BridgeService(QObject):
     # --- Guided flow: knowledge, mission, sessions, actions ----------------
     def get_knowledge(self, _params):
         """Everything the guided flow shows that comes from curated data files."""
-        return {"catalog": self.catalog, "mission_context": self.mission_context, "registry": self.registry}
+        return {"catalog": self.catalog, "mission_context": self.mission_context, "registry": self.registry,
+                "hrr_evidence": self.hrr_evidence}
 
     def get_mission(self, _params):
         return {"profile": self.state.get_mission()}

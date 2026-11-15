@@ -103,10 +103,28 @@ export interface QuestionRegistry {
   questions: Question[];
 }
 
+/** One Human Research Roadmap risk with its NASA evidence report. */
+export interface EvidenceReport {
+  risk_id: number;
+  risk_title: string;
+  risk_url: string;
+  report_title: string;
+  report_url: string;
+}
+
+/** NASA HRP evidence reports per catalog condition, from humanresearchroadmap.nasa.gov/evidence. */
+export interface HrrEvidence {
+  reviewed_on: string;
+  source_url: string;
+  note: string;
+  conditions: Record<string, EvidenceReport[]>;
+}
+
 export interface Knowledge {
   catalog: Catalog;
   mission_context: MissionContext;
   registry: QuestionRegistry;
+  hrr_evidence: HrrEvidence;
 }
 
 export interface FollowupAction {

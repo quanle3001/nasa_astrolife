@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import type { MeasurementSource, PriorityLevel } from "@/types/backend";
-import type { Source } from "@/types/flow";
+import type { EvidenceReport, Source } from "@/types/flow";
 
 export const LEVEL_LABELS: Record<PriorityLevel, string> = {
   urgent: "Act now", review: "Medical review", watch: "Follow up", info: "No prompt",
@@ -53,6 +53,31 @@ export function SourceList({ ids, sources, className }: { ids: string[]; sources
         </li>
       ))}
     </ul>
+  );
+}
+
+/**
+ * NASA Human Research Program evidence reports for a health topic. Each entry
+ * opens the report (PDF) on the Human Research Roadmap; the risk title links
+ * to the Roadmap's page for that risk.
+ */
+export function EvidenceReports({ reports, className }: { reports: EvidenceReport[] | undefined; className?: string }) {
+  if (!reports?.length) return null;
+  const open = (url: string) => void api.openNasaSource(url).catch(() => undefined);
+  return (
+    <div className={cn("evidence-reports", className)}>
+      <p className="evidence-reports-title">NASA Human Research Program evidence report{reports.length > 1 ? "s" : ""}</p>
+      <ul>
+        {reports.map((report) => (
+          <li key={report.risk_id}>
+            <button type="button" className="evidence-report" onClick={() => open(report.report_url)} title={report.report_url}>
+              <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" /><span>{report.report_title}: {report.risk_title}</span>
+            </button>
+            <button type="button" className="evidence-risk" onClick={() => open(report.risk_url)} title={report.risk_url}>Roadmap risk page</button>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 

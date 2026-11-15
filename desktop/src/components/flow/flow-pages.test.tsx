@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import catalog from "../../../../software/resources/nasa_sources.json";
+import hrrEvidence from "../../../../software/resources/hrr_evidence.json";
 import missionContext from "../../../../software/resources/mission_context.json";
 import registry from "../../../../software/resources/question_registry.json";
 import type { AppConfig, Assessment, CheckIn } from "@/types/backend";
@@ -25,7 +26,7 @@ const { WelcomePage } = await import("@/components/flow/welcome-page");
 const { INITIAL_SENSOR } = await import("@/components/monitor/sensor-state");
 const { questionnaireView } = await import("@/questions/engine");
 
-const knowledge = { catalog, mission_context: missionContext, registry } as unknown as Knowledge;
+const knowledge = { catalog, mission_context: missionContext, registry, hrr_evidence: hrrEvidence } as unknown as Knowledge;
 const profile = (fields: Partial<MissionProfile> = {}): MissionProfile => ({ environment: "leo", phase: "orbit", mission_day: null, eva_recent: false, gravity_transition_recent: false, ...fields });
 const config: AppConfig = {
   missions: { leo: "Low Earth orbit", lunar: "Lunar mission", mars: "Mars / deep space" },
@@ -338,6 +339,9 @@ describe("CompassPage (2D body map)", () => {
     fireEvent.click(screen.getByRole("button", { name: /Show NASA research and sources/ }));
     expect(screen.getByText(/What to watch:/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Hide NASA research and sources/ })).toHaveAttribute("aria-expanded", "true");
+    // The Human Research Roadmap evidence report for this risk is one click away.
+    expect(screen.getByRole("button", { name: /Evidence Report: Risk of Cardiovascular Adaptations/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Roadmap risk page" })).toHaveAttribute("title", "https://humanresearchroadmap.nasa.gov/Risks/?i=179");
   });
 
   it("does not call an unhighlighted region healthy", () => {

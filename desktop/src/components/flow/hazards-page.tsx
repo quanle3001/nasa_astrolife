@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { ChevronDown, Globe2, Orbit, Radiation, Ruler, Users } from "lucide-react";
 import { useState } from "react";
-import { FlowPage, ProvenanceBadge, SourceList } from "@/components/flow/common";
+import { EvidenceReports, FlowPage, ProvenanceBadge, SourceList } from "@/components/flow/common";
 import { useCalmMotion } from "@/lib/motion-preference";
 import { cn } from "@/lib/utils";
 import type { HazardId, Knowledge, MissionProfile } from "@/types/flow";
@@ -62,6 +62,7 @@ export function HazardsPage({ profile, knowledge, onBack, onNext, nextLabel }: {
                         <ul className="risk-chips">{related.map((condition) => <li key={condition.id} title={condition.why_it_matters}>{condition.title}</li>)}</ul>
                         <div className="mt-3 flex flex-wrap items-center gap-2"><ProvenanceBadge kind="evidence" /></div>
                         <SourceList ids={[...detail.source_ids, ...related.flatMap((condition) => condition.source_ids)].slice(0, 6)} sources={catalog.sources} />
+                        <EvidenceReports reports={related.flatMap((condition) => knowledge.hrr_evidence.conditions[condition.id] ?? []).filter((report, index, all) => all.findIndex((item) => item.risk_id === report.risk_id) === index).slice(0, 3)} />
                       </section>
                     </div>
                   </motion.div>

@@ -4,7 +4,7 @@ import { Component, lazy, Suspense, useMemo, useState, type ReactNode } from "re
 import { BodyMap2D } from "@/components/compass/body-map-2d";
 import { COMPASS_REGIONS, regionForCondition, type RegionSummary } from "@/components/compass/regions";
 import { ActionItem } from "@/components/flow/actions-page";
-import { FlowPage, LEVEL_LABELS, measurementKind, ProvenanceBadge, SourceList } from "@/components/flow/common";
+import { EvidenceReports, FlowPage, LEVEL_LABELS, measurementKind, ProvenanceBadge, SourceList } from "@/components/flow/common";
 import { Card } from "@/components/ui/card";
 import { useCalmMotion } from "@/lib/motion-preference";
 import { cn } from "@/lib/utils";
@@ -141,6 +141,7 @@ export function CompassPage({ result, actions, knowledge, conditionTitles, onTog
                       {condition.research.map((item) => <p key={item.text} className="research-line"><strong>Research:</strong> {item.text}</p>)}
                       <p className="limit-line"><strong>Limit:</strong> {condition.limitations}</p>
                       <SourceList ids={[...condition.source_ids, ...condition.research.flatMap((item) => item.source_ids)]} sources={catalog.sources} />
+                      <EvidenceReports reports={knowledge.hrr_evidence.conditions[id]} />
                     </div>
                   )}
                   {related.length > 0 && <><h4>Your follow-up actions</h4><ul className="action-list">{related.map((action) => <ActionItem key={action.id} action={action} knowledge={knowledge} conditionTitles={conditionTitles} onToggle={onToggleAction} />)}</ul></>}

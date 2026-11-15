@@ -91,6 +91,7 @@ class BridgeTests(unittest.TestCase):
     def test_guided_check_in_reaches_the_rules_and_survives_a_restart(self):
         knowledge = self.ok("knowledge.get")
         self.assertEqual(len(knowledge["catalog"]["hazards"]), 5)
+        self.assertEqual(knowledge["hrr_evidence"]["conditions"]["sleep"][0]["risk_id"], 100)
         self.assertEqual(set(knowledge["mission_context"]["missions"]), {"leo", "lunar", "mars"})
         safety = {q["id"]: "no" for q in knowledge["registry"]["questions"] if q["domain"] == "safety"}
         self.assertFalse(self.call("session.start")["ok"], "A mission must be chosen first")

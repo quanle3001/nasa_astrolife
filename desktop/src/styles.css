@@ -715,3 +715,13 @@ input, textarea { caret-color: var(--color-space-cyan); }
 .radlab-instrument.is-selected { border-color:var(--status-watch); background:rgba(142,197,255,.1); color:#fff; }
 .radlab-instrument strong { font-size:var(--text-sm); }
 .radlab-instrument small { color:var(--color-space-muted); font-size:var(--text-xs); }
+
+/* NASA HRP evidence reports */
+.evidence-reports { margin-top:12px; border-top:1px dashed rgba(139,124,246,.3); padding-top:10px; }
+.evidence-reports-title { color:var(--color-space-subtle); font-size:var(--text-label); font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+.evidence-reports ul { margin-top:6px; display:flex; flex-direction:column; gap:6px; }
+.evidence-reports li { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; }
+.evidence-report { display:inline-flex; align-items:flex-start; gap:6px; border:0; background:transparent; padding:0; color:#c9c1ff; font-size:var(--text-xs); line-height:1.5; text-align:left; text-decoration:underline; text-decoration-color:rgba(201,193,255,.4); text-underline-offset:3px; }
+.evidence-report:hover, .evidence-risk:hover { color:#fff; }
+.evidence-report svg { margin-top:3px; }
+.evidence-risk { border:0; background:transparent; padding:0; color:var(--color-space-muted); font-size:var(--text-xs); text-decoration:underline; text-underline-offset:3px; }

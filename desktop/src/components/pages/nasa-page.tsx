@@ -1,6 +1,6 @@
 import { BookOpen } from "lucide-react";
 import { useState, type ReactNode } from "react";
-import { ProvenanceBadge, SourceList } from "@/components/flow/common";
+import { EvidenceReports, ProvenanceBadge, SourceList } from "@/components/flow/common";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { HazardId, Knowledge, MissionProfile } from "@/types/flow";
@@ -38,10 +38,12 @@ export function NasaPage({ knowledge, profile, radiation }: { knowledge: Knowled
               {condition.research.map((item) => <p key={item.text} className="research-line"><strong>Research:</strong> {item.text}</p>)}
               <p className="limit-line"><strong>Limit:</strong> {condition.limitations}</p>
               <SourceList ids={[...condition.source_ids, ...condition.research.flatMap((item) => item.source_ids)]} sources={catalog.sources} />
+              <EvidenceReports reports={knowledge.hrr_evidence.conditions[condition.id]} />
             </article>
           ))}
         </div>
         <p className="flow-footnote">{catalog.scope} Reviewed {catalog.reviewed_on}.</p>
+        <p className="flow-footnote">{knowledge.hrr_evidence.note} Reviewed {knowledge.hrr_evidence.reviewed_on}.</p>
       </Card>
     </div>
   );
