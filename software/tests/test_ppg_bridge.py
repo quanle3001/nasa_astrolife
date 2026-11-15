@@ -231,6 +231,25 @@ class BridgeSensorTests(unittest.TestCase):
         self.assertEqual(latest_event["captured_measurement"], first)
         self.assertEqual(self.service.state.open_session()["measurement"], first)
 
+    def test_measure_again_discards_the_capture_and_takes_only_fresh_reports(self):
+        session = self.start_session()
+        reader = self.connect()
+        for elapsed in (30, 31, 32):
+            reader.reading_received.emit(reading(72, 98, elapsed))
+        self.assertIsNotNone(self.service.state.open_session()["measurement"])
+
+        cleared = self.service.remeasure_session({"session_id": session["session_id"]})
+        self.assertIsNone(cleared["measurement"])
+        self.assertIsNone(self.service.latest_sensor_checkin, "The old reading can no longer be submitted")
+        reader.reading_received.emit(reading(80, 96, 33))
+        self.assertIsNone(self.service.state.open_session()["measurement"], "One report after the request is not a stable window")
+        for elapsed in (34, 35):
+            reader.reading_received.emit(reading(80, 96, elapsed))
+        captured = self.service.state.open_session()["measurement"]
+        self.assertEqual((captured["heart_rate"], captured["spo2"]), (80, 96))
+        with self.assertRaises(ValueError):
+            self.service.remeasure_session({"session_id": "not-a-session"})
+
     def test_invalid_report_stays_unavailable(self):
         reader = self.connect()
         reader.reading_received.emit(reading(heart_rate=None, spo2=None))

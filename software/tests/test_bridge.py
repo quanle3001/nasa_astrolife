@@ -125,6 +125,15 @@ class BridgeTests(unittest.TestCase):
         self.assertEqual(result["checkin"]["symptoms"], ["poor_sleep"])
         self.assertNotIn("mission", result["checkin"])
         self.assertTrue(any(action["condition_id"] == "sleep" for action in result["actions"]))
+        # Each prompt carries the astronaut's own steps and the crew step, and both become follow-up actions.
+        sleep_finding = next(f for f in result["assessment"]["findings"] if f["condition_id"] == "sleep")
+        self.assertTrue(any("same time each day" in step for step in sleep_finding["self_care"]))
+        self.assertTrue(sleep_finding["actions"])
+        sleep_actions = [action["text"] for action in result["actions"] if action["condition_id"] == "sleep"]
+        self.assertEqual(sorted(sleep_actions), sorted([*sleep_finding["self_care"], *sleep_finding["actions"]]))
+        self.assertEqual([(i["id"], i["status"]) for i in result["assessment"]["indicators"]], [("heart_rate", "in_reference"), ("spo2", "review")])
+        self.assertEqual(knowledge["care_guidance"]["measurement"]["title"], "How to take a good fingertip reading")
+        self.assertFalse(self.call("session.remeasure", {"session_id": session["session_id"]})["ok"], "A submitted check-in cannot be re-measured")
         # The result explains each prompt through the mission's NASA hazard and risk.
         sleep_trace = next(entry for entry in result["evidence_trace"] if entry["condition_id"] == "sleep")
         self.assertEqual(sleep_trace["hazards"][0]["title"], "Isolation and confinement")

@@ -115,6 +115,7 @@ class BridgeService(QObject):
             "session.current": self.current_session,
             "session.start": self.start_session,
             "session.save": self.save_session,
+            "session.remeasure": self.remeasure_session,
             "session.preview": self.preview_session,
             "session.submit": self.submit_session,
             "actions.list": self.list_actions,
@@ -445,6 +446,17 @@ class BridgeService(QObject):
         session = self._open_session(params)
         answers = self._clean_answers(session, params.get("answers", {}))
         return self.state.save_progress(session["session_id"], answers, str(params.get("position", ""))[:120])
+
+    def remeasure_session(self, params):
+        """Discard this check-in's saved reading and collect a fresh stable window.
+
+        The agreement window restarts too, so the next saved reading is made
+        only of reports that arrive after the astronaut asked to measure again.
+        """
+        session = self._open_session(params)
+        self.stability.reset()
+        self._drop_sensor_assessment()
+        return self.state.clear_measurement(session["session_id"])
 
     def preview_session(self, params):
         """Assess the answers so far without saving a result.

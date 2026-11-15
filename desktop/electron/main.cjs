@@ -142,6 +142,7 @@ handle("backend:mission-plan", "mission.plan");
 handle("backend:session-current", "session.current");
 handle("backend:session-start", "session.start");
 handle("backend:session-save", "session.save");
+handle("backend:session-remeasure", "session.remeasure");
 handle("backend:session-preview", "session.preview");
 handle("backend:session-submit", "session.submit");
 handle("backend:actions-list", "actions.list");

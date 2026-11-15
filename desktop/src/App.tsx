@@ -270,6 +270,14 @@ export default function App() {
     send({ type: "NEXT" });
   });
 
+  /** Discard the saved reading of this check-in; the backend then captures the next stable window. */
+  const remeasure = () => guarded(async () => {
+    if (!session) return;
+    const updated = await api.remeasureSession(session.session_id);
+    setSession(updated);
+    setAppState((current) => ({ ...current, open: current.open ? { ...current.open, measurement: updated.measurement } : current.open }));
+  });
+
   const answerQuestion = useCallback((question: Question, value: AnswerValue) => {
     if (!session) return;
     // The machine applies the answer; the same pure step gives the state to save.
@@ -377,7 +385,7 @@ export default function App() {
   } else if (view === "questions" && questionView) {
     screen = <QuestionsPage view={questionView} knowledge={knowledge} plan={plan} index={questionIndex} onIndex={(index) => sendQuestionnaire({ type: "GOTO", index })} onAnswer={answerQuestion} onBack={() => send({ type: "BACK" })} onDone={() => send({ type: "NEXT" })} aside={exitAside} notice={notice} error={flowError} />;
   } else if (view === "measure") {
-    screen = <MeasurePage guide={knowledge.care_guidance?.measurement} sources={knowledge.catalog.sources} sensor={sensor} measurement={session?.measurement ?? null} onConnectStart={linking} onBack={() => send({ type: "BACK" })} onSubmit={(measurement) => void submitCheckin(measurement)} busy={flowBusy} error={flowError} aside={exitAside} />;
+    screen = <MeasurePage onRemeasure={() => void remeasure()} guide={knowledge.care_guidance?.measurement} sources={knowledge.catalog.sources} sensor={sensor} measurement={session?.measurement ?? null} onConnectStart={linking} onBack={() => send({ type: "BACK" })} onSubmit={(measurement) => void submitCheckin(measurement)} busy={flowBusy} error={flowError} aside={exitAside} />;
   } else if (view === "findings" && result) {
     screen = <FindingsPage result={result.result} entryId={result.entryId} config={config} knowledge={knowledge} onNext={() => send({ type: "NEXT" })} onExit={onboarded ? () => send({ type: "EXIT" }) : undefined} />;
   } else if (view === "compass") {

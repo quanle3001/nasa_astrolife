@@ -298,6 +298,29 @@ describe("MeasurePage", () => {
     expect(onSubmit).toHaveBeenCalledWith({ use: "sensor" });
   });
 
+  it("lets the astronaut discard the saved reading and measure again", () => {
+    const onRemeasure = vi.fn();
+    const { rerender } = render(<MeasurePage sensor={INITIAL_SENSOR} measurement={savedMeasurement()} onRemeasure={onRemeasure} onConnectStart={() => undefined} onBack={() => undefined} onSubmit={() => undefined} busy={false} error="" />);
+    fireEvent.click(screen.getByRole("button", { name: "Measure again" }));
+    expect(onRemeasure).toHaveBeenCalledTimes(1);
+    rerender(<MeasurePage sensor={INITIAL_SENSOR} measurement={null} onRemeasure={onRemeasure} onConnectStart={() => undefined} onBack={() => undefined} onSubmit={() => undefined} busy={false} error="" />);
+    expect(screen.queryByRole("button", { name: "Measure again" })).not.toBeInTheDocument();
+    expect(screen.getByText("Waiting for three agreeing reports")).toBeInTheDocument();
+  });
+
+  it("explains how to take the reading and what the two numbers mean, with sources", () => {
+    const guide = { title: "How to take a good fingertip reading",
+      steps: [{ text: "Sit still and do not move the hand that is on the sensor.", source_ids: ["fda_oximetry"] }],
+      meaning: [{ indicator: "heart_rate" as const, label: "Pulse (heart rate)", text: "How many times your heart beats in a minute.", source_ids: ["fda_oximetry"] },
+        { indicator: "spo2" as const, label: "Blood oxygen (SpO2)", text: "An estimate of how much oxygen your blood is carrying.", source_ids: ["fda_oximetry"] }] };
+    render(<MeasurePage guide={guide} sources={knowledge.catalog.sources} sensor={INITIAL_SENSOR} measurement={null} onConnectStart={() => undefined} onBack={() => undefined} onSubmit={() => undefined} busy={false} error="" />);
+    expect(screen.getByText(/How to take a good fingertip reading/)).toBeInTheDocument();
+    expect(screen.getByText(/Sit still and do not move the hand/)).toBeInTheDocument();
+    expect(screen.getByText("Pulse (heart rate)")).toBeInTheDocument();
+    expect(screen.getByText(/FDA: Pulse Oximeters/)).toBeInTheDocument();
+    expect(screen.getByText(/not clinically validated/)).toBeInTheDocument();
+  });
+
   it("labels simulated data", () => {
     renderPage(
       { ...INITIAL_SENSOR, connected: true, usable: true, measurementReady: true, heartRate: 72, spo2: 98, source: "simulated", readingState: "steady", samplesCollected: 3 },

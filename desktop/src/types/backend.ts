@@ -125,6 +125,8 @@ export interface AstroLifeDesktopApi {
   currentSession: () => Promise<AppState>;
   startSession: () => Promise<Session>;
   saveSession: (sessionId: string, answers: Answers, position: string) => Promise<Session>;
+  /** Discard the saved reading of an open check-in so a new stable window is captured. */
+  remeasureSession: (sessionId: string) => Promise<Session>;
   /** Runs the Python rules on the answers so far without storing a result. */
   previewSession: (sessionId: string, answers: Answers, position: string) => Promise<SessionPreview>;
   submitSession: (sessionId: string, answers: Answers, measurement: MeasurementChoice) => Promise<SubmittedSession>;

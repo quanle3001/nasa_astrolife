@@ -41,8 +41,10 @@ function sensorStep(sensor: SensorViewState, measurement: CapturedMeasurement | 
  * keeps a check-in from being lost, and the result then says the measurement
  * is missing instead of treating it as normal.
  */
-export function MeasurePage({ sensor, measurement, onConnectStart, onBack, onSubmit, busy, error, aside, guide, sources }: {
-  /** Sourced instructions for taking the reading; shown open until a reading is saved. */
+export function MeasurePage({ sensor, measurement, onConnectStart, onBack, onSubmit, onRemeasure, busy, error, aside, guide, sources }: {
+  /** Discards the saved reading so a fresh one is collected. */
+  onRemeasure?: () => void;
+  /** Sourced instructions for taking the reading; open until the sensor is connected. */
   guide?: MeasurementGuide; sources?: Source[];
   sensor: SensorViewState; measurement: CapturedMeasurement | null; onConnectStart: (port: string) => void; onBack: () => void;
   onSubmit: (measurement: MeasurementChoice) => void; busy: boolean; error: string; aside?: React.ReactNode;
@@ -90,6 +92,7 @@ export function MeasurePage({ sensor, measurement, onConnectStart, onBack, onSub
                 Median of {measurement.report_count} agreeing reports, kept with this check-in for findings and history.
               </p>
             </div>
+            {onRemeasure && <button type="button" className="measure-fallback-submit mt-0" onClick={onRemeasure} disabled={busy}>Measure again</button>}
           </div>
           <dl className="fact-grid mt-4" aria-label="Saved pulse and blood oxygen">
             <div><dt>Heart rate</dt><dd>{measurement.heart_rate ?? "Not measured"}{measurement.heart_rate != null && " bpm"}</dd></div>
@@ -99,7 +102,7 @@ export function MeasurePage({ sensor, measurement, onConnectStart, onBack, onSub
         </section>
       )}
       <SensorDock state={sensor} onConnectStart={onConnectStart} autoConnect />
-      <MeasureGuide guide={guide} sources={sources ?? []} open={!measurement} />
+      <MeasureGuide guide={guide} sources={sources ?? []} open={!sensor.connected && !measurement} />
       <LiveMonitor state={sensor} onSimulate={simulate} />
       {(error || simulateError) && <div role="alert" className="flow-error">{error || `The simulated stream could not start: ${simulateError}`}</div>}
 

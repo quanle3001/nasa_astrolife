@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld("astrotip", {
   currentSession: () => ipcRenderer.invoke("backend:session-current"),
   startSession: () => ipcRenderer.invoke("backend:session-start"),
   saveSession: (sessionId, answers, position) => ipcRenderer.invoke("backend:session-save", { session_id: sessionId, answers, position }),
+  remeasureSession: (sessionId) => ipcRenderer.invoke("backend:session-remeasure", { session_id: sessionId }),
   previewSession: (sessionId, answers, position) => ipcRenderer.invoke("backend:session-preview", { session_id: sessionId, answers, position }),
   submitSession: (sessionId, answers, measurement) => ipcRenderer.invoke("backend:session-submit", { session_id: sessionId, answers, measurement }),
   listActions: () => ipcRenderer.invoke("backend:actions-list"),

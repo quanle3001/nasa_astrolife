@@ -173,6 +173,20 @@ class AppStateStore:
             raise ValueError("The stable measurement could not be saved.")
         return session
 
+    def clear_measurement(self, session_id: str) -> dict:
+        """Discard the saved reading of an open session so a new one can be captured.
+
+        The first stable window is kept on purpose (see `save_measurement`), so
+        replacing it is always an explicit request from the astronaut.
+        """
+        with closing(self._connect()) as connection, connection:
+            updated = connection.execute(
+                "UPDATE assessment_sessions SET measurement_json = NULL, updated_at = ? "
+                "WHERE id = ? AND status = 'in_progress'", (_now(), session_id)).rowcount
+        if not updated:
+            raise ValueError("This check-in session is no longer open.")
+        return self.get_session(session_id)
+
     def complete_session(self, session_id: str, answers: dict, entry_id: int | None, result: dict, actions: list[dict]) -> list[dict]:
         """Mark a session submitted and record its follow-up actions in one transaction."""
         now = _now()
