@@ -1,11 +1,12 @@
-import { Bounds, OrbitControls, useGLTF } from "@react-three/drei";
+import { Bounds, Html, Line, OrbitControls, useBounds, useGLTF } from "@react-three/drei";
 import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
 import { ANATOMY_BY_KEY, ATTRIBUTION, SYSTEM_LABELS, type AnatomySex, type AnatomyStructure, type AnatomySystem } from "open-anatomy-3d";
 import femaleModelUrl from "open-anatomy-3d/models/anatomy-female.glb?url";
 import maleModelUrl from "open-anatomy-3d/models/anatomy-male.glb?url";
-import { Suspense, useEffect, useMemo, useState } from "react";
-import { Color, Mesh, MeshStandardMaterial, type Object3D } from "three";
-import { COMPASS_REGIONS, regionForStructure } from "@/components/compass/regions";
+import { RotateCcw } from "lucide-react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Box3, Color, Mesh, MeshStandardMaterial, Vector3, type Object3D } from "three";
+import { COMPASS_REGIONS, regionForStructure, type RegionSummary } from "@/components/compass/regions";
 import { cn } from "@/lib/utils";
 
 /**
@@ -29,11 +30,18 @@ const DEFAULT_LAYERS: Record<AnatomySystem, boolean> = { skin: false, skeleton: 
 
 /** Never rendered: the unclothed skin surface and reproductive structures (no AstroLife health topic uses them). */
 const isExcluded = (structure: AnatomyStructure) => structure.system === "skin" || structure.category === "Reproductive";
+/** Space kept around a selected region when the camera flies to it, in metres. */
+const FOCUS_PADDING = 0.17;
+const HOVER = new Color("#bfeaff");
 const SELECTED = new Color("#46d9e8");
 const PROMPT = new Color("#f5c67b");
 const NONE = new Color("#000000");
 
+/** Distance of a guide label from the body's centre line, in metres (model units). */
+const PIN_OFFSET = 0.5;
+
 interface Part { mesh: Mesh; structure: AnatomyStructure; regionId: string | null }
+interface Pin { regionId: string; label: string; anchor: Vector3; labelAt: Vector3 }
 
 function structureOf(object: Object3D | null): AnatomyStructure | null {
   for (let current = object; current; current = current.parent) {
@@ -42,10 +50,13 @@ function structureOf(object: Object3D | null): AnatomyStructure | null {
   return null;
 }
 
-function Model({ url, layers, selected, highlighted, onPick, onHover }: {
-  url: string; layers: Record<AnatomySystem, boolean>; selected: string; highlighted: Set<string>;
-  onPick: (structure: AnatomyStructure) => void; onHover: (structure: AnatomyStructure | null) => void;
+function Model({ url, layers, selected, highlighted, hoveredKey, showPins, onPick, onPickRegion, onHover, onHoverPin }: {
+  url: string; layers: Record<AnatomySystem, boolean>; selected: string; highlighted: Set<string>; hoveredKey: string | null; showPins: boolean;
+  onPick: (structure: AnatomyStructure) => void; onPickRegion: (regionId: string) => void; onHover: (structure: AnatomyStructure | null) => void;
+  onHoverPin: (regionId: string | null) => void;
 }) {
+  const bounds = useBounds();
+  const overview = useRef(true);
   // The third argument enables the meshopt decoder the models are compressed with.
   const { scene } = useGLTF(url, false, true);
   const invalidate = useThree((state) => state.invalidate);
@@ -69,6 +80,18 @@ function Model({ url, layers, selected, highlighted, onPick, onHover }: {
     return list;
   }, [scene]);
 
+  // Guide pins: one labelled, clickable pointer per health region, anchored to a real structure.
+  const pins = useMemo(() => {
+    const result: Pin[] = [];
+    for (const region of COMPASS_REGIONS) {
+      const part = region.pin && parts.find((item) => item.structure.key === region.pin?.structure);
+      if (!region.pin || !part) continue;
+      const anchor = new Box3().setFromObject(part.mesh).getCenter(new Vector3());
+      result.push({ regionId: region.id, label: region.pin.label, anchor, labelAt: new Vector3(region.pin.side * PIN_OFFSET, anchor.y, anchor.z) });
+    }
+    return result;
+  }, [parts]);
+
   useEffect(() => {
     // When the selected region has visible structures, everything else fades so
     // the selection can be seen through what surrounds it (the heart behind the ribs).
@@ -78,24 +101,50 @@ function Model({ url, layers, selected, highlighted, onPick, onHover }: {
       const material = mesh.material as MeshStandardMaterial;
       const isSelected = regionId === selected;
       const hasPrompt = regionId !== null && highlighted.has(regionId);
-      const faded = focus && !isSelected;
-      material.emissive.copy(isSelected ? SELECTED : hasPrompt ? PROMPT : NONE);
-      material.emissiveIntensity = isSelected ? 0.6 : hasPrompt ? 0.3 : 0;
+      const isHovered = structure.key === hoveredKey;
+      const faded = focus && !isSelected && !isHovered;
+      material.emissive.copy(isHovered ? HOVER : isSelected ? SELECTED : hasPrompt ? PROMPT : NONE);
+      material.emissiveIntensity = isHovered ? 0.45 : isSelected ? 0.7 : hasPrompt ? 0.3 : 0;
       material.transparent = faded;
-      material.opacity = faded ? 0.32 : 1;
+      material.opacity = faded ? 0.5 : 1;
       material.depthWrite = !faded;
       material.needsUpdate = true;
     }
     invalidate();
-  }, [parts, layers, selected, highlighted, invalidate]);
+  }, [parts, layers, selected, highlighted, hoveredKey, invalidate]);
+
+  // Fly the camera to the selected region. The first view is the whole body, so the
+  // astronaut sees where everything is before anything zooms.
+  useEffect(() => {
+    if (overview.current) { overview.current = false; return; }
+    const box = new Box3();
+    for (const part of parts) if (part.regionId === selected && layers[part.structure.system]) box.expandByObject(part.mesh);
+    if (box.isEmpty()) bounds.refresh().fit();
+    else bounds.refresh(box.expandByScalar(FOCUS_PADDING)).fit();
+    invalidate();
+    // Zoom follows the selection and the layers that show it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected, layers, parts]);
 
   return (
-    <primitive
-      object={scene}
-      onClick={(event: ThreeEvent<MouseEvent>) => { event.stopPropagation(); const structure = structureOf(event.object); if (structure) onPick(structure); }}
-      onPointerOver={(event: ThreeEvent<PointerEvent>) => { event.stopPropagation(); onHover(structureOf(event.object)); }}
-      onPointerOut={() => onHover(null)}
-    />
+    <>
+      <primitive
+        object={scene}
+        onClick={(event: ThreeEvent<MouseEvent>) => { event.stopPropagation(); const structure = structureOf(event.object); if (structure) onPick(structure); }}
+        onPointerOver={(event: ThreeEvent<PointerEvent>) => { event.stopPropagation(); onHover(structureOf(event.object)); }}
+        onPointerOut={() => onHover(null)}
+      />
+      {showPins && pins.map((pin) => (
+        <group key={pin.regionId}>
+          <Line points={[pin.anchor, pin.labelAt]} color={pin.regionId === selected ? "#46d9e8" : "#8fa6c4"} lineWidth={1} transparent opacity={0.75} />
+          <Html position={pin.labelAt} center zIndexRange={[15, 0]}>
+            <button type="button" className={cn("anatomy-pin", pin.regionId === selected && "is-selected", highlighted.has(pin.regionId) && "has-prompt")} aria-pressed={pin.regionId === selected} onClick={() => onPickRegion(pin.regionId)} onPointerEnter={() => onHoverPin(pin.regionId)} onPointerLeave={() => onHoverPin(null)} onFocus={() => onHoverPin(pin.regionId)} onBlur={() => onHoverPin(null)}>
+              {pin.label}{highlighted.has(pin.regionId) && <span className="sr-only"> · has a prompt to review</span>}
+            </button>
+          </Html>
+        </group>
+      ))}
+    </>
   );
 }
 
@@ -108,15 +157,60 @@ function layersForRegion(regionId: string): AnatomySystem[] {
   return [...systems];
 }
 
-export default function AnatomyViewer({ selected, highlighted, onSelect, calm }: {
+/**
+ * Floating card that follows the cursor over the model. It gives the short
+ * version (what this is, what was recorded, whether there is a prompt) so the
+ * astronaut can explore by hovering and open the full panel only when wanted.
+ */
+function HoverCard({ label, summary }: { label: string; summary: RegionSummary | null }) {
+  return (
+    <>
+      <strong>{label}</strong>
+      {summary ? (
+        <>
+          <span className="hover-card-region">{summary.title}</span>
+          {summary.measurement && <span>{summary.measurement}{summary.simulated ? " · simulated, not a measurement" : ""}</span>}
+          {summary.prompt
+            ? <span className="hover-card-prompt">Prompt to review{summary.promptCount > 1 ? ` (${summary.promptCount})` : ""}: {summary.prompt}</span>
+            : <span>No prompt from your latest check-in. Not examined, not ruled out.</span>}
+          <span className="hover-card-risks">NASA research: {summary.risks.join(" · ")}</span>
+          <em>Select to open the details</em>
+        </>
+      ) : <span>No AstroLife health topic is linked to this structure.</span>}
+    </>
+  );
+}
+
+export default function AnatomyViewer({ selected, highlighted, onSelect, calm, regionInfo }: {
   selected: string; highlighted: Set<string>; onSelect: (regionId: string) => void;
   /** True when motion is paused or reduced: the camera stops easing. */
   calm?: boolean;
+  /** Short facts per region for the hover card. */
+  regionInfo?: Record<string, RegionSummary>;
 }) {
+  const card = useRef<HTMLDivElement>(null);
+  const [hoveredPin, setHoveredPin] = useState<string | null>(null);
+  /** Keep the card next to the cursor without re-rendering on every move. */
+  const follow = (event: React.PointerEvent<HTMLDivElement>) => {
+    const element = card.current;
+    if (!element) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    // Flip to the other side of the cursor near the right and bottom edges.
+    const left = x > rect.width - 280 ? x - 268 : x + 18;
+    const top = y > rect.height - 190 ? y - 170 : y + 18;
+    element.style.transform = `translate3d(${Math.max(8, left)}px, ${Math.max(8, top)}px, 0)`;
+  };
   const [sex, setSex] = useState<AnatomySex>("male");
   const [layers, setLayers] = useState(DEFAULT_LAYERS);
   const [hovered, setHovered] = useState<AnatomyStructure | null>(null);
   const [picked, setPicked] = useState<AnatomyStructure | null>(null);
+  const [showPins, setShowPins] = useState(true);
+  const [view, setView] = useState(0);
+  // A slow turn shows the model is three-dimensional; it stops at the first interaction.
+  const [spinning, setSpinning] = useState(!calm);
+  const controls = useRef<{ reset: () => void } | null>(null);
 
   // Selecting a region (here or from the list) reveals the layer it lives in.
   useEffect(() => {
@@ -131,27 +225,38 @@ export default function AnatomyViewer({ selected, highlighted, onSelect, calm }:
   };
   const shown = hovered ?? picked;
   const shownRegion = shown ? regionForStructure(shown) : null;
+  const hoverRegion = hovered ? regionForStructure(hovered) : hoveredPin ? COMPASS_REGIONS.find((region) => region.id === hoveredPin) ?? null : null;
+  const hoverLabel = hovered?.label ?? hoverRegion?.pin?.label ?? null;
 
   return (
     <div className="anatomy-viewer">
-      <div className="anatomy-canvas" style={{ cursor: hovered ? "pointer" : "grab" }}>
-        <Canvas frameloop="demand" dpr={[1, 1.75]} camera={{ fov: 32, position: [0, 1, 4.2] }} role="img" aria-label="3D anatomical model. Drag to rotate, scroll to zoom, select a structure to see its health information. The same regions are listed as buttons below.">
-          <ambientLight intensity={0.75} />
-          <hemisphereLight args={["#cfe9ff", "#0b1424", 0.9]} />
-          <directionalLight position={[2.5, 4, 3.5]} intensity={1.5} />
-          <directionalLight position={[-3, 2, -2.5]} intensity={0.55} />
+      <ol className="anatomy-guide" aria-label="How to use the 3D model">
+        <li><strong>Hover, then pick.</strong> Hovering a part shows a short summary; select it or a label for details.</li>
+        <li><strong>Read the panel.</strong> Your observations, AstroLife's prompts and NASA research appear beside it.</li>
+        <li><strong>Look around.</strong> The view zooms to your selection. Drag to rotate, scroll to zoom, Reset view to step back.</li>
+      </ol>
+      <div className="anatomy-canvas" style={{ cursor: hovered ? "pointer" : "grab" }} onPointerMove={follow} onPointerLeave={() => setHoveredPin(null)}>
+        <div ref={card} className={cn("hover-card", hoverLabel && "is-visible")} role="status" aria-live="polite">
+          {hoverLabel && <HoverCard label={hoverLabel} summary={hoverRegion ? regionInfo?.[hoverRegion.id] ?? null : null} />}
+        </div>
+        <Canvas frameloop={spinning ? "always" : "demand"} dpr={[1, 1.75]} camera={{ fov: 32, position: [0, 1, 4.2] }} role="img" aria-label="3D anatomical model. Drag to rotate, scroll to zoom, select a structure to see its health information. The same regions are listed as buttons below.">
+          <ambientLight intensity={1.15} />
+          <hemisphereLight args={["#e6f4ff", "#1a2740", 1.2]} />
+          <directionalLight position={[2.5, 4, 3.5]} intensity={2.2} />
+          <directionalLight position={[-3, 2, -2.5]} intensity={0.9} />
           <Suspense fallback={null}>
-            <Bounds fit clip observe margin={1.08} key={sex}>
-              <Model url={MODEL_URLS[sex]} layers={layers} selected={selected} highlighted={highlighted} onPick={pick} onHover={setHovered} />
+            <Bounds fit clip observe margin={1.02} maxDuration={0.9} key={`${sex}-${view}`}>
+              <Model url={MODEL_URLS[sex]} layers={layers} selected={selected} highlighted={highlighted} hoveredKey={hovered?.key ?? null} showPins={showPins} onPick={(structure) => { setSpinning(false); pick(structure); }} onPickRegion={(regionId) => { setSpinning(false); setPicked(null); onSelect(regionId); }} onHover={setHovered} onHoverPin={setHoveredPin} />
             </Bounds>
           </Suspense>
-          <OrbitControls makeDefault enablePan={false} enableDamping={!calm} minDistance={0.6} maxDistance={7} />
+          <OrbitControls ref={controls as never} makeDefault enablePan={false} enableDamping={!calm} minDistance={0.25} maxDistance={7} autoRotate={spinning} autoRotateSpeed={0.9} onStart={() => setSpinning(false)} />
         </Canvas>
         <p className="anatomy-readout" aria-live="polite">
           {shown
             ? <><strong>{shown.label}</strong> · {shown.category}{shownRegion ? ` · ${shownRegion.title}` : " · no AstroLife health topic is linked to this structure"}</>
-            : "Drag to rotate · scroll to zoom · select a structure"}
+            : "Select a label or a structure to see its health information"}
         </p>
+        <button type="button" className="anatomy-reset" onClick={() => { controls.current?.reset(); setView((value) => value + 1); }}><RotateCcw className="size-3.5" aria-hidden="true" /> Reset view</button>
       </div>
       <div className="anatomy-controls">
         <fieldset className="anatomy-layers">
@@ -163,6 +268,10 @@ export default function AnatomyViewer({ selected, highlighted, onSelect, calm }:
             </label>
           ))}
         </fieldset>
+        <label className={cn("layer-chip", showPins && "is-on")}>
+          <input type="checkbox" checked={showPins} onChange={() => setShowPins((value) => !value)} />
+          Guide labels
+        </label>
         <div className="anatomy-model" role="radiogroup" aria-label="Body model">
           {(["male", "female"] as const).map((option) => (
             <button key={option} type="button" role="radio" aria-checked={sex === option} className={cn("layer-chip", sex === option && "is-on")} onClick={() => { setSex(option); setPicked(null); }}>{option === "male" ? "Male model" : "Female model"}</button>

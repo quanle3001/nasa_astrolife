@@ -333,6 +333,11 @@ describe("CompassPage (2D body map)", () => {
     expect(within(screen.getByRole("list", { name: "Related NASA hazards" })).getByText("Gravity fields")).toBeInTheDocument();
     expect(screen.getByText("NASA scientific evidence")).toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: /Mark done: Compare with your baseline/ })).toBeInTheDocument();
+    // NASA research detail is folded away until the astronaut asks for it.
+    expect(screen.queryByText(/What to watch:/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Show NASA research and sources/ }));
+    expect(screen.getByText(/What to watch:/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Hide NASA research and sources/ })).toHaveAttribute("aria-expanded", "true");
   });
 
   it("does not call an unhighlighted region healthy", () => {

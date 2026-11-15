@@ -1,8 +1,8 @@
 import { AnimatePresence, motion } from "motion/react";
-import { Info } from "lucide-react";
+import { ChevronDown, Info } from "lucide-react";
 import { Component, lazy, Suspense, useMemo, useState, type ReactNode } from "react";
 import { BodyMap2D } from "@/components/compass/body-map-2d";
-import { COMPASS_REGIONS, regionForCondition } from "@/components/compass/regions";
+import { COMPASS_REGIONS, regionForCondition, type RegionSummary } from "@/components/compass/regions";
 import { ActionItem } from "@/components/flow/actions-page";
 import { FlowPage, LEVEL_LABELS, measurementKind, ProvenanceBadge, SourceList } from "@/components/flow/common";
 import { Card } from "@/components/ui/card";
@@ -52,6 +52,20 @@ export function CompassPage({ result, actions, knowledge, conditionTitles, onTog
   const [mode, setMode] = useState<"3d" | "2d">(canRender3d ? "3d" : "2d");
   const [viewerFailed, setViewerFailed] = useState(false);
   const region = COMPASS_REGIONS.find((item) => item.id === selected) ?? COMPASS_REGIONS[0];
+  // NASA research is folded away until asked for, so the panel opens on the astronaut's own data.
+  const [openResearch, setOpenResearch] = useState<Set<string>>(new Set());
+  const toggleResearch = (id: string) => setOpenResearch((current) => { const next = new Set(current); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+  const regionInfo = useMemo(() => Object.fromEntries(COMPASS_REGIONS.map((item): [string, RegionSummary] => {
+    const value = item.measurement && result ? result.checkin[item.measurement] : null;
+    const prompts = item.conditionIds.map((id) => findings.find((finding) => finding.condition_id === id && finding.level !== "info")).filter((finding) => finding !== undefined);
+    return [item.id, {
+      title: item.title, about: item.about,
+      measurement: item.measurement ? (value != null ? `${value}${item.measurement === "heart_rate" ? " bpm" : "% SpO₂"} recorded` : "No measurement recorded") : null,
+      simulated: value != null && result?.checkin.input_source === "simulated",
+      prompt: prompts[0]?.reason ?? null, promptCount: prompts.length,
+      risks: item.conditionIds.map((id) => catalog.conditions.find((condition) => condition.id === id)?.title ?? id),
+    }];
+  })), [findings, result, catalog]);
   const checkin = result?.checkin;
   const measured = region.measurement && checkin ? checkin[region.measurement] : null;
   const kind = measurementKind(checkin?.input_source, measured != null);
@@ -69,7 +83,7 @@ export function CompassPage({ result, actions, knowledge, conditionTitles, onTog
         {mode === "3d" && !viewerFailed ? (
           <ViewerBoundary onError={() => { setViewerFailed(true); setMode("2d"); }}>
             <Suspense fallback={<p className="compass-loading" aria-busy="true">Loading the 3D anatomical model…</p>}>
-              <AnatomyViewer selected={selected} highlighted={highlighted} onSelect={setSelected} calm={Boolean(reduced)} />
+              <AnatomyViewer selected={selected} highlighted={highlighted} onSelect={setSelected} calm={Boolean(reduced)} regionInfo={regionInfo} />
             </Suspense>
           </ViewerBoundary>
         ) : <BodyMap2D selected={selected} highlighted={highlighted} onSelect={setSelected} />}
@@ -118,10 +132,17 @@ export function CompassPage({ result, actions, knowledge, conditionTitles, onTog
                   <div className="flex flex-wrap items-center justify-between gap-2"><h3>{condition.title}</h3><ProvenanceBadge kind="evidence" /></div>
                   <p>{condition.why_it_matters}</p>
                   <ul className="risk-chips" aria-label="Related NASA hazards">{hazards.map((hazard) => <li key={hazard}>{hazard}</li>)}</ul>
-                  <p className="research-line"><strong>What to watch:</strong> {condition.monitoring}</p>
-                  {condition.research.map((item) => <p key={item.text} className="research-line"><strong>Research:</strong> {item.text}</p>)}
-                  <p className="limit-line"><strong>Limit:</strong> {condition.limitations}</p>
-                  <SourceList ids={[...condition.source_ids, ...condition.research.flatMap((item) => item.source_ids)]} sources={catalog.sources} />
+                  <button type="button" className="research-toggle" aria-expanded={openResearch.has(id)} aria-controls={`research-${id}`} onClick={() => toggleResearch(id)}>
+                    <ChevronDown className={cn("size-4 transition-transform", openResearch.has(id) && "rotate-180")} aria-hidden="true" /> {openResearch.has(id) ? "Hide" : "Show"} NASA research and sources
+                  </button>
+                  {openResearch.has(id) && (
+                    <div id={`research-${id}`}>
+                      <p className="research-line"><strong>What to watch:</strong> {condition.monitoring}</p>
+                      {condition.research.map((item) => <p key={item.text} className="research-line"><strong>Research:</strong> {item.text}</p>)}
+                      <p className="limit-line"><strong>Limit:</strong> {condition.limitations}</p>
+                      <SourceList ids={[...condition.source_ids, ...condition.research.flatMap((item) => item.source_ids)]} sources={catalog.sources} />
+                    </div>
+                  )}
                   {related.length > 0 && <><h4>Your follow-up actions</h4><ul className="action-list">{related.map((action) => <ActionItem key={action.id} action={action} knowledge={knowledge} conditionTitles={conditionTitles} onToggle={onToggleAction} />)}</ul></>}
                 </section>
               );

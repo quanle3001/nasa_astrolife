@@ -12,20 +12,40 @@ export interface CompassRegion {
   conditionIds: string[];
   /** Which recorded measurement belongs to this region, if any. */
   measurement?: "heart_rate" | "spo2";
+  /**
+   * Guide pin on the 3D model: a short label, the catalog structure it points
+   * at, and the side of the body the label sits on (-1 or 1 along the x axis).
+   */
+  pin?: { label: string; structure: string; side: -1 | 1 };
 }
 
 export const COMPASS_REGIONS: CompassRegion[] = [
-  { id: "brain", title: "Brain and behavior", about: "Sleep, fatigue, mood and teamwork.", conditionIds: ["sleep", "behavioral"] },
-  { id: "eyes", title: "Eyes", about: "Vision changes and spaceflight-associated neuro-ocular syndrome.", conditionIds: ["sans"] },
+  { id: "brain", title: "Brain and behavior", about: "Sleep, fatigue, mood and teamwork.", conditionIds: ["sleep", "behavioral"], pin: { label: "Brain", structure: "brain", side: 1 } },
+  { id: "eyes", title: "Eyes", about: "Vision changes and spaceflight-associated neuro-ocular syndrome.", conditionIds: ["sans"], pin: { label: "Eyes", structure: "eye_r", side: -1 } },
   { id: "inner_ear", title: "Inner ear and balance", about: "Dizziness, motion sickness and sensorimotor adaptation.", conditionIds: ["vestibular"] },
-  { id: "heart", title: "Heart and circulation", about: "Cardiovascular adaptation; your recorded pulse appears here.", conditionIds: ["cardiovascular"], measurement: "heart_rate" },
-  { id: "lungs", title: "Lungs and oxygen", about: "Oxygenation; your recorded SpO₂ estimate appears here.", conditionIds: ["hypoxia"], measurement: "spo2" },
-  { id: "digestive", title: "Nutrition", about: "Food and fluid intake.", conditionIds: ["nutrition"] },
-  { id: "immune", title: "Immune system", about: "Infection concerns and immune changes.", conditionIds: ["immune"] },
-  { id: "muscles", title: "Muscles and fitness", about: "Strength, exercise and aerobic capacity.", conditionIds: ["fitness"] },
-  { id: "skeleton", title: "Bones", about: "Bone changes and fracture risk.", conditionIds: ["bone"] },
+  { id: "heart", title: "Heart and circulation", about: "Cardiovascular adaptation; your recorded pulse appears here.", conditionIds: ["cardiovascular"], measurement: "heart_rate", pin: { label: "Heart", structure: "heart", side: 1 } },
+  { id: "lungs", title: "Lungs and oxygen", about: "Oxygenation; your recorded SpO₂ estimate appears here.", conditionIds: ["hypoxia"], measurement: "spo2", pin: { label: "Lungs", structure: "lung_r", side: -1 } },
+  { id: "digestive", title: "Nutrition", about: "Food and fluid intake.", conditionIds: ["nutrition"], pin: { label: "Nutrition", structure: "stomach", side: 1 } },
+  { id: "immune", title: "Immune system", about: "Infection concerns and immune changes.", conditionIds: ["immune"], pin: { label: "Immune", structure: "thymus", side: -1 } },
+  { id: "muscles", title: "Muscles and fitness", about: "Strength, exercise and aerobic capacity.", conditionIds: ["fitness"], pin: { label: "Muscles", structure: "quadriceps_r", side: -1 } },
+  { id: "skeleton", title: "Bones", about: "Bone changes and fracture risk.", conditionIds: ["bone"], pin: { label: "Bones", structure: "femur_l", side: 1 } },
   { id: "whole_body", title: "Whole body and mission", about: "Radiation, EVA and medical readiness affect the whole body.", conditionIds: ["radiation", "eva", "medical_support"] },
 ];
+
+/** Short facts about a region for the hover card on the body view. */
+export interface RegionSummary {
+  title: string;
+  about: string;
+  /** Recorded value for this region, or a statement that none was recorded. */
+  measurement: string | null;
+  /** True when that value is simulated demo data. */
+  simulated: boolean;
+  /** Reason text of the first rule-based prompt for this region, if any. */
+  prompt: string | null;
+  promptCount: number;
+  /** Titles of the NASA catalog risks shown for this region. */
+  risks: string[];
+}
 
 export const regionForCondition = (conditionId: string) => COMPASS_REGIONS.find((region) => region.conditionIds.includes(conditionId));
 
