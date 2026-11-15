@@ -1,6 +1,6 @@
 import { motion, useReducedMotion } from "motion/react";
 import { ClipboardCheck, Database, HeartPulse, Orbit, Sparkles, UserRound } from "lucide-react";
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { StatusBadge } from "@/components/spaceui/status-badge";
 import { MISSIONS } from "@/lib/missions";
 import { cn } from "@/lib/utils";
@@ -21,6 +21,9 @@ export function AppShell({ page, setPage, mission, connected, backendReady, chil
 }) {
   const reduced = useReducedMotion();
   const missionData = MISSIONS[mission];
+  const scroller = useRef<HTMLElement>(null);
+  // Each page starts at its top; the shared scroll container otherwise keeps the previous page's offset.
+  useEffect(() => { scroller.current?.scrollTo({ top: 0 }); }, [page]);
   return (
     <div className="cosmic-app relative min-h-screen text-slate-100" data-mission={mission}>
       <header className="space-navbar app-drag-region">
@@ -46,7 +49,7 @@ export function AppShell({ page, setPage, mission, connected, backendReady, chil
         </div>
       </header>
 
-      <main className="cosmic-scroll">
+      <main ref={scroller} className="cosmic-scroll">
         {children}
         <footer className="space-footer"><Sparkles className="size-3" /> AstroTip educational prototype · Local-first crew wellness interface</footer>
       </main>
