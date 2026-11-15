@@ -23,4 +23,23 @@ describe("MissionSelector", () => {
     expect(screen.getByText("NASA / JSC")).toBeInTheDocument();
     expect(screen.getByText(/NASA does not endorse AstroTip/i)).toBeInTheDocument();
   });
+
+  it("supports arrow-key selection with a single tab stop", () => {
+    const onChange = vi.fn();
+    render(<MissionSelector value="lunar" onChange={onChange} />);
+    const radios = screen.getAllByRole("radio");
+    expect(radios.map((radio) => radio.tabIndex)).toEqual([-1, 0, -1]);
+    fireEvent.keyDown(radios[1], { key: "ArrowRight" });
+    expect(onChange).toHaveBeenLastCalledWith("mars");
+    fireEvent.keyDown(radios[1], { key: "ArrowLeft" });
+    expect(onChange).toHaveBeenLastCalledWith("leo");
+  });
+
+  it("marks the active mission in text and labels clip types", () => {
+    render(<MissionSelector value="mars" onChange={() => undefined} />);
+    expect(screen.getByRole("radio", { name: /Active mission/i })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByText("Visualization")).toBeInTheDocument();
+    expect(screen.getByText("Footage")).toBeInTheDocument();
+    expect(screen.getByText(/NASA \/ JPL · PIA24264/)).toBeInTheDocument();
+  });
 });

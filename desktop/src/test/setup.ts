@@ -21,3 +21,6 @@ class ResizeObserverStub {
 }
 
 Object.defineProperty(window, "ResizeObserver", { writable: true, value: ResizeObserverStub });
+
+// jsdom does not implement element scrolling; AppShell resets scroll on page change.
+if (!Element.prototype.scrollTo) Element.prototype.scrollTo = () => undefined;
