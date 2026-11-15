@@ -1,3 +1,5 @@
+import type { Answers, AppState, FollowupAction, Knowledge, MeasurementChoice, MissionProfile, Session, SessionPreview, SubmittedSession } from "@/types/flow";
+
 export type MissionId = "leo" | "lunar" | "mars";
 export type PriorityLevel = "urgent" | "review" | "watch" | "info";
 /** Where a measurement came from. "simulated" is demo data and is always labelled. */
@@ -93,6 +95,19 @@ export interface AstroLifeDesktopApi {
   assess: (checkin: CheckIn) => Promise<AssessmentBundle>;
   saveAssessment: (assessmentId: string) => Promise<{ saved: boolean; entry_id: number }>;
   listHistory: () => Promise<{ entries: HistoryEntry[] }>;
+  /** Curated NASA catalog, mission context and question registry, validated by the backend. */
+  getKnowledge: () => Promise<Knowledge>;
+  getMission: () => Promise<{ profile: MissionProfile | null }>;
+  saveMission: (profile: MissionProfile) => Promise<{ profile: MissionProfile }>;
+  /** Launch state: saved mission, resumable check-in, latest result and follow-up actions. */
+  currentSession: () => Promise<AppState>;
+  startSession: () => Promise<Session>;
+  saveSession: (sessionId: string, answers: Answers, position: string) => Promise<Session>;
+  /** Runs the Python rules on the answers so far without storing a result. */
+  previewSession: (sessionId: string, answers: Answers, position: string) => Promise<SessionPreview>;
+  submitSession: (sessionId: string, answers: Answers, measurement: MeasurementChoice) => Promise<SubmittedSession>;
+  listActions: () => Promise<{ actions: FollowupAction[] }>;
+  updateAction: (id: number, status: FollowupAction["status"]) => Promise<{ action: FollowupAction }>;
   openNasaSource: (url: string) => Promise<boolean>;
   onBackendEvent: (callback: (event: BackendEvent) => void) => () => void;
 }

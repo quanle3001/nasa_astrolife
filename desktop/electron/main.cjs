@@ -134,6 +134,16 @@ handle("backend:sensor-simulate", "sensor.simulate");
 handle("backend:assess", "health.assess");
 handle("backend:save", "health.save");
 handle("backend:history", "history.list");
+handle("backend:knowledge", "knowledge.get");
+handle("backend:mission-get", "mission.get");
+handle("backend:mission-save", "mission.save");
+handle("backend:session-current", "session.current");
+handle("backend:session-start", "session.start");
+handle("backend:session-save", "session.save");
+handle("backend:session-preview", "session.preview");
+handle("backend:session-submit", "session.submit");
+handle("backend:actions-list", "actions.list");
+handle("backend:actions-update", "actions.update");
 
 ipcMain.handle("external:nasa", async (event, value) => {
   if (!validSender(event)) throw new Error("Rejected untrusted desktop request.");
