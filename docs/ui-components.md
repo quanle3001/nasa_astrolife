@@ -123,3 +123,28 @@ Rules enforced by the code:
   black-hole crown pauses while a clip plays.
 
 NASA does not endorse AstroTip, and NASA insignia are not used as branding.
+
+## 5. Design review: Impeccable and UI UX Pro Max
+
+The UI was reviewed against two design skills: Impeccable 4.9.1 (Operate mode
+and craft floor) and UI UX Pro Max (`--design-system` for a dark health
+monitoring console, plus the `ux` guidelines). Impeccable's context launcher
+needs a downloaded engine binary, so its documented fallback was used: the
+playbooks were applied directly against the running app. There is no
+PRODUCT.md or DESIGN.md yet.
+
+| Finding | Source | Change |
+|---|---|---|
+| Endless video and loops with no way to stop them (WCAG 2.2.2) | Both | Navbar "Pause background motion" toggle, persisted; OS reduced motion still honored |
+| `slate-500` small text at 4.02:1; placeholders at ~3.6:1 | UUPM priority 1, Impeccable verify | All text on tokens, ≥4.5:1 on every page (scripted scan) |
+| Telemetry could look live while frozen | UUPM real-time/operations pattern | Update time, "Stalled" after 10 s without data, dimmed old values |
+| Numeric errors only shown at the bottom after a round trip | UUPM forms rules | Inline format errors with `aria-describedby`, focus first invalid field |
+| Archive flashed "No saved check-ins" while loading | Impeccable states, UUPM loading | Skeleton with `aria-busy` until the first response |
+| Focused fields could hide under the sticky bar | UUPM focus not obscured | `scroll-padding` on the scroll container |
+| Kickers above headings, decorative 01/02/03, gradient heading, zero-offset halos, fluid page titles, long page-load choreography | Impeccable craft floor and Operate mode | Removed or replaced (see the `style(ui): apply the Impeccable craft floor` commit) |
+
+Deliberately kept because the project brief pins them: the hero product label
+("NASA-inspired crew health console") and the Space Portfolio gradient on
+"in orbit."; the decorative atmosphere (black hole, starfield, floating
+cards) the brief asked for, now pausable.
+
