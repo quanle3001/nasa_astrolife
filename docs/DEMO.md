@@ -13,7 +13,13 @@ every prompt is traced back to NASA evidence and the astronaut's own answers.
 ## Before judging
 
 1. Plug in the ESP32. Close PlatformIO's serial monitor.
-2. Start with a clean demo database so the first-launch flow appears:
+2. Make sure no other AstroLife window or leftover process is running (see
+   "Known limitations"). On macOS:
+
+   ```bash
+   pkill -f "nasa_astrotip/desktop/node_modules/electron"
+   ```
+3. Start with a clean demo database so the first-launch flow appears:
 
    ```bash
    cd desktop && ASTROTIP_HISTORY_PATH="$HOME/astrolife-demo.sqlite3" npm start
@@ -21,13 +27,13 @@ every prompt is traced back to NASA evidence and the astronaut's own answers.
 
    Delete `~/astrolife-demo.sqlite3` to reset the demo. Your real history is
    not touched.
-3. **Rehearse the measurement step with a finger on the sensor.** Transport and
+4. **Rehearse the measurement step with a finger on the sensor.** Transport and
    timing are verified on the real board. A reading with a finger on the sensor
    has not yet been verified in the React app (see [HARDWARE.md](HARDWARE.md)).
    Check how many seconds it takes to reach a usable reading and plan for it.
-4. Check the network if you plan to show "Retrieve again from NASA". The demo
+5. Check the network if you plan to show "Retrieve again from NASA". The demo
    does not need it: both NASA datasets are bundled and verified.
-5. Keep the window large (the screens were checked at 1440 × 888).
+6. Keep the window large (the screens were checked at 1440 × 888).
 
 ## Script (3 minutes)
 
@@ -118,9 +124,14 @@ encrypted storage.
 - A reading with a finger on the sensor has not yet been verified in the React
   app in this branch (transport, timing and the no-contact path are).
 - RadLab unit and two instrument descriptions are unverified and shown as such.
-- One intermittent crash of the Electron window was seen once in automated
-  walkthroughs when switching the Compass from 3D to 2D; it did not repeat in
-  later runs. If it happens, relaunch: the check-in resumes.
+- In automated walkthroughs on 2026-11-15, the Electron window crashed once
+  when switching the Compass from 3D to 2D. The cause was not found. Four later
+  full walkthroughs and a separate 3D → 2D → 3D test completed without it. If it
+  happens, relaunch: the check-in resumes.
+- That crash left an Electron process running in the background. While it was
+  running, two of three relaunches were still on the loading screen after 3.5
+  seconds. After it was closed, seven of seven relaunches reached the dashboard.
+  Close any leftover AstroLife process before the demo.
 - The packaged app has not been re-verified since pandas and Pydantic were
   added; run from source for the demo.
 - The React app has been run on macOS only.
