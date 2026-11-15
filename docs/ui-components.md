@@ -148,3 +148,24 @@ Deliberately kept because the project brief pins them: the hero product label
 "in orbit."; the decorative atmosphere (black hole, starfield, floating
 cards) the brief asked for, now pausable.
 
+### Impeccable critique and polish (single-context run)
+
+Critique scored **23/40 (Acceptable)** on Nielsen's heuristics for this
+Operate surface. Its detector and snapshot storage need the downloaded engine
+binary, so evidence came from CDP checks on the running app instead. The
+polish pass fixed:
+
+| Severity | Issue | Fix |
+|---|---|---|
+| P1 | Failed serial connect showed only "Disconnected" (backend error overwritten) | Fault kept as a `role="alert"` with recovery guidance; real linking state |
+| P2 | Focus dropped to `<body>` after the NASA media dialog | Focus returns to the opening expand button |
+| P2 | Telemetry had one heading | `h2` for ESP32 uplink, Live interpretation, Local-first by design |
+| P2 | "Archive" vs "Health history" vs "Save to history" | Nav renamed "History" |
+| P2 | Navbar collided at 200% zoom (490 px) | Duplicate home mark hidden below 600 px |
+
+Left as recommendations (structural, beyond polish): keyboard shortcuts for
+pages and submit (`/impeccable harden`), the duplicate mission select plus
+cards (`/impeccable distill`), grouping the 17 symptom checkboxes
+(`/impeccable layout`), contextual help for SpO2 estimates and priorities
+(`/impeccable clarify`).
+
