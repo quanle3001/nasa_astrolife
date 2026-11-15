@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QLineEdit, QMessageBox, QPushButton, QScrollArea, QTextEdit, QVBoxLayout, QWidget,
 )
 
-from astrotip.models.health_indicator import CheckIn, MISSION_LABELS, SYMPTOMS
+from astrotip.models.health_indicator import CheckIn, SYMPTOMS
 from astrotip.ui.common import label
 
 
@@ -25,12 +25,8 @@ class CheckinPage(QWidget):
         scroll.setWidgetResizable(True)
         content = QWidget()
         body = QVBoxLayout(content)
-        context = QGroupBox("Mission and observations")
+        context = QGroupBox("Health observations")
         form = QFormLayout(context)
-        self.mission = QComboBox()
-        for key, name in MISSION_LABELS.items():
-            self.mission.addItem(name, key)
-        form.addRow("Mission context", self.mission)
         self.heart_rate = QLineEdit()
         self.heart_rate.setPlaceholderText("Optional · beats per minute")
         self.heart_rate.setAccessibleName("Heart rate in beats per minute")
@@ -38,7 +34,7 @@ class CheckinPage(QWidget):
         self.spo2 = QLineEdit()
         self.spo2.setPlaceholderText("Optional · percent")
         self.spo2.setAccessibleName("Estimated blood oxygen saturation in percent")
-        form.addRow("Estimated SpO₂ (%)", self.spo2)
+        form.addRow("Blood oxygen (%)", self.spo2)
         self.signal_quality = QComboBox()
         self.signal_quality.addItem("Unknown / not checked", "unknown")
         self.signal_quality.addItem("Good · stable, repeated reading", "good")
@@ -59,7 +55,7 @@ class CheckinPage(QWidget):
             "eye changes, or cabin air quality. Severe symptoms need help even when readings look typical.",
             "subtitle",
         ))
-        symptoms_box = QGroupBox("Symptoms and mission alerts reported today")
+        symptoms_box = QGroupBox("Symptoms and alerts reported today")
         symptoms_layout = QGridLayout(symptoms_box)
         self.symptom_checks = {}
         for index, (key, title) in enumerate(SYMPTOMS.items()):
@@ -97,7 +93,6 @@ class CheckinPage(QWidget):
 
     def collect_checkin(self):
         return CheckIn(
-            mission=self.mission.currentData(),
             heart_rate=self._optional_number(self.heart_rate, "heart rate"),
             spo2=self._optional_number(self.spo2, "SpO₂"),
             signal_quality=self.signal_quality.currentData(),

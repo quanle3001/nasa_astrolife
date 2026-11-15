@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 from math import isfinite
 
 
-MISSION_LABELS = {"leo": "Low Earth orbit", "lunar": "Lunar mission", "mars": "Mars / deep space"}
 SYMPTOMS = {
     "chest_pain": "Chest pain or tightness",
     "breathing_difficulty": "Difficulty breathing",
@@ -31,7 +30,6 @@ SYMPTOMS = {
 
 @dataclass(frozen=True)
 class CheckIn:
-    mission: str = "leo"
     heart_rate: float | None = None
     spo2: float | None = None
     signal_quality: str = "unknown"
@@ -46,8 +44,6 @@ class CheckIn:
     def __post_init__(self):
         if self.input_source not in {"manual", "sensor"}:
             raise ValueError("Unknown reading source.")
-        if self.mission not in MISSION_LABELS:
-            raise ValueError("Choose a supported mission context.")
         if self.signal_quality not in {"unknown", "good", "poor"}:
             raise ValueError("Choose a valid signal quality.")
         for name, low, high in (("heart_rate", 1, 300), ("spo2", 1, 100), ("sleep_hours", 0, 24)):
