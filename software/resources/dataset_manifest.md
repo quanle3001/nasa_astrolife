@@ -1,5 +1,7 @@
 # NASA guidance catalog
 
+This file documents `nasa_sources.json`. Every NASA source used by the app, including the RadLab and OSDR API integrations and the Human Research Roadmap evidence reports, is listed in [`docs/NASA_DATA.md`](../../docs/NASA_DATA.md).
+
 Reviewed against NASA's public pages on **2026-11-14**. This is a curated, offline educational catalog; it is not raw patient data, a trained model, or a live NASA feed. No NASA endorsement or clinical validation of AstroLife is implied.
 
 ## Sources and scope
@@ -28,7 +30,7 @@ The catalog covers all five hazards and groups the 17 entries visible in the ris
 
 These groups, their order, and hazard mappings are AstroLife's editorial organization, not an official NASA ranking or a claim that these are the entire Human Research Roadmap. NASA's overview explains that risk changes with mission destination. A normal fingertip reading must never suppress prevention topics or imply that unmeasured risks have been excluded.
 
-The app does not ask for or assume a mission destination. Assessments use sensor readings and explicitly reported symptoms, sleep, exercise, and alerts. Destination-based planning reminders are not generated. NASA's discussion of mission differences remains background context in the catalog, not a personalized prediction. Older saved assessments retain their original contents; new check-ins do not store a mission field.
+The guided flow asks for a mission (low Earth orbit, lunar, or Mars / deep space) and stores it as a separate mission profile. The mission changes presentation only: the order of the five hazards, the order of question topics, and which NASA statements are shown first (`mission_context.json`). It is not an input to the assessment rules. Findings use sensor readings and explicitly reported symptoms, sleep, exercise, and alerts, and the same answers give the same findings on every mission. NASA's discussion of mission differences is context, not a personalized prediction. Check-ins do not store a mission field; older saved assessments that have one remain readable.
 
 ## Evidence labels
 
