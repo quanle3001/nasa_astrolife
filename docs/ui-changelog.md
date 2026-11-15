@@ -1,8 +1,9 @@
-# UI branch changelog: `codex/astrotip-space-ui`
+# UI branch changelog: `astrotip-space-ui`
 
 This file organizes every commit on the UI branch into phases so reviewers can
 read the history in order. Hashes are the real local commits. The branch is
-based on `main` at `22957bd` and has not been pushed or merged.
+based on `main` at `22957bd` and has not been merged. It was renamed from
+`codex/astrotip-space-ui` to `astrotip-space-ui` before its first push.
 
 Read the whole branch:
 
@@ -101,6 +102,16 @@ Some fixes carry their own regression tests in the same commit (`e29ef6e`,
 
 This changelog and the keyboard-shortcut docs are added by the `docs(ui)`
 commit that follows `f91e3b4`.
+
+## Phase 8: AstroLife branding
+
+| Commit | Summary |
+|---|---|
+| `40d4620` | Rename the product from AstroTip to AstroLife (user-visible text only) |
+| `93b69aa` | AstroLife space logo, favicon and app icon |
+
+The branding docs are added by the `docs(brand)` commit that follows
+`93b69aa`.
 
 ## Conventions for further work
 

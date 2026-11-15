@@ -172,3 +172,28 @@ cards (`/impeccable distill`), grouping the 17 symptom checkboxes
 (`/impeccable clarify`).
 
 The full, phase-grouped commit history is in [`ui-changelog.md`](ui-changelog.md).
+
+## 6. AstroLife brand
+
+The product was renamed from AstroTip to AstroLife. User-visible text
+changed everywhere. Internal identifiers kept their names: the `astrotip`
+Python package, `window.astrotip`, `ASTROTIP_*` variables, the
+`astrotip-backend` sidecar and the repository. The firmware banners and the
+local history folder also kept theirs, so the serial parser and existing
+records keep working.
+
+| Asset | Path | Notes |
+|---|---|---|
+| Mark | `desktop/public/logo.svg` | Original artwork; navbar, splash, favicon |
+| App icon source | `desktop/build/icon.svg` | Mark on a dark rounded tile (macOS grid) |
+| App icon | `desktop/build/icon.png` | 1024 px render used by electron-builder and the dev Dock |
+
+Design sources:
+- **Space-agency emblem:** a deep-blue disc, stars and a tilted orbit ring
+  passing in front of the symbol.
+- **Antigravity mark:** a smooth rising arch, read as an "A" and as lift.
+- **AstroLife's own element:** a heartbeat crossbar for crew health.
+
+NASA's red chevron, wordmark and insignia are intentionally absent; the
+mark must not suggest NASA endorsement.
+
