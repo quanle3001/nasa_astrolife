@@ -105,10 +105,10 @@ function Model({ url, layers, selected, highlighted, hoveredKey, showPins, onPic
       const faded = focus && !isSelected && !isHovered;
       material.emissive.copy(isHovered ? HOVER : isSelected ? SELECTED : hasPrompt ? PROMPT : NONE);
       material.emissiveIntensity = isHovered ? 0.45 : isSelected ? 0.7 : hasPrompt ? 0.3 : 0;
-      material.transparent = faded;
+      // Recompiling a material is only needed when it switches between opaque and see-through.
+      if (material.transparent !== faded) { material.transparent = faded; material.needsUpdate = true; }
       material.opacity = faded ? 0.5 : 1;
       material.depthWrite = !faded;
-      material.needsUpdate = true;
     }
     invalidate();
   }, [parts, layers, selected, highlighted, hoveredKey, invalidate]);
@@ -211,6 +211,8 @@ export default function AnatomyViewer({ selected, highlighted, onSelect, calm, r
   // A slow turn shows the model is three-dimensional; it stops at the first interaction.
   const [spinning, setSpinning] = useState(!calm);
   const controls = useRef<{ reset: () => void } | null>(null);
+  // "Pause motion" can be switched on while the model is turning.
+  useEffect(() => { if (calm) setSpinning(false); }, [calm]);
 
   // Selecting a region (here or from the list) reveals the layer it lives in.
   useEffect(() => {
@@ -239,13 +241,13 @@ export default function AnatomyViewer({ selected, highlighted, onSelect, calm, r
         <div ref={card} className={cn("hover-card", hoverLabel && "is-visible")} role="status" aria-live="polite">
           {hoverLabel && <HoverCard label={hoverLabel} summary={hoverRegion ? regionInfo?.[hoverRegion.id] ?? null : null} />}
         </div>
-        <Canvas frameloop={spinning ? "always" : "demand"} dpr={[1, 1.75]} camera={{ fov: 32, position: [0, 1, 4.2] }} role="img" aria-label="3D anatomical model. Drag to rotate, scroll to zoom, select a structure to see its health information. The same regions are listed as buttons below.">
+        <Canvas frameloop={spinning ? "always" : "demand"} dpr={[1, 1.75]} camera={{ fov: 32, position: [0, 1, 4.2] }} role="group" aria-label="3D anatomical model with selectable region labels. Drag to rotate, scroll to zoom. The same regions are listed as buttons below.">
           <ambientLight intensity={1.15} />
           <hemisphereLight args={["#e6f4ff", "#1a2740", 1.2]} />
           <directionalLight position={[2.5, 4, 3.5]} intensity={2.2} />
           <directionalLight position={[-3, 2, -2.5]} intensity={0.9} />
           <Suspense fallback={null}>
-            <Bounds fit clip observe margin={1.02} maxDuration={0.9} key={`${sex}-${view}`}>
+            <Bounds fit clip observe margin={1.02} maxDuration={calm ? 0 : 0.9} key={`${sex}-${view}`}>
               <Model url={MODEL_URLS[sex]} layers={layers} selected={selected} highlighted={highlighted} hoveredKey={hovered?.key ?? null} showPins={showPins} onPick={(structure) => { setSpinning(false); pick(structure); }} onPickRegion={(regionId) => { setSpinning(false); setPicked(null); onSelect(regionId); }} onHover={setHovered} onHoverPin={setHoveredPin} />
             </Bounds>
           </Suspense>

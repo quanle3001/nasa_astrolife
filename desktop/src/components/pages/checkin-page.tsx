@@ -89,7 +89,16 @@ export function CheckinPage({ config, onAssess, busy, onCancel }: {
 
   return (
     <form id="checkin-form" onSubmit={submit} className="page-grid checkin-experience">
-      <div className="page-heading immersive-heading"><div><h1>Report a health concern</h1><p>Select what applies and add any reading you have. Leave missing readings blank; unreported symptoms are not ruled out. For an emergency, follow the mission emergency procedure first.</p></div>{onCancel && <Button onClick={onCancel}>Return without reporting</Button>}</div>
+      <div className="page-heading immersive-heading"><div><h1>Report a health concern</h1><p>Select what applies and add any reading you have. Leave missing readings blank; unreported symptoms are not ruled out.</p></div>{onCancel && <Button onClick={onCancel}>Return without reporting</Button>}</div>
+      <p className="emergency-line" role="note"><strong>For an emergency, follow the mission emergency procedure first.</strong> Nothing here is sent to anyone: this report stays on this computer.</p>
+      <Card className="p-5">
+        <h2 className="text-base font-semibold text-white">Symptoms and mission alerts reported today</h2>
+        <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+          {Object.entries(config.symptoms).map(([key, title]) => (
+            <label key={key} className="check-tile"><input type="checkbox" checked={symptoms.has(key)} onChange={() => toggleSymptom(key)} /><span>{title}</span></label>
+          ))}
+        </div>
+      </Card>
       <Card className="p-5">
         <div className="mb-5 flex items-center gap-2"><NotebookPen className="size-4 text-cyan-300" /><h2 className="text-base font-semibold text-white">Readings and observations</h2></div>
         <div className="form-grid">
@@ -98,14 +107,6 @@ export function CheckinPage({ config, onAssess, busy, onCancel }: {
           <label><span>Reading quality</span><select className="control" value={quality} onChange={(event) => setQuality(event.target.value as CheckIn["signal_quality"])}><option value="unknown">Unknown / not checked</option><option value="good">Good · stable repeated reading</option><option value="poor">Poor · motion or unstable contact</option></select></label>
           <NumberField id="sleep_hours" label="Sleep (hours)" value={sleep} onChange={edit("sleep_hours", setSleep)} onBlur={() => checkField("sleep_hours")} placeholder="Optional · last 24 hours" error={fieldErrors.sleep_hours} />
           <label><span>Prescribed exercise</span><select className="control" value={exercise} onChange={(event) => setExercise(event.target.value)}><option value="unknown">Not recorded / not applicable</option><option value="yes">Completed prescribed session</option><option value="no">Missed prescribed session</option></select></label>
-        </div>
-      </Card>
-      <Card className="p-5">
-        <h2 className="text-base font-semibold text-white">Symptoms and mission alerts reported today</h2>
-        <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-          {Object.entries(config.symptoms).map(([key, title]) => (
-            <label key={key} className="check-tile"><input type="checkbox" checked={symptoms.has(key)} onChange={() => toggleSymptom(key)} /><span>{title}</span></label>
-          ))}
         </div>
       </Card>
       <Card className="p-5"><label className="block"><span className="mb-2 block text-xs font-medium text-space-muted">Notes for your record · not automatically analyzed</span><textarea className="control min-h-28 resize-y" maxLength={5000} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Optional: timing, activity, changes from baseline, or information for the medical team." /></label></Card>

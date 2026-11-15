@@ -88,10 +88,10 @@ export function CompassPage({ result, actions, knowledge, conditionTitles, onTog
           </ViewerBoundary>
         ) : <BodyMap2D selected={selected} highlighted={highlighted} onSelect={setSelected} />}
         {(!canRender3d || viewerFailed) && <p className="compass-legend">3D is not available on this device, so the 2D body map is shown. Everything else works the same.</p>}
-        <p className="compass-legend"><Info className="size-3.5 shrink-0" aria-hidden="true" /> A highlighted region has a prompt to review. It does not mean something is wrong there, and a region without a highlight is not confirmed healthy.</p>
+        <p className="compass-legend"><Info className="size-3.5 shrink-0" aria-hidden="true" /> A region marked with a blue dot has a prompt to review. It does not mean something is wrong there, and a region without a mark is not confirmed healthy.</p>
         <nav className="compass-chips" aria-label="Body regions">
           {COMPASS_REGIONS.map((item) => (
-            <button key={item.id} type="button" aria-pressed={selected === item.id} className={cn("choice-chip", selected === item.id && "is-selected", highlighted.has(item.id) && "has-prompt")} onClick={() => setSelected(item.id)}>{item.title}</button>
+            <button key={item.id} type="button" aria-pressed={selected === item.id} className={cn("choice-chip", selected === item.id && "is-selected", highlighted.has(item.id) && "has-prompt")} onClick={() => setSelected(item.id)}>{item.title}{highlighted.has(item.id) && <span className="sr-only"> · has a prompt to review</span>}</button>
           ))}
         </nav>
       </Card>

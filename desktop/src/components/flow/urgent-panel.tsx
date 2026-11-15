@@ -21,8 +21,7 @@ export function UrgentPanel({ assessment, conditionTitles, sources, children }: 
       <div className="flex items-start gap-3">
         <AlertOctagon className="mt-1 size-7 shrink-0 text-rose-300" aria-hidden="true" />
         <div className="min-w-0">
-          <p className="urgent-eyebrow">Act now</p>
-          <h2 id="urgent-title">{actions[0] ?? FALLBACK_URGENT_ACTION}</h2>
+          <h2 id="urgent-title"><span className="urgent-eyebrow">Act now.</span> {actions[0] ?? FALLBACK_URGENT_ACTION}</h2>
           {actions.slice(1).map((action) => <p key={action} className="mt-2 font-medium">{action}</p>)}
         </div>
       </div>

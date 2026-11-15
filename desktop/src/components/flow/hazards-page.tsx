@@ -12,11 +12,11 @@ const ICONS: Record<HazardId, typeof Orbit> = { radiation: Radiation, isolation:
  * Step 4: all five NASA hazards, always. The mission only changes their order
  * and which ones carry a mission-specific NASA statement.
  */
-export function HazardsPage({ profile, knowledge, plan, onBack, onNext, nextLabel }: {
+export function HazardsPage({ profile, knowledge, plan, onBack, onNext, nextLabel, busy }: {
   profile: MissionProfile; knowledge: Knowledge;
   /** Check-in plan computed by the backend from the NASA catalog for this mission. */
   plan?: AssessmentPlan | null;
-  onBack: () => void; onNext: () => void; nextLabel?: string;
+  onBack: () => void; onNext: () => void; nextLabel?: string; busy?: boolean;
 }) {
   const questionText = new Map(knowledge.registry.questions.map((question) => [question.id, question.text]));
   const firstTopic = plan?.topics.find((topic) => topic.domain_id !== "safety");
@@ -26,7 +26,7 @@ export function HazardsPage({ profile, knowledge, plan, onBack, onNext, nextLabe
   const [open, setOpen] = useState<HazardId | null>(mission.hazard_order[0]);
   return (
     <FlowPage wide title={`NASA's five hazards on a ${mission.title} mission`}
-      lead={context.note} onBack={onBack} onNext={onNext} nextLabel={nextLabel ?? "Start health check-in"}
+      lead={context.note} onBack={onBack} onNext={onNext} busy={busy} nextLabel={nextLabel ?? "Start health check-in"}
     >
       {plan && (
         <section className="plan-summary" aria-label="Your check-in plan">

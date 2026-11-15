@@ -144,10 +144,14 @@ describe("SafetyPage", () => {
     const { rerender } = render(<SafetyPage questions={safetyQuestions} answers={{}} onChange={onChange} onBack={() => undefined} onNext={() => undefined} busy={false} error="" />);
     expect(screen.getAllByRole("checkbox")).toHaveLength(10);
     expect(screen.getByRole("button", { name: /Continue to check-in/ })).toBeDisabled();
+    expect(screen.getByText(/Tick what applies, or tick "None of these"/)).toBeInTheDocument();
+    expect(screen.getByText(/a pulse and oxygen reading from your sensor/)).toBeInTheDocument();
+    expect(screen.queryByText(/optional pulse/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByLabelText("None of these apply to me right now"));
     expect(onChange).toHaveBeenLastCalledWith(safetyNo);
     rerender(<SafetyPage questions={safetyQuestions} answers={safetyNo} onChange={onChange} onBack={() => undefined} onNext={() => undefined} busy={false} error="" />);
     expect(screen.getByRole("button", { name: /Continue to check-in/ })).toBeEnabled();
+    expect(screen.queryByText(/Tick what applies/)).not.toBeInTheDocument();
   });
 
   it("answers the whole screen when one item is ticked and offers immediate guidance", () => {
@@ -191,6 +195,10 @@ describe("QuestionsPage", () => {
     expect(screen.getByText(/Related NASA hazards: Isolation and confinement · Distance from Earth/)).toBeInTheDocument();
     expect(screen.queryByText(/Why this question:/)).not.toBeInTheDocument();
     expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuemax", String(current.questions.length));
+    // One way forward: until there is an answer, the only ways on are to answer, skip or say "not sure".
+    expect(screen.queryByRole("button", { name: /Leave unanswered|Next question/ })).not.toBeInTheDocument();
+    if (current.questions[0].required) expect(screen.getByText("Answer to continue")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2 })).toHaveFocus();
     fireEvent.click(screen.getByRole("radio", { name: /Yes/ }));
     expect(onAnswer).toHaveBeenCalledWith(current.questions[0], "yes");
     fireEvent.click(screen.getByRole("button", { name: /Not sure/ }));
@@ -244,6 +252,7 @@ describe("MeasurePage", () => {
     expect(primary()).toBeDisabled();
     expect(screen.getByText("Required")).toBeInTheDocument();
     expect(screen.getByText(/Connect the ESP32 sensor to take your reading/)).toBeInTheDocument();
+    expect(screen.getByText("Waiting for a usable reading")).toBeInTheDocument();
     expect(screen.queryByRole("radiogroup")).not.toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
   });
@@ -264,6 +273,8 @@ describe("MeasurePage", () => {
   it("labels simulated data", () => {
     renderPage({ ...INITIAL_SENSOR, connected: true, usable: true, heartRate: 72, spo2: 98, source: "simulated" });
     expect(screen.getByText("Simulated data · not a measurement")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Continue with simulated demo values/ })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: /Use this reading/ })).not.toBeInTheDocument();
   });
 
   it("never dead-ends when the hardware fails, but needs a stated reason", () => {
@@ -306,7 +317,7 @@ describe("FindingsPage", () => {
   it("keeps measurement, reported observations, trends, rule prompts and NASA research in separate sections", async () => {
     render(<FindingsPage result={result()} entryId={5} config={config} knowledge={knowledge} onNext={() => undefined} />);
     expect(screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent)).toEqual([
-      "Measurement quality", "What you reported", "Compared with earlier saved measurements", "Follow-up prompts", "NASA scientific context",
+      "Follow-up prompts", "Measurement quality", "What you reported", "Compared with earlier saved measurements", "NASA scientific context",
     ]);
     expect(screen.getByText("Your sensor measurement")).toBeInTheDocument();
     expect(screen.getByText("91%")).toBeInTheDocument();
@@ -435,7 +446,7 @@ describe("CompassPage (2D body map)", () => {
 
   it("does not call an unhighlighted region healthy", () => {
     render(<CompassPage result={result} actions={[]} knowledge={knowledge} conditionTitles={config.condition_titles} onToggleAction={() => undefined} onNext={() => undefined} />);
-    expect(screen.getByText(/a region without a highlight is not confirmed healthy/)).toBeInTheDocument();
+    expect(screen.getByText(/a region without a mark is not confirmed healthy/)).toBeInTheDocument();
     // The body-map region and the chip below it are both buttons for the same region.
     fireEvent.click(screen.getAllByRole("button", { name: "Eyes" })[0]);
     expect(screen.getByText(/This area was not examined and is not ruled out/)).toBeInTheDocument();

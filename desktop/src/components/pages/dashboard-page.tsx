@@ -1,6 +1,7 @@
 import { Activity, AlertTriangle, ClipboardCheck, Compass, Database, ListTodo, Orbit, PlayCircle, Radiation, RotateCcw, Settings2 } from "lucide-react";
 import type { ReactNode } from "react";
-import { Magnetic, TiltCard } from "@/components/effects/interactive";
+import { Magnetic, PointerGlow } from "@/components/effects/interactive";
+import { UrgentPanel } from "@/components/flow/urgent-panel";
 import { ActionItem } from "@/components/flow/actions-page";
 import { LEVEL_LABELS, measurementKind, ProvenanceBadge } from "@/components/flow/common";
 import { MissionViewport } from "@/components/hero/mission-viewport";
@@ -14,10 +15,11 @@ import type { AppState, FollowupAction, Knowledge } from "@/types/flow";
 function Tile({ title, icon: Icon, children, className }: { title: string; icon: typeof Activity; children: ReactNode; className?: string }) {
   return (
     <div className={className}>
-      <TiltCard className="glass-panel dashboard-tile" maxTilt={2.5}>
-        <h2 className="telemetry-label"><Icon className="mr-1.5 inline size-3.5 text-space-cyan" aria-hidden="true" />{title}</h2>
+      {/* The tiles hold checkboxes and text being read, so they light up under the cursor but do not tilt. */}
+      <PointerGlow className="glass-panel dashboard-tile rounded-2xl border">
+        <h2 className="tile-title"><Icon className="size-4 text-space-cyan" aria-hidden="true" />{title}</h2>
         {children}
-      </TiltCard>
+      </PointerGlow>
     </div>
   );
 }
@@ -57,7 +59,9 @@ export function DashboardPage({ state, knowledge, config, sensor, onStartCheckin
           <div className="hero-actions">
             {state.open
               ? <Magnetic><Button variant="primary" size="lg" onClick={onResume}><RotateCcw className="size-4" /> Resume check-in</Button></Magnetic>
-              : <Magnetic><Button variant="primary" size="lg" onClick={onStartCheckin}><PlayCircle className="size-4" /> Start new check-in</Button></Magnetic>}
+              : doneToday
+                ? <><Magnetic><Button variant="primary" size="lg" onClick={() => onViewResult("findings")}><ClipboardCheck className="size-4" /> Review today's findings</Button></Magnetic><Button size="lg" onClick={onStartCheckin}><PlayCircle className="size-4" /> Check in again</Button></>
+                : <Magnetic><Button variant="primary" size="lg" onClick={onStartCheckin}><PlayCircle className="size-4" /> Start today's check-in</Button></Magnetic>}
             <Button size="lg" variant="danger" onClick={onReportConcern}><AlertTriangle className="size-4" /> Report health concern</Button>
           </div>
         </div>
@@ -68,6 +72,8 @@ export function DashboardPage({ state, knowledge, config, sensor, onStartCheckin
           </div>
         )}
       </section>
+
+      {latest?.assessment.level === "urgent" && <UrgentPanel assessment={latest.assessment} conditionTitles={config.condition_titles} sources={knowledge.catalog.sources} />}
 
       <div className="dashboard-grid">
         <Tile title="Mission profile" icon={Orbit}>
@@ -101,7 +107,7 @@ export function DashboardPage({ state, knowledge, config, sensor, onStartCheckin
             <>
               <div className="tile-vitals"><div><strong>{checkin.heart_rate ?? "—"}</strong><small>bpm</small></div><div><strong>{checkin.spo2 ?? "—"}</strong><small>% SpO₂</small></div></div>
               {kind && <ProvenanceBadge kind={kind} />}
-              <p className="tile-note">{checkin.sensor_received_at ? `Measured ${when(checkin.sensor_received_at)}` : "From your latest check-in"} · estimates, not validated</p>
+              <p className="tile-note">{checkin.sensor_received_at ? `${checkin.input_source === "simulated" ? "Simulated" : "Measured"} ${when(checkin.sensor_received_at)}` : "From your latest check-in"} · {checkin.input_source === "simulated" ? "demo values, not a measurement" : "estimates, not validated"}</p>
             </>
           ) : <p className="empty-line">No measurement in your latest check-in. Pulse and oxygen are unassessed.</p>}
           {sensor.connected && <PpgChart compact height={96} />}

@@ -15,6 +15,8 @@ export interface ViewportTelemetry {
   lastUpdate?: number | null;
   lastUsableAt?: number | null;
   fault?: string | null;
+  /** "simulated" while the labelled demo stream is running. */
+  source?: string | null;
 }
 
 /**
@@ -49,7 +51,8 @@ function TelemetryCard({ className, icon, label, value, unit, float, stale = fal
 /**
  * Hero visual: the selected mission's cached NASA photograph inside a framed
  * viewport, with compositor-only orbital tracks and live sensor values.
- * Values come straight from the sensor state; nothing is simulated.
+ * Values come straight from the sensor state. While the demo stream runs they
+ * are marked as simulated, never as a live sensor.
  */
 export function MissionViewport({ mission, telemetry }: { mission: MissionId; telemetry: ViewportTelemetry }) {
   const reduced = useCalmMotion();
@@ -94,15 +97,16 @@ export function MissionViewport({ mission, telemetry }: { mission: MissionId; te
         </figcaption>
       </figure>
 
-      <TelemetryCard className="viewport-card-heart" icon={<HeartPulse className="size-4" />} label="Heart rate" value={telemetry.heartRate} unit="bpm" stale={valuesStale} float={floatAnimation(reduced, 0)} />
-      <TelemetryCard className="viewport-card-oxygen" icon={<Waves className="size-4" />} label="Estimated SpO₂" value={telemetry.spo2} unit="%" stale={valuesStale} float={floatAnimation(reduced, .8, 7)} />
+      {/* Values being read stay still; only decoration moves. */}
+      <TelemetryCard className="viewport-card-heart" icon={<HeartPulse className="size-4" />} label={telemetry.source === "simulated" ? "Heart rate · simulated" : "Heart rate"} value={telemetry.heartRate} unit="bpm" stale={valuesStale} float={undefined} />
+      <TelemetryCard className="viewport-card-oxygen" icon={<Waves className="size-4" />} label={telemetry.source === "simulated" ? "SpO₂ · simulated" : "Estimated SpO₂"} value={telemetry.spo2} unit="%" stale={valuesStale} float={undefined} />
       <span className="viewport-satellite viewport-satellite-one" aria-hidden="true"><Activity className="size-4" /></span>
       <span className="viewport-satellite viewport-satellite-two" aria-hidden="true"><Sparkles className="size-3.5" /></span>
       <motion.div className="viewport-card viewport-card-link" animate={floatAnimation(reduced, 1.4, 6)}>
-        <span className={cn("live-pulse", telemetry.connected && !linkStale && "is-live", (telemetry.connecting || linkStale) && "is-connecting")} />
+        <span className={cn("live-pulse", telemetry.connected && !linkStale && (telemetry.source === "simulated" ? "is-fault" : "is-live"), (telemetry.connecting || linkStale) && "is-connecting")} />
         <span>
           <small>Sensor link</small>
-          <strong className="viewport-link-state" role="status">{telemetry.connected ? (linkStale ? "Stalled" : "Online") : telemetry.connecting ? "Linking" : "Standby"}</strong>
+          <strong className="viewport-link-state" role="status">{telemetry.connected ? (linkStale ? "Stalled" : telemetry.source === "simulated" ? "Simulated" : "Online") : telemetry.connecting ? "Linking" : "Standby"}</strong>
           <span className={cn("viewport-link-detail", (linkStale || (!telemetry.connected && telemetry.fault)) && "is-warning")}>{linkDetail}</span>
         </span>
       </motion.div>

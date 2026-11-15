@@ -32,7 +32,8 @@ function chartOptions(width: number, height: number, showRed: boolean): uPlot.Op
     series: [
       {},
       { label: "Infrared", stroke: "#46d9e8", width: 2, points: { show: false } },
-      { label: "Red", stroke: "#ff8394", width: 1.5, points: { show: false }, show: showRed },
+      // Dashed as well as coloured, so the two channels differ without relying on colour.
+      { label: "Red", stroke: "#ff8394", width: 1.5, dash: [6, 4], points: { show: false }, show: showRed },
     ],
   };
 }
@@ -106,7 +107,7 @@ export function PpgChart({ buffer = ppgBuffer, height = 220, className, compact 
       </div>
       <div className="relative mt-3">
         <div ref={host} role="img" aria-label="Live optical finger pulse over the last ten seconds. This is a PPG signal, not an ECG." />
-        {state !== "live" && <div className="ppg-chart-idle" aria-hidden="true" />}
+        {state !== "live" && <div className="ppg-chart-idle" aria-hidden="true"><span>No usable signal</span></div>}
       </div>
       {!compact && <p className="mt-2 text-xs leading-5 text-space-subtle">
         Optical pulse (PPG) at the fingertip, not an ECG. Infrared about 880 nm{showRed ? ", red about 660 nm" : ""}. The trace is display-filtered

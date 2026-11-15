@@ -29,10 +29,10 @@ describe("SensorPage", () => {
 });
 
 describe("SensorPage live monitor", () => {
-  it("shows unavailable estimates as dashes and explains they are not normal results", () => {
+  it("names unavailable estimates as no reading and explains they are not normal results", () => {
     render(<SensorPage state={{ ...base, fault: null }} onReview={() => undefined} onConnectStart={() => undefined} />);
     const monitor = screen.getByTestId("live-monitor");
-    expect(within(monitor).getByLabelText("Latest sensor estimates")).toHaveTextContent("—");
+    expect(within(monitor).getByLabelText("Latest sensor estimates")).toHaveTextContent("No reading");
     expect(monitor).toHaveTextContent("It is not a normal result");
     expect(within(monitor).getByRole("button", { name: /Run simulated stream/ })).toBeInTheDocument();
   });

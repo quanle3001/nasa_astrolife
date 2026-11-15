@@ -26,6 +26,14 @@ describe("MissionViewport", () => {
     expect(screen.getByText("Online")).toBeInTheDocument();
   });
 
+  it("marks demo values as simulated instead of an online sensor", () => {
+    render(<MissionViewport mission="leo" telemetry={{ connected: true, connecting: false, heartRate: 72, spo2: 98, source: "simulated" }} />);
+    expect(screen.getByText("Simulated")).toBeInTheDocument();
+    expect(screen.queryByText("Online")).not.toBeInTheDocument();
+    expect(screen.getByText("Heart rate · simulated")).toBeInTheDocument();
+    expect(screen.getByText("SpO₂ · simulated")).toBeInTheDocument();
+  });
+
   it("marks a link with no new data for over 10 s as stalled and dims old values", () => {
     const old = Date.now() - 15_000;
     const { container } = render(<MissionViewport mission="leo" telemetry={{ connected: true, connecting: false, heartRate: 72, spo2: 97, lastUpdate: old, lastUsableAt: old }} />);

@@ -12,7 +12,7 @@ export function MissionPage({ mission, onChange, onBack, onNext }: {
       lead="Your mission decides which NASA hazards and health topics AstroLife explains and asks about first. It does not change how your answers or measurements are assessed."
       onBack={onBack} onNext={onNext} nextLabel={`Continue with ${MISSIONS[mission].title}`}
     >
-      <MissionSelector value={mission} onChange={onChange} />
+      <MissionSelector value={mission} onChange={onChange} compact />
     </FlowPage>
   );
 }

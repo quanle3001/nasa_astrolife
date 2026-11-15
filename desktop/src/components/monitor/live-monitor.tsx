@@ -11,7 +11,8 @@ import { Card } from "@/components/ui/card";
 export function LiveMonitor({ state, onSimulate, compact }: { state: SensorViewState; onSimulate?: () => void; compact?: boolean }) {
   const details = [
     ["Source", state.source === "simulated" ? "Simulated demo stream" : state.source === "sensor" ? "ESP32 + MAX30102" : "—"],
-    ["Firmware", state.firmware || (state.connected ? "Older report-only firmware" : "—")],
+    // Until the first complete report arrives nothing is known about the firmware.
+    ["Firmware", state.firmware || (state.connected ? (state.lastUpdate == null ? "Waiting for the first report" : "Older report-only firmware") : "—")],
     ["Sample rate", state.sampleRateHz != null ? `${state.sampleRateHz} samples/s` : "—"],
     ["Firmware window", state.signalStatus ?? "—"],
     ["Optical check", state.opticalState ?? "—"],
@@ -31,12 +32,18 @@ export function LiveMonitor({ state, onSimulate, compact }: { state: SensorViewS
       <div className="monitor-layout mt-4">
         <PpgChart height={compact ? 160 : 220} />
         <div className="monitor-vitals" aria-label="Latest sensor estimates">
-          <div><span className="telemetry-label">Pulse</span><strong>{state.heartRate ?? "—"}</strong><small>beats / min · estimate</small></div>
-          <div><span className="telemetry-label">Blood oxygen</span><strong>{state.spo2 ?? "—"}</strong><small>% SpO₂ · estimate</small></div>
+          <div><span className="telemetry-label">Pulse</span><strong className={state.heartRate == null ? "is-empty" : undefined}>{state.heartRate ?? "No reading"}</strong><small>beats / min · estimate</small></div>
+          <div><span className="telemetry-label">Blood oxygen</span><strong className={state.spo2 == null ? "is-empty" : undefined}>{state.spo2 ?? "No reading"}</strong><small>% SpO₂ · estimate</small></div>
         </div>
       </div>
-      {!compact && <dl className="monitor-details">{details.map(([term, value]) => <div key={term}><dt>{term}</dt><dd>{value}</dd></div>)}</dl>}
-      <p className="mt-3 text-xs leading-5 text-space-subtle">A dash means the sensor could not provide a usable estimate. It is not a normal result. These engineering checks do not prove accuracy.</p>
+      <p className="mt-3 text-xs leading-5 text-space-subtle">"No reading" means the sensor could not provide a usable estimate. It is not a normal result.</p>
+      {!compact && (
+        <details className="monitor-diagnostics">
+          <summary>Sensor diagnostics</summary>
+          <dl className="monitor-details">{details.map(([term, value]) => <div key={term}><dt>{term}</dt><dd>{value}</dd></div>)}</dl>
+          <p className="mt-2 text-xs leading-5 text-space-subtle">These engineering checks do not prove accuracy.</p>
+        </details>
+      )}
     </Card>
   );
 }

@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowLeft, CornerDownRight, HelpCircle, SkipForward } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ProvenanceBadge, SourceList } from "@/components/flow/common";
 import { Button } from "@/components/ui/button";
 import { useCalmMotion } from "@/lib/motion-preference";
@@ -76,6 +76,10 @@ export function QuestionsPage({ view, knowledge, plan, index, onIndex, onAnswer,
     return () => window.removeEventListener("keydown", listener);
   }, [question, onAnswer]);
 
+  // Keyboard and screen-reader users land on the new question instead of the top of the page.
+  const heading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => { if (question?.input !== "number") heading.current?.focus({ preventScroll: true }); }, [question?.id]);
+
   const options = !question ? [] : question.input === "boolean" ? [{ value: "yes", label: "Yes" }, { value: "no", label: "No" }] : question.options ?? [];
   const pop = reduced ? {} : { initial: { opacity: 0, y: 18, scale: 0.98 }, animate: { opacity: 1, y: 0, scale: 1 }, exit: { opacity: 0, y: -12, scale: 0.98 }, transition: { duration: 0.22 } };
   const stage = reduced ? {} : { initial: { opacity: 0, x: 40 }, animate: { opacity: 1, x: 0 }, exit: { opacity: 0, x: -40 }, transition: { duration: 0.3 } };
@@ -85,7 +89,6 @@ export function QuestionsPage({ view, knowledge, plan, index, onIndex, onAnswer,
       <div className="question-progress" role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={Math.min(position, total)} aria-label="Check-in progress">
         <span style={{ width: `${total ? (Math.min(position, total) / total) * 100 : 100}%` }} />
       </div>
-      <p className="question-count">{question ? `Question ${position + 1} of ${total}` : `All ${total} questions seen`} · {view.answered} answered</p>
       {notice && <p className="flow-notice" role="status">{notice}</p>}
       <AnimatePresence mode="wait" initial={false}>
         {question && domain ? (
@@ -93,11 +96,12 @@ export function QuestionsPage({ view, knowledge, plan, index, onIndex, onAnswer,
             <header className="question-topic">
               <h1>{domain.title}</h1>
               {hazards.length > 0 && <p className="topic-hazards">Related NASA hazard{hazards.length > 1 ? "s" : ""}: {hazards.join(" · ")}</p>}
+              <p className="question-count">Question {position + 1} of {total} · {view.answered} answered</p>
             </header>
             <AnimatePresence mode="wait" initial={false}>
               <motion.div key={question.id} className={cn("question-card", parent && "is-followup")} {...pop}>
                 {parent && <p className="followup-tag"><CornerDownRight className="size-3.5" aria-hidden="true" /> Follow-up to "{parent.text}"</p>}
-                <h2 id="question-text">{question.text}</h2>
+                <h2 id="question-text" ref={heading} tabIndex={-1}>{question.text}</h2>
                 {question.input === "number"
                   ? <NumberAnswer key={question.id} question={question} value={current} onAnswer={(value) => onAnswer(question, value)} />
                   : (
@@ -141,7 +145,9 @@ export function QuestionsPage({ view, knowledge, plan, index, onIndex, onAnswer,
         <div className="flex items-center gap-2">
           {aside}
           {question
-            ? <Button onClick={() => onIndex(position + 1)} disabled={question.required && current === undefined}>{current === undefined ? "Leave unanswered" : "Next"}</Button>
+            ? (current !== undefined
+              ? <Button onClick={() => onIndex(position + 1)}>Next question</Button>
+              : question.required ? <span className="flow-hint">Answer to continue</span> : null)
             : <Button variant="primary" size="lg" onClick={onDone}>Continue to measurement</Button>}
         </div>
       </div>

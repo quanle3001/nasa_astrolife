@@ -7,7 +7,7 @@ import type { MeasurementSource, PriorityLevel } from "@/types/backend";
 import type { EvidenceReport, EvidenceTraceEntry, Source } from "@/types/flow";
 
 export const LEVEL_LABELS: Record<PriorityLevel, string> = {
-  urgent: "Act now", review: "Medical review", watch: "Follow up", info: "No prompt",
+  urgent: "Act now", review: "Medical review", watch: "Follow up", info: "Monitoring only",
 };
 
 /**

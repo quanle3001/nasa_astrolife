@@ -22,8 +22,10 @@ export const NAV = [
 /** Position in the guided flow, shown instead of the tabs while a flow step is open. */
 export interface FlowProgress { index: number; total: number; label: string }
 
-export function AppShell({ page, setPage, mission, connected, backendReady, disclaimer, onShowShortcuts, onReportConcern, flow, onHome, scrollKey, children }: {
+export function AppShell({ page, setPage, mission, connected, simulated, backendReady, disclaimer, onShowShortcuts, onReportConcern, flow, onHome, scrollKey, children }: {
   page: PageId; setPage: (page: PageId) => void; mission: MissionId; connected: boolean; backendReady: boolean; disclaimer: string;
+  /** True while the labelled demo stream is running instead of the ESP32. */
+  simulated?: boolean;
   onShowShortcuts?: () => void;
   /** Always available: opens the health-concern report from any screen. */
   onReportConcern?: () => void;
@@ -37,7 +39,11 @@ export function AppShell({ page, setPage, mission, connected, backendReady, disc
   const { paused, setPaused } = useMotionPreference();
   const missionData = MISSIONS[mission];
   const scroller = useRef<HTMLElement>(null);
-  useEffect(() => { scroller.current?.scrollTo({ top: 0 }); }, [page, scrollKey]);
+  // Each screen starts at its top, and keyboard focus moves with it instead of staying on a control that is gone.
+  useEffect(() => {
+    scroller.current?.scrollTo({ top: 0 });
+    if (document.activeElement === document.body || !document.body.contains(document.activeElement)) scroller.current?.focus({ preventScroll: true });
+  }, [page, scrollKey]);
   return (
     <div className="cosmic-app relative min-h-screen text-space-white" data-mission={mission}>
       <header className="space-navbar app-drag-region">
@@ -69,7 +75,7 @@ export function AppShell({ page, setPage, mission, connected, backendReady, disc
         <div className="app-no-drag nav-status">
           {onReportConcern && <button type="button" className="concern-button" onClick={onReportConcern}><AlertTriangle className="size-3.5" aria-hidden="true" /><span>Report concern</span></button>}
           {!backendReady && <StatusBadge status="warning" primaryText="Backend offline" aria-label="Local Python backend offline" className="nav-badge" />}
-          <StatusBadge status={connected ? "online" : "offline"} primaryText={connected ? "Sensor live" : "No sensor"} animated={connected} aria-label={connected ? "Sensor connected" : "No sensor connected"} className="nav-badge" />
+          <StatusBadge status={!connected ? "offline" : simulated ? "warning" : "online"} primaryText={!connected ? "No sensor" : simulated ? "Simulated" : "Sensor connected"} animated={connected && !simulated} aria-label={!connected ? "No sensor connected" : simulated ? "Simulated stream, not a measurement" : "Sensor connected"} className="nav-badge" />
           <button
             type="button"
             className="motion-toggle"
@@ -82,7 +88,7 @@ export function AppShell({ page, setPage, mission, connected, backendReady, disc
         </div>
       </header>
 
-      <main ref={scroller} className="cosmic-scroll">
+      <main ref={scroller} className="cosmic-scroll" tabIndex={-1}>
         {children}
         <footer className="space-footer">
           <p className="space-footer-disclaimer">{disclaimer}</p>

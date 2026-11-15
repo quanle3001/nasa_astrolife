@@ -36,6 +36,8 @@ export function FindingsPage({ result, entryId, config, knowledge, onNext, onExi
   const { catalog } = knowledge;
   // Trends are computed by the backend (pandas) from the saved measurements; simulated entries are excluded there.
   const [trends, setTrends] = useState<HistoryTrends | null | "unavailable">(null);
+  // Warm the 3D anatomy viewer while the astronaut reads, so the Compass opens without a pause.
+  useEffect(() => { void import("@/components/compass/anatomy-viewer").catch(() => undefined); }, []);
   useEffect(() => { let alive = true; api.getTrends().then((data) => { if (alive) setTrends(data); }).catch(() => { if (alive) setTrends("unavailable"); }); return () => { alive = false; }; }, [entryId]);
 
   const hasMeasurement = checkin.heart_rate != null || checkin.spo2 != null;
@@ -58,6 +60,21 @@ export function FindingsPage({ result, entryId, config, knowledge, onNext, onExi
         <span className="text-xs text-space-subtle">Saved to local history · {when(assessment.created_at)}</span>
       </div>
       {assessment.level === "urgent" && <UrgentPanel assessment={assessment} conditionTitles={config.condition_titles} sources={catalog.sources} />}
+
+      <Section icon={ListChecks} title="Follow-up prompts" badge={<ProvenanceBadge kind="rule" />}>
+        {flagged.length === 0 && <p className="empty-line">No follow-up prompt was triggered by what was entered. This is not a health clearance.</p>}
+        <div className="finding-list">
+          {flagged.map((finding) => (
+            <article key={finding.condition_id} className="finding-item">
+              <header><h3>{config.condition_titles[finding.condition_id] ?? finding.condition_id}</h3><span className={cn("priority-badge", `priority-${finding.level}`)}>{LEVEL_LABELS[finding.level]}</span></header>
+              <p>{finding.reason}</p>
+              {finding.actions.length > 0 ? <ul className="dot-list">{[...new Set(finding.actions)].map((action) => <li key={action}>{action}</li>)}</ul> : assessment.level === "urgent" && <p>{FALLBACK_URGENT_ACTION}</p>}
+              {trace.get(finding.condition_id) && <><EvidenceTrace entry={trace.get(finding.condition_id)!} /><TraceAudit entry={trace.get(finding.condition_id)!} /></>}
+            </article>
+          ))}
+        </div>
+        {later.length > 0 && <p className="empty-line">{later.length} lower-priority prompt{later.length > 1 ? "s are" : " is"} saved in your Action Center for after the urgent concern is handled.</p>}
+      </Section>
 
       <Section icon={Activity} title="Measurement quality" badge={kind ? <ProvenanceBadge kind={kind} /> : undefined}>
         {hasMeasurement ? (
@@ -111,21 +128,6 @@ export function FindingsPage({ result, entryId, config, knowledge, onNext, onExi
                   <p className="empty-line">{trends.limits}{trends.simulated_excluded > 0 ? ` ${trends.simulated_excluded} simulated entr${trends.simulated_excluded > 1 ? "ies were" : "y was"} left out.` : ""} Share an unexpected change with the medical team.</p>
                 </>
               )}
-      </Section>
-
-      <Section icon={ListChecks} title="Follow-up prompts" badge={<ProvenanceBadge kind="rule" />}>
-        {flagged.length === 0 && <p className="empty-line">No follow-up prompt was triggered by what was entered. This is not a health clearance.</p>}
-        <div className="finding-list">
-          {flagged.map((finding) => (
-            <article key={finding.condition_id} className="finding-item">
-              <header><h3>{config.condition_titles[finding.condition_id] ?? finding.condition_id}</h3><span className={cn("priority-badge", `priority-${finding.level}`)}>{LEVEL_LABELS[finding.level]}</span></header>
-              <p>{finding.reason}</p>
-              {finding.actions.length > 0 ? <ul className="dot-list">{[...new Set(finding.actions)].map((action) => <li key={action}>{action}</li>)}</ul> : assessment.level === "urgent" && <p>{FALLBACK_URGENT_ACTION}</p>}
-              {trace.get(finding.condition_id) && <><EvidenceTrace entry={trace.get(finding.condition_id)!} /><TraceAudit entry={trace.get(finding.condition_id)!} /></>}
-            </article>
-          ))}
-        </div>
-        {later.length > 0 && <p className="empty-line">{later.length} lower-priority prompt{later.length > 1 ? "s are" : " is"} saved in your Action Center for after the urgent concern is handled.</p>}
       </Section>
 
       <Section icon={BookOpen} title="NASA scientific context" badge={<ProvenanceBadge kind="evidence" />}>

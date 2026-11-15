@@ -48,7 +48,8 @@ export function MeasurePage({ sensor, onConnectStart, onBack, onSubmit, busy, er
     if (fallback === "manual") onSubmit({ use: "manual", heart_rate: optionalNumber(heartRate), spo2: optionalNumber(spo2), signal_quality: quality });
     else if (fallback) onSubmit({ use: "none", reason: fallback });
   };
-  const simulate = () => { onConnectStart("simulated stream"); void api.simulateSensor().catch(() => undefined); };
+  const [simulateError, setSimulateError] = useState("");
+  const simulate = () => { setSimulateError(""); onConnectStart("simulated stream"); api.simulateSensor().catch((reason) => setSimulateError(reason instanceof Error ? reason.message : String(reason))); };
   const options: { id: Fallback; label: string; hint: string }[] = [
     { id: "manual", label: "Enter values from another approved instrument", hint: "Recorded as a manual entry" },
     { id: "no_stable_reading", label: "A stable reading could not be obtained", hint: "Pulse and oxygen will be recorded as not measured" },
@@ -58,16 +59,18 @@ export function MeasurePage({ sensor, onConnectStart, onBack, onSubmit, busy, er
     <FlowPage
       wide title="Measure your pulse and blood oxygen"
       lead="Every check-in includes a reading from your fingertip sensor. Rest a fingertip on the lit window and hold still for a few seconds."
-      onBack={onBack} onNext={() => onSubmit({ use: "sensor" })} nextDisabled={!sensor.usable} busy={busy} nextLabel="Use this reading and see my findings" aside={aside}
+      onBack={onBack} onNext={() => onSubmit({ use: "sensor" })} nextDisabled={!sensor.usable} busy={busy}
+      nextLabel={sensor.source === "simulated" ? "Continue with simulated demo values" : "Use this reading and see my findings"}
+      aside={<>{!sensor.usable && <span className="flow-hint">Waiting for a usable reading</span>}{aside}</>}
     >
-      <SensorDock state={sensor} onConnectStart={onConnectStart} autoConnect />
-      <LiveMonitor state={sensor} onSimulate={simulate} />
       <p className={cn("measure-status", sensor.usable && "is-ready")} role="status">
         <span className="measure-required">Required</span>
         {sensorStep(sensor)}
         {sensor.usable && <ProvenanceBadge kind={sensor.source === "simulated" ? "simulated" : "measurement"} />}
       </p>
-      {error && <div role="alert" className="flow-error">{error}</div>}
+      <SensorDock state={sensor} onConnectStart={onConnectStart} autoConnect />
+      <LiveMonitor state={sensor} onSimulate={simulate} />
+      {(error || simulateError) && <div role="alert" className="flow-error">{error || `The simulated stream could not start: ${simulateError}`}</div>}
 
       <section className="measure-fallback">
         <button type="button" className="measure-fallback-toggle" aria-expanded={fallbackOpen} aria-controls="measure-fallback" onClick={() => setFallbackOpen((open) => !open)}>

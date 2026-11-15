@@ -1,3 +1,4 @@
+import { LEVEL_LABELS } from "@/components/flow/common";
 import { AlertOctagon, Check, Edit3, Save, ShieldCheck, Stethoscope } from "lucide-react";
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,6 @@ import { ARIA_MOD, MOD } from "@/lib/shortcuts";
 import { cn } from "@/lib/utils";
 import type { AppConfig, AssessmentBundle } from "@/types/backend";
 
-const LEVEL_LABELS = { urgent: "Act now", review: "Medical review", watch: "Follow up", info: "Prevention & monitoring" } as const;
 
 export function AssessmentPage({ config, bundle, saved, saving, onSave, onEdit }: {
   config: AppConfig; bundle: AssessmentBundle | null; saved: boolean; saving: boolean;
@@ -33,7 +33,7 @@ export function AssessmentPage({ config, bundle, saved, saving, onSave, onEdit }
         <div className="flex items-start gap-4"><div className={cn("grid size-11 shrink-0 place-items-center rounded-xl", assessment.level === "urgent" ? "bg-rose-500/15 text-rose-300" : "bg-cyan-300/10 text-cyan-300")}><Stethoscope className="size-5" /></div><div><div className={cn("priority-badge", `priority-${assessment.level}`)}>{LEVEL_LABELS[assessment.level]}</div><h2 className="mt-3 text-xl font-semibold text-white">{assessment.summary}</h2></div></div>
       </Card>
       {assessment.level === "urgent" && (
-        <div className="rounded-2xl border border-rose-400/50 bg-rose-500/15 p-5 text-rose-50">
+        <div role="alert" className="rounded-2xl border border-rose-400/50 bg-rose-500/15 p-5 text-rose-50">
           <div className="flex items-start gap-3"><AlertOctagon className="mt-0.5 size-6 shrink-0 text-rose-300" /><div><div className="text-xs font-black tracking-[.18em] text-rose-300">ACT NOW</div><p className="mt-2 font-semibold">{urgentActions[0] || "Follow the mission emergency procedure and contact the crew medical officer now."}</p>{urgentActions.length > 1 && <p className="mt-2 text-sm text-rose-100/70">Additional urgent actions are listed below.</p>}</div></div>
         </div>
       )}

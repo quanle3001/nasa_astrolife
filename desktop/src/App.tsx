@@ -267,12 +267,18 @@ export default function App() {
   const reportConcern = () => { setConcern({ stage: "form" }); setSaved(false); send({ type: "REPORT_URGENT" }); };
   const assessConcern = async (checkin: CheckIn) => {
     setBusy(true);
-    try { const bundle = await api.assess(checkin); setConcern({ stage: "result", bundle }); setSaved(false); } finally { setBusy(false); }
+    setFlowError("");
+    try { const bundle = await api.assess(checkin); setConcern({ stage: "result", bundle }); setSaved(false); }
+    catch (reason) { setFlowError(`Your report could not be assessed: ${message(reason)}`); }
+    finally { setBusy(false); }
   };
   const saveBundle = async (bundle: AssessmentBundle | null) => {
     if (!bundle || saved) return;
     setSaving(true);
-    try { await api.saveAssessment(bundle.assessment_id); setSaved(true); setHistoryRefresh((value) => value + 1); } finally { setSaving(false); }
+    setFlowError("");
+    try { await api.saveAssessment(bundle.assessment_id); setSaved(true); setHistoryRefresh((value) => value + 1); }
+    catch (reason) { setFlowError(`This assessment could not be saved: ${message(reason)}`); }
+    finally { setSaving(false); }
   };
   const reviewSensor = (bundle: AssessmentBundle) => { setQuick(bundle); setSaved(false); setPage("assessment"); };
 
@@ -320,7 +326,8 @@ export default function App() {
   const compassOpen = view === "compass" || (view === "dashboard" && page === "compass");
   // The decorative astronaut leads on the welcome screen, steps aside while the mission is
   // set up, and leaves before any question or measurement is shown.
-  const astronaut = view === "welcome" ? "hero" as const : view === "mission" || view === "context" || view === "hazards" ? "side" as const : null;
+  // Only where there is room beside the content: the mission cards and the hazard list fill the page.
+  const astronaut = view === "welcome" ? "hero" as const : view === "context" ? "side" as const : null;
 
   let screen: ReactNode = null;
   let screenKey: string = view;
@@ -331,7 +338,7 @@ export default function App() {
   } else if (view === "context") {
     screen = <ContextPage profile={profile} context={knowledge.mission_context} onChange={setProfile} onBack={() => send({ type: "BACK" })} onNext={() => void saveContext()} busy={flowBusy} error={flowError} />;
   } else if (view === "hazards") {
-    screen = <HazardsPage profile={profile} knowledge={knowledge} plan={plan && plan.environment === profile.environment ? plan : null} onBack={() => send({ type: "BACK" })} onNext={() => void beginCheckin("NEXT")} />;
+    screen = <HazardsPage profile={profile} knowledge={knowledge} plan={plan && plan.environment === profile.environment ? plan : null} onBack={() => send({ type: "BACK" })} onNext={() => void beginCheckin("NEXT")} busy={flowBusy} />;
   } else if (view === "safety" && questionView) {
     screen = <SafetyPage questions={questionView.safety} answers={answers} onChange={(next) => sendQuestionnaire({ type: "SET_ANSWERS", answers: next })} onBack={() => send({ type: "BACK" })} onNext={() => void submitSafety()} busy={flowBusy} error={flowError} aside={exitAside} />;
   } else if (view === "questions" && questionView) {
@@ -392,7 +399,7 @@ export default function App() {
       {!compassOpen && <Suspense fallback={null}><SpaceScene reducedMotion={reducedMotion} astronaut={astronaut} mission={mission} /></Suspense>}
       <div className="mission-atmosphere" data-mission={mission} aria-hidden="true" />
       <AppShell
-        page={page} setPage={setPage} mission={mission} connected={sensor.connected} backendReady={backendReady} disclaimer={config.disclaimer}
+        page={page} setPage={setPage} mission={mission} connected={sensor.connected} simulated={sensor.source === "simulated"} backendReady={backendReady} disclaimer={config.disclaimer}
         onShowShortcuts={() => setShortcutsOpen(true)} onReportConcern={view === "urgent" ? undefined : reportConcern}
         flow={flowProgress} scrollKey={`${screenKey}-${view === "questions" ? questionIndex : ""}`}
         onHome={() => { if (view === "dashboard") setPage("dashboard"); else if (onboarded && view !== "urgent") send({ type: "EXIT" }); }}
@@ -400,7 +407,8 @@ export default function App() {
         <AnimatePresence mode="wait" initial={false}>
           <Screen key={screenKey}>{screen}</Screen>
         </AnimatePresence>
-        {flowError && view === "dashboard" && <div role="alert" className="flow-error mx-auto max-w-3xl">{flowError}</div>}
+        {/* Screens with their own error line show it next to the control; every other screen shows it here. */}
+        {flowError && !["context", "safety", "questions", "measure"].includes(view) && <div role="alert" className="flow-error flow-error-global">{flowError}</div>}
       </AppShell>
       <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     </div>

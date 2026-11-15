@@ -18,6 +18,14 @@ describe("AppShell", () => {
     expect(screen.getByLabelText("No sensor connected")).toBeInTheDocument();
   });
 
+  it("never calls the simulated demo stream a connected sensor", () => {
+    const { rerender } = render(<AppShell page="sensor" setPage={() => undefined} mission="leo" connected simulated backendReady disclaimer="x"><p /></AppShell>);
+    expect(screen.getByLabelText("Simulated stream, not a measurement")).toHaveTextContent("Simulated");
+    expect(screen.queryByLabelText("Sensor connected")).not.toBeInTheDocument();
+    rerender(<AppShell page="sensor" setPage={() => undefined} mission="leo" connected backendReady disclaimer="x"><p /></AppShell>);
+    expect(screen.getByLabelText("Sensor connected")).toBeInTheDocument();
+  });
+
   it("shows five dashboard tabs and no stepper outside the guided flow", () => {
     const setPage = vi.fn();
     render(<AppShell page="dashboard" setPage={setPage} mission="leo" connected={false} backendReady disclaimer="x"><p /></AppShell>);
