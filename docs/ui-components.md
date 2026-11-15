@@ -163,9 +163,12 @@ polish pass fixed:
 | P2 | "Archive" vs "Health history" vs "Save to history" | Nav renamed "History" |
 | P2 | Navbar collided at 200% zoom (490 px) | Duplicate home mark hidden below 600 px |
 
-Left as recommendations (structural, beyond polish): keyboard shortcuts for
-pages and submit (`/impeccable harden`), the duplicate mission select plus
+Keyboard shortcuts were added afterwards (`64996da`; see
+`desktop/README.md`), addressing the Flexibility and Efficiency score.
+
+Left as recommendations (structural, beyond polish): the duplicate mission select plus
 cards (`/impeccable distill`), grouping the 17 symptom checkboxes
 (`/impeccable layout`), contextual help for SpO2 estimates and priorities
 (`/impeccable clarify`).
 
+The full, phase-grouped commit history is in [`ui-changelog.md`](ui-changelog.md).

@@ -128,6 +128,19 @@ Refresh the cache (network required; the app itself never downloads media):
 python software/scripts/fetch_nasa_media.py --with-video
 ```
 
+## Keyboard shortcuts
+
+| Shortcut (macOS / Windows, Linux) | Action |
+|---|---|
+| ⌘1–⌘4 / Ctrl+1–Ctrl+4 | Telemetry, Check-in, Assessment, History |
+| ⌘Enter / Ctrl+Enter | Review health priorities (on Check-in; same validation as the button) |
+| ⌘S / Ctrl+S | Save the current assessment to history |
+| ? | Show the shortcut reference (ignored while typing in a field) |
+| Esc | Close a dialog |
+
+Shortcuts defer to an open dialog. The key map lives in `src/lib/shortcuts.ts`;
+nav items, the submit button and the save button expose `aria-keyshortcuts`.
+
 ## Visual testing tip
 
 `ASTROTIP_HISTORY_PATH=/tmp/astrotip-test.sqlite3` points the backend at a
