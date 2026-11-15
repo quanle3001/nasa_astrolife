@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QTableWidgetItem, QVBoxLayout, QWidget,
 )
 
-from astrotip.models.health_indicator import MISSION_LABELS, SYMPTOMS
+from astrotip.models.health_indicator import SYMPTOMS
 from astrotip.ui.common import LEVEL_LABELS, browser, assessment_html, e, label
 
 
@@ -26,8 +26,8 @@ class HistoryPage(QWidget):
         self.storage_location = label("", "subtitle")
         layout.addWidget(self.storage_location)
         splitter = QSplitter(Qt.Orientation.Vertical)
-        self.table = QTableWidget(0, 3)
-        self.table.setHorizontalHeaderLabels(["Recorded", "Mission", "Priority"])
+        self.table = QTableWidget(0, 2)
+        self.table.setHorizontalHeaderLabels(["Recorded", "Priority"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
@@ -51,7 +51,6 @@ class HistoryPage(QWidget):
         for row, entry in enumerate(entries):
             values = [
                 entry["created_at"],
-                MISSION_LABELS.get(entry["checkin"]["mission"], entry["checkin"]["mission"]),
                 LEVEL_LABELS.get(entry["assessment"]["level"], entry["assessment"]["level"]),
             ]
             for col, value in enumerate(values):

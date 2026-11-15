@@ -28,7 +28,7 @@ The catalog covers all five hazards and groups the 17 entries visible in the ris
 
 These groups, their order, and hazard mappings are AstroLife's editorial organization, not an official NASA ranking or a claim that these are the entire Human Research Roadmap. NASA's overview explains that risk changes with mission destination. A normal fingertip reading must never suppress prevention topics or imply that unmeasured risks have been excluded.
 
-The current check-in uses destination for broad planning reminders but does not calculate how risk changes with mission duration, phase, exposure history, or individual medical background. Longer-duration concerns are described in the catalog; they are not quantitative predictions.
+The app does not ask for or assume a mission destination. Assessments use sensor readings and explicitly reported symptoms, sleep, exercise, and alerts. Destination-based planning reminders are not generated. NASA's discussion of mission differences remains background context in the catalog, not a personalized prediction. Older saved assessments retain their original contents; new check-ins do not store a mission field.
 
 ## Evidence labels
 

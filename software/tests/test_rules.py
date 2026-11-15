@@ -104,17 +104,17 @@ class AssessmentTests(unittest.TestCase):
         self.assertEqual(missed["fitness"].level, "watch")
         self.assertEqual(missed["bone"].level, "watch")
 
-    def test_mission_context_adds_planning_priorities_without_diagnosis(self):
-        for mission in ("lunar", "mars"):
-            with self.subTest(mission=mission):
-                result = self.assess(mission=mission)
-                findings = findings_by_id(result)
-                self.assertEqual(findings["radiation"].level, "watch")
-                self.assertEqual(findings["medical_support"].level, "watch")
-                self.assertNotEqual(result.level, "urgent")
+    def test_planning_priorities_are_not_inferred_without_reported_observations(self):
+        result = self.assess(heart_rate=72, spo2=98)
+        findings = findings_by_id(result)
+        self.assertEqual(findings["radiation"].level, "info")
+        self.assertEqual(findings["medical_support"].level, "info")
+        self.assertFalse(any("Beyond low Earth orbit" in finding.reason for finding in result.findings))
+        radiation = findings_by_id(self.assess(symptoms={"radiation_alert"}))["radiation"]
+        self.assertEqual(radiation.level, "urgent")
 
     def test_mixed_findings_sort_by_urgency_and_reference_real_sources(self):
-        result = self.assess(mission="mars", spo2=87,
+        result = self.assess(spo2=87,
                              symptoms={"poor_sleep", "vision_changes", "bone_pain"})
         severity = {"urgent": 0, "review": 1, "watch": 2, "info": 3}
         ranks = [severity[f.level] for f in result.findings]
@@ -130,7 +130,7 @@ class AssessmentTests(unittest.TestCase):
         self.assertTrue(any("not automatically analyzed" in note for note in result.data_notes))
 
     def test_multiple_triggers_for_one_group_preserve_highest_urgency(self):
-        result = self.assess(mission="mars", spo2=86, signal_quality="poor",
+        result = self.assess(spo2=86, signal_quality="poor",
                              symptoms={"breathing_difficulty", "confusion", "environmental_alert"})
         finding = findings_by_id(result)["hypoxia"]
         self.assertEqual(finding.level, "urgent")

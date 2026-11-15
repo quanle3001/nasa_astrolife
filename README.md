@@ -71,7 +71,11 @@ python -m pip install -r software/requirements.txt
 python software/run.py
 ```
 
-The current desktop application provides placeholder navigation pages. Live sensor integration and health assessment features are under development.
+The desktop app includes a live sensor monitor with red/infrared optical
+waveforms, optional check-ins, rule-based guidance, and local health history.
+On this Windows setup, double-click the **Astro Life** desktop shortcut to open
+it. See [the software guide](software/README.md#live-optical-waveform) for waveform
+behavior and the required ESP32 firmware update.
 
 ### 2. Build the ESP32 firmware
 
@@ -103,21 +107,21 @@ Open the Serial Monitor:
 pio device monitor -b 115200
 ```
 
-The terminal displays descriptive MAX30102 reports, including raw optical readings, estimated heart rate, estimated SpO₂, and measurement validity.
+The terminal displays descriptive MAX30102 reports, including raw optical readings, estimated heart rate, estimated SpO₂, and measurement validity, plus `PPG` lines containing paired red/infrared samples for the desktop waveform. Close the serial monitor before connecting the desktop app.
 
 On macOS, if `pio` is not recognized, use the PlatformIO Core CLI terminal in VS Code or run `~/.platformio/penv/bin/pio`.
 
 ## Development Status
 
 - [x] Initial repository and software structure
-- [x] PySide6 desktop application placeholder
+- [x] PySide6 desktop application
 - [x] ESP32 MAX30102 firmware implementation
-- [ ] Physical sensor testing and verification
-- [ ] Real-time sensor-to-desktop integration
-- [ ] Manual health inputs and questionnaires
+- [ ] Sensor accuracy verified against reference medical equipment
+- [x] Serial reader and live optical waveform (hardware stream verified)
+- [x] Manual health inputs and questionnaires
 - [ ] Image import and webcam capture
-- [ ] Local health history and visualization
-- [ ] NASA-informed health assessment
+- [x] Local health history
+- [x] NASA-informed, rule-based health guidance
 - [ ] Optional local machine-learning integration
 
 ## Important Notice

@@ -8,7 +8,6 @@ from PySide6.QtWidgets import (
 
 from astrotip.analysis.nasa_guidance import load_catalog
 from astrotip.analysis.rules import assess
-from astrotip.models.health_indicator import MISSION_LABELS
 from astrotip.storage.database import HistoryStore
 from astrotip.ui.animations.starfield import Starfield
 from astrotip.ui.animations.transitions import fade_in, reduced_motion
@@ -21,8 +20,23 @@ from astrotip.ui.pages.sensor import SensorPage
 from astrotip.ui.theme import APP_STYLESHEET
 from astrotip.ui.widgets.orbital_indicator import OrbitalIndicator
 
+# Styles for the teammate's live monitor card (pulse chart and large estimates).
+MONITOR_STYLESHEET = """
+QFrame#monitorCard { background: #040c10; border: 1px solid #23444a; border-radius: 9px; }
+QFrame#monitorCard QWidget { background: #040c10; }
+QLabel#pulseValue { font-size: 44pt; font-weight: 600; color: #82ee9c; }
+QLabel#oxygenValue { font-size: 44pt; font-weight: 600; color: #4ae8df; }
+QLabel#pulseCaption { font-size: 11pt; font-weight: 600; color: #82ee9c; }
+QLabel#oxygenCaption { font-size: 11pt; font-weight: 600; color: #4ae8df; }
+QLabel#connectionStatus { color: #9ee5d3; padding: 3px 0; }
+QLabel#waveformTitle { font-size: 13pt; font-weight: 600; color: #9ee5d3; }
+"""
 
-class AstroTipWindow(QMainWindow):
+# Display names for the decorative mission context. The mission never enters a CheckIn.
+MISSION_NAMES = {"leo": "Low Earth orbit", "lunar": "Lunar mission", "mars": "Mars / deep space"}
+
+
+class AstroLifeWindow(QMainWindow):
     NAV_ITEMS = (
         ("fa6s.heart-pulse", "◉", "Sensor monitor"),
         ("fa6s.user-astronaut", "◇", "Optional check-in"),
@@ -40,7 +54,7 @@ class AstroTipWindow(QMainWindow):
         self.setWindowTitle("AstroLife · Crew health console")
         self.resize(1320, 880)
         self.setMinimumSize(900, 640)
-        self.setStyleSheet(APP_STYLESHEET)
+        self.setStyleSheet(APP_STYLESHEET + MONITOR_STYLESHEET)
 
         central = QWidget()
         central.setObjectName("appSurface")
@@ -58,7 +72,7 @@ class AstroTipWindow(QMainWindow):
         self.checkin_page.assess_requested.connect(self.run_assessment)
         self.assessment_page.save_requested.connect(self.save_assessment)
         self.tabs.currentChanged.connect(self._tab_changed)
-        self.checkin_page.mission.currentIndexChanged.connect(self._mission_changed)
+        self.checkin_page.mission_gallery.mission_changed.connect(self._mission_changed)
         self._tab_changed(0)
         self._mission_changed()
 
@@ -269,9 +283,9 @@ class AstroTipWindow(QMainWindow):
         except Exception as exc:
             QMessageBox.warning(self, "Could not load history", str(exc))
 
-    def _mission_changed(self, *_args):
-        mission = self.checkin_page.mission.currentData() or "leo"
-        name = MISSION_LABELS.get(mission, mission)
+    def _mission_changed(self, mission="leo"):
+        mission = mission if mission in MISSION_NAMES else "leo"
+        name = MISSION_NAMES[mission]
         self.sidebar_mission.setText(name)
         self.mission_pill.setText(f"{mission.upper()}  ·  LOCAL")
         self.orbit_indicator.set_mission(mission)
@@ -294,3 +308,7 @@ class AstroTipWindow(QMainWindow):
         else:
             event.ignore()
             self.sensor_page.status.setText("Waiting for the serial connection to close; try closing again shortly.")
+
+
+# Earlier name of the window class, kept so existing launchers keep working.
+AstroTipWindow = AstroLifeWindow

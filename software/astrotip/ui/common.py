@@ -20,6 +20,39 @@ LEVEL_COLORS = {
     "info": "#8ad8c4",
 }
 
+PLAIN_TITLES = {
+    "hypoxia": "Oxygen reading", "cardiovascular": "Pulse and heart health",
+    "sans": "Eyes and vision", "vestibular": "Balance and dizziness",
+    "fitness": "Strength and exercise", "bone": "Bones", "sleep": "Sleep and fatigue",
+    "behavioral": "Mood and wellbeing", "immune": "Illness or infection",
+    "nutrition": "Food and fluids", "radiation": "Radiation alert",
+    "eva": "After a spacewalk", "medical_support": "Medical support",
+}
+
+
+def simple_summary(assessment):
+    return {
+        "urgent": "Immediate action needed. Contact the medical team or emergency services now.",
+        "review": "Contact the medical team about this reading or concern.",
+        "watch": "Check these readings and concerns. Follow your personal care plan.",
+        "info": "No alert from the information entered. This is not a health clearance.",
+    }[assessment.level]
+
+
+def live_guidance_html(checkin, assessment):
+    """One short next step; always evaluate the latest, unaveraged reading."""
+    if assessment.level == "urgent":
+        title = "Get help now"
+        text = (f"Oxygen estimate: {checkin.spo2:g}%. This reading needs immediate medical attention. "
+                "Contact the medical team or emergency services now. Do not wait for another reading.")
+    elif assessment.level == "review":
+        title = "Contact the medical team"
+        text = f"Oxygen estimate: {checkin.spo2:g}%. Arrange a prompt check with an approved monitor and the medical team."
+    else:
+        title = "What to do"
+        text = "Compare these estimates with your personal limits and an approved monitor. Tell the medical team about unexpected readings."
+    return f'<b style="color:{LEVEL_COLORS[assessment.level]}">{e(title)}</b><p>{e(text)}</p>'
+
 
 def e(value):
     return escape(str(value), quote=True)
@@ -52,7 +85,7 @@ def browser():
     return widget
 
 
-def assessment_html(assessment, catalog):
+def assessment_html(assessment, catalog, detailed=False):
     """Show only relevant results and responses; keep reference content internal."""
     data = asdict(assessment) if is_dataclass(assessment) else assessment
     conditions = {item["id"]: item for item in catalog["conditions"]}
@@ -65,19 +98,16 @@ def assessment_html(assessment, catalog):
         condition = conditions.get(finding["condition_id"])
         if not condition:
             continue
-        html += f'<h2>{e(condition["title"])}</h2><p>{e(finding["reason"])}</p>'
+        title = condition["title"] if detailed else PLAIN_TITLES.get(condition["id"], condition["title"])
+        html += f'<h2>{e(title)}</h2><p>{e(finding["reason"])}</p>'
         actions = list(finding.get("actions", []))
-        if data["level"] != "urgent":
+        if detailed and data["level"] != "urgent":
             actions += [item["text"] for item in condition["countermeasures"] if item["evidence"] != "Research only"]
         if actions:
             html += '<h3>Suggested next steps</h3><ul>'
             html += ''.join(f'<li>{e(action)}</li>' for action in dict.fromkeys(actions)) + '</ul>'
     if not html:
-        html = '<p>No specific follow-up trigger was entered. This does not establish that you are healthy.</p>'
-    html += (
-        '<hr><p class="muted">Pulse and oxygen estimates cannot diagnose a condition or assess '
-        'radiation exposure, bone health, eye changes, or mental health. '
-        'Seek help for concerning symptoms even if a reading looks typical.</p>'
-    )
+        html = '<p>No alert from the information entered. This does not establish that you are healthy.</p>'
+    html += '<hr><p class="muted">If you feel unwell, contact the medical team even when the numbers look usual.</p>'
     level = data["level"]
     return f'<p style="color:{LEVEL_COLORS.get(level, LEVEL_COLORS["info"])}"><b>{e(LEVEL_LABELS.get(level, level))}</b></p>' + html
