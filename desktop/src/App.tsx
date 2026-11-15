@@ -10,6 +10,8 @@ import { SensorPage, type SensorViewState } from "@/components/pages/sensor-page
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { useAmbientVideo } from "@/lib/media-playback";
+import { isTypingTarget, matchShortcut } from "@/lib/shortcuts";
+import { ShortcutsDialog } from "@/components/shortcuts-dialog";
 import type { AppConfig, AssessmentBundle, BackendEvent, CheckIn, MissionId } from "@/types/backend";
 
 const INITIAL_SENSOR: SensorViewState = {
@@ -46,6 +48,7 @@ export default function App() {
   const [saving, setSaving] = useState(false);
   const [historyRefresh, setHistoryRefresh] = useState(0);
   const crownVideo = useRef<HTMLVideoElement>(null);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   useAmbientVideo(crownVideo, Boolean(config));
 
   const start = async () => {
@@ -101,6 +104,25 @@ export default function App() {
     finally { setSaving(false); }
   };
 
+  const onShortcut = useRef<(event: KeyboardEvent) => void>(() => undefined);
+  onShortcut.current = (event: KeyboardEvent) => {
+    if (!config) return;
+    const action = matchShortcut(event, isTypingTarget(event.target));
+    if (!action) return;
+    // While a dialog is open, it owns the keyboard (Esc closes it).
+    if (document.querySelector('[role="dialog"]')) return;
+    event.preventDefault();
+    if (action.type === "page") setPage(action.page);
+    else if (action.type === "help") setShortcutsOpen(true);
+    else if (action.type === "submit-checkin" && page === "checkin" && !busy) (document.getElementById("checkin-form") as HTMLFormElement | null)?.requestSubmit();
+    else if (action.type === "save-assessment" && page === "assessment") void save();
+  };
+  useEffect(() => {
+    const listener = (event: KeyboardEvent) => onShortcut.current(event);
+    window.addEventListener("keydown", listener);
+    return () => window.removeEventListener("keydown", listener);
+  }, []);
+
   if (!config) {
     return (
       <div className="relative grid min-h-screen place-items-center overflow-hidden bg-space-black p-6 text-space-white">
@@ -119,12 +141,13 @@ export default function App() {
       </div>
       <Suspense fallback={null}><StarBackground reducedMotion={reducedMotion} /></Suspense>
       <div className="mission-atmosphere" data-mission={mission} aria-hidden="true" />
-      <AppShell page={page} setPage={setPage} mission={mission} connected={sensor.connected} backendReady={backendReady} disclaimer={config.disclaimer}>
+      <AppShell page={page} setPage={setPage} mission={mission} connected={sensor.connected} backendReady={backendReady} disclaimer={config.disclaimer} onShowShortcuts={() => setShortcutsOpen(true)}>
         <PageStage active={page === "sensor"}><SensorPage state={sensor} mission={mission} onReview={reviewSensor} onCheckin={() => setPage("checkin")} onConnectStart={(port) => setSensor((current) => ({ ...current, connecting: true, fault: null, status: `Opening ${port}…` }))} /></PageStage>
         <PageStage active={page === "checkin"}><CheckinPage config={config} mission={mission} setMission={setMission} onAssess={assess} busy={busy} /></PageStage>
         <PageStage active={page === "assessment"}><AssessmentPage config={config} bundle={latest} saved={saved} saving={saving} onSave={save} onEdit={() => setPage("checkin")} /></PageStage>
         <PageStage active={page === "history"}><HistoryPage config={config} active={page === "history"} refreshKey={historyRefresh} /></PageStage>
       </AppShell>
+      <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     </div>
   );
 }

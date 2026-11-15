@@ -1,6 +1,7 @@
 import { ClipboardCheck, NotebookPen } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { MissionSelector } from "@/components/mission-selector";
+import { ARIA_MOD, MOD } from "@/lib/shortcuts";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { AppConfig, CheckIn, MissionId } from "@/types/backend";
@@ -84,7 +85,7 @@ export function CheckinPage({ config, mission, setMission, onAssess, busy }: {
   };
 
   return (
-    <form onSubmit={submit} className="page-grid checkin-experience">
+    <form id="checkin-form" onSubmit={submit} className="page-grid checkin-experience">
       <div className="page-heading immersive-heading"><div><h1>Log the human side of <span className="whitespace-nowrap">the mission.</span></h1><p>Record what you know. Leave missing readings blank; unreported symptoms are not ruled out.</p></div></div>
       <MissionSelector value={mission} onChange={setMission} />
       <Card className="p-5">
@@ -108,7 +109,7 @@ export function CheckinPage({ config, mission, setMission, onAssess, busy }: {
       </Card>
       <Card className="p-5"><label className="block"><span className="mb-2 block text-xs font-medium text-space-muted">Notes for your record · not automatically analyzed</span><textarea className="control min-h-28 resize-y" maxLength={5000} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Optional: timing, activity, changes from baseline, or information for the medical team." /></label></Card>
       {error && <div role="alert" className="rounded-xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">{error}</div>}
-      <div className="sticky bottom-0 z-20 flex items-center justify-between gap-4 rounded-2xl border border-white/10 p-3"><p className="hidden text-xs text-space-subtle md:block">Assessment stays in memory until you choose Save to history.</p><Button type="submit" variant="primary" size="lg" disabled={busy} className="ml-auto"><ClipboardCheck className="size-4" />{busy ? "Reviewing…" : "Review health priorities"}</Button></div>
+      <div className="sticky bottom-0 z-20 flex items-center justify-between gap-4 rounded-2xl border border-white/10 p-3"><p className="hidden text-xs text-space-subtle md:block">Assessment stays in memory until you choose Save to history.</p><Button type="submit" variant="primary" size="lg" disabled={busy} className="ml-auto" title={`Review health priorities (${MOD} Enter)`} aria-keyshortcuts={`${ARIA_MOD}+Enter`}><ClipboardCheck className="size-4" />{busy ? "Reviewing…" : "Review health priorities"}<kbd className="kbd kbd-on-primary" aria-hidden="true">{MOD}↵</kbd></Button></div>
     </form>
   );
 }

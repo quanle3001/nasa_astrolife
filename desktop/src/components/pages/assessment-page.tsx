@@ -2,6 +2,7 @@ import { AlertOctagon, Check, Edit3, Save, ShieldCheck, Stethoscope } from "luci
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { ARIA_MOD, MOD } from "@/lib/shortcuts";
 import { cn } from "@/lib/utils";
 import type { AppConfig, AssessmentBundle } from "@/types/backend";
 
@@ -26,7 +27,7 @@ export function AssessmentPage({ config, bundle, saved, saving, onSave, onEdit }
     <div className="page-grid">
       <div className="page-heading">
         <div><h1>Health priorities & next steps</h1><p>Explainable local assessment from the observations recorded in this session.</p></div>
-        <div className="flex gap-2"><Button onClick={onEdit}><Edit3 className="size-4" /> Edit check-in</Button><Button variant="primary" disabled={saved || saving} onClick={() => void onSave()}>{saved ? <Check className="size-4" /> : <Save className="size-4" />}{saved ? "Saved" : saving ? "Saving…" : "Save to history"}</Button></div>
+        <div className="flex gap-2"><Button onClick={onEdit}><Edit3 className="size-4" /> Edit check-in</Button><Button variant="primary" disabled={saved || saving} onClick={() => void onSave()} title={`Save to history (${MOD} S)`} aria-keyshortcuts={`${ARIA_MOD}+S`}>{saved ? <Check className="size-4" /> : <Save className="size-4" />}{saved ? "Saved" : saving ? "Saving…" : "Save to history"}</Button></div>
       </div>
       <Card className={cn("overflow-hidden p-5", assessment.level === "urgent" && "border-rose-400/40 bg-rose-950/25")}>
         <div className="flex items-start gap-4"><div className={cn("grid size-11 shrink-0 place-items-center rounded-xl", assessment.level === "urgent" ? "bg-rose-500/15 text-rose-300" : "bg-cyan-300/10 text-cyan-300")}><Stethoscope className="size-5" /></div><div><div className={cn("priority-badge", `priority-${assessment.level}`)}>{LEVEL_LABELS[assessment.level]}</div><h2 className="mt-3 text-xl font-semibold text-white">{assessment.summary}</h2></div></div>

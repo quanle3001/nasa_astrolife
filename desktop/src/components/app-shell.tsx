@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
 import { useCalmMotion, useMotionPreference } from "@/lib/motion-preference";
-import { ClipboardCheck, Database, HeartPulse, Orbit, Pause, Play, Sparkles, UserRound } from "lucide-react";
+import { ClipboardCheck, Database, HeartPulse, Keyboard, Orbit, Pause, Play, Sparkles, UserRound } from "lucide-react";
+import { ARIA_MOD, MOD } from "@/lib/shortcuts";
 import { useEffect, useRef, type ReactNode } from "react";
 import { StatusBadge } from "@/components/spaceui/status-badge";
 import { MISSIONS } from "@/lib/missions";
@@ -16,8 +17,9 @@ const NAV = [
   { id: "history" as const, label: "History", icon: Database },
 ];
 
-export function AppShell({ page, setPage, mission, connected, backendReady, disclaimer, children }: {
+export function AppShell({ page, setPage, mission, connected, backendReady, disclaimer, onShowShortcuts, children }: {
   page: PageId; setPage: (page: PageId) => void; mission: MissionId; connected: boolean; backendReady: boolean; disclaimer: string;
+  onShowShortcuts?: () => void;
   children: ReactNode;
 }) {
   const reduced = useCalmMotion();
@@ -35,8 +37,8 @@ export function AppShell({ page, setPage, mission, connected, backendReady, disc
         </button>
 
         <nav className="nav-capsule app-no-drag" aria-label="Primary navigation">
-          {NAV.map(({ id, label, icon: Icon }) => (
-            <button key={id} type="button" onClick={() => setPage(id)} aria-current={page === id ? "page" : undefined} className={cn("nav-capsule-item", page === id && "is-active")}>
+          {NAV.map(({ id, label, icon: Icon }, index) => (
+            <button key={id} type="button" onClick={() => setPage(id)} aria-current={page === id ? "page" : undefined} title={`${label} (${MOD}${index + 1})`} aria-keyshortcuts={`${ARIA_MOD}+${index + 1}`} className={cn("nav-capsule-item", page === id && "is-active")}>
               {page === id && <motion.span layoutId="nav-capsule-active" className="nav-capsule-active" transition={reduced ? { duration: 0 } : { type: "spring", stiffness: 360, damping: 32 }} />}
               <Icon className="relative z-10 size-3.5" />
               <span className="relative z-10 nav-label">{label}</span>
@@ -64,6 +66,7 @@ export function AppShell({ page, setPage, mission, connected, backendReady, disc
         <footer className="space-footer">
           <p className="space-footer-disclaimer">{disclaimer}</p>
           <p className="space-footer-tagline"><Sparkles className="size-3" /> AstroTip educational prototype · Local-first crew wellness interface</p>
+          {onShowShortcuts && <button type="button" className="footer-shortcuts" onClick={onShowShortcuts} aria-keyshortcuts="Shift+?"><Keyboard className="size-3.5" /> Keyboard shortcuts <kbd className="kbd">?</kbd></button>}
         </footer>
       </main>
     </div>

@@ -201,6 +201,10 @@ input, textarea { caret-color: var(--color-space-cyan); }
 .mission-chip { display:flex; height:32px; align-items:center; gap:6px; border:1px solid rgba(255,255,255,.1); border-radius:var(--radius-pill); background:rgba(255,255,255,.03); padding:0 11px; color:var(--color-space-silver); font-size:var(--text-label); font-weight:800; letter-spacing:.1em; }
 .space-footer { margin:8px auto 24px; display:flex; width:min(calc(var(--page-max) - var(--page-gutter) * 2),calc(100% - var(--page-gutter) * 2)); flex-direction:column; align-items:center; gap:10px; border-top:1px solid rgba(255,255,255,.07); padding-top:18px; text-align:center; }
 .space-footer-disclaimer { margin:0; max-width:100%; color:var(--color-space-muted); font-size:var(--text-xs); line-height:1.6; white-space:nowrap; }
+.kbd { display:inline-grid; min-width:20px; height:20px; place-items:center; border:1px solid rgba(255,255,255,.18); border-radius:6px; background:rgba(255,255,255,.06); padding:0 5px; color:var(--color-space-silver); font:600 11px/1 var(--font-sans); }
+.kbd-on-primary { margin-left:4px; border-color:rgba(255,255,255,.35); background:rgba(255,255,255,.14); color:#fff; }
+.footer-shortcuts { display:inline-flex; align-items:center; gap:7px; border:0; border-radius:var(--radius-sm); background:transparent; padding:4px 8px; color:var(--color-space-muted); font-size:var(--text-xs); transition:color var(--duration-fast), background var(--duration-fast); }
+.footer-shortcuts:hover { background:rgba(255,255,255,.05); color:var(--color-space-white); }
 .space-footer-tagline { margin:0; display:flex; align-items:center; justify-content:center; gap:7px; color:var(--color-space-subtle); font-size:var(--text-label); letter-spacing:.08em; text-transform:uppercase; }
 
 /* ---------- Telemetry hero ---------- */
