@@ -3,7 +3,6 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Component, Suspense, useEffect, useRef, type MutableRefObject, type ReactNode } from "react";
 import type { Group } from "three";
 import { StarField } from "@/components/effects/star-background";
-import type { MissionId } from "@/types/backend";
 
 /**
  * The app's single decorative WebGL scene: the rotating starfield, plus the
@@ -27,17 +26,6 @@ const POSES: Record<AstronautVariant, { position: [number, number, number]; scal
   // Upper right, beside the page heading and clear of the cards and controls.
   side: { position: [3.7, 1.25, -3.4], scale: 0.5 },
 };
-/**
- * Coloured lighting per mission. The suit in the NASA model is white, so its
- * colour on screen comes from light: a key light in the mission accent, a rim
- * light from behind and a fill from below.
- */
-const MISSION_LIGHTS: Record<MissionId, { key: string; rim: string; fill: string }> = {
-  leo: { key: "#9dcddc", rim: "#5692a9", fill: "#044568" },
-  lunar: { key: "#cdd7df", rim: "#9dcddc", fill: "#5692a9" },
-  mars: { key: "#ffb27a", rim: "#ff5a3c", fill: "#c46c3e" },
-};
-
 function Astronaut({ variant, pointer, calm }: { variant: AstronautVariant; pointer: MutableRefObject<{ x: number; y: number }>; calm: boolean }) {
   const { scene } = useGLTF(MODEL_URL, DRACO_PATH);
   const group = useRef<Group>(null);
@@ -76,8 +64,8 @@ class Optional extends Component<{ children: ReactNode }, { failed: boolean }> {
   render() { return this.state.failed ? null : this.props.children; }
 }
 
-export default function SpaceScene({ reducedMotion, astronaut, mission }: {
-  reducedMotion: boolean; astronaut: AstronautVariant | null; mission: MissionId;
+export default function SpaceScene({ reducedMotion, astronaut }: {
+  reducedMotion: boolean; astronaut: AstronautVariant | null;
 }) {
   const pointer = useRef({ x: 0, y: 0 });
   useEffect(() => {
@@ -95,10 +83,14 @@ export default function SpaceScene({ reducedMotion, astronaut, mission }: {
         <Suspense fallback={null}><StarField reducedMotion={reducedMotion} /></Suspense>
         {astronaut && (
           <Optional>
-            <ambientLight intensity={0.3} />
-            <directionalLight position={[-3, 4, 4]} intensity={3} color={MISSION_LIGHTS[mission].key} />
-            <directionalLight position={[5, 1, -3]} intensity={4.2} color={MISSION_LIGHTS[mission].rim} />
-            <directionalLight position={[0.5, -4, 2]} intensity={1.8} color={MISSION_LIGHTS[mission].fill} />
+            {/* Neutral studio lighting keeps the suit white while the angled
+                key, rim and fill lights reveal the model's original textures,
+                seams, folds, helmet and life-support equipment. */}
+            <ambientLight intensity={0.08} />
+            <hemisphereLight args={["#ffffff", "#062b43", 0.22]} />
+            <directionalLight position={[-4, 5, 4]} intensity={2.9} color="#ffffff" />
+            <directionalLight position={[4.5, 2, -3]} intensity={2.1} color="#e3f3f7" />
+            <directionalLight position={[1, -3, 3]} intensity={0.45} color="#b8cbd2" />
             <Suspense fallback={null}><Astronaut variant={astronaut} pointer={pointer} calm={reducedMotion} /></Suspense>
           </Optional>
         )}

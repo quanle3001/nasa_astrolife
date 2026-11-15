@@ -406,7 +406,7 @@ export default function App() {
         </video>
       </div>
       {/* One WebGL scene at a time: the starfield yields to the 3D anatomy viewer. */}
-      {!compassOpen && <Suspense fallback={null}><SpaceScene reducedMotion={reducedMotion} astronaut={astronaut} mission={mission} /></Suspense>}
+      {!compassOpen && <Suspense fallback={null}><SpaceScene reducedMotion={reducedMotion} astronaut={astronaut} /></Suspense>}
       <div className="mission-atmosphere" data-mission={mission} aria-hidden="true" />
       <CursorAura />
       <AppShell

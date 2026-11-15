@@ -258,8 +258,9 @@ A highlight means "there is a prompt to review here". It never means something
 is wrong there, and an unmarked region is never called healthy.
 
 The NASA astronaut model is separate and decorative. It appears only on the
-welcome and mission-context screens, lit in the mission's colours, and turns
-toward the cursor.
+welcome and mission-context screens. Neutral three-point studio lighting keeps
+the original suit white while revealing its textured seams, equipment and
+helmet; the model retains its existing gentle cursor-facing motion.
 
 ## 9. Cursor-reactive motion
 
