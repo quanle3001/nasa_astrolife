@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from astrotip.models.health_indicator import CheckIn
 from astrotip.questionnaire.registry import (
-    SAFETY_DOMAIN, SKIPPED, UNSURE, applicable_answers, option_values, validate_answer, visible_questions,
+    SKIPPED, UNSURE, applicable_answers, option_values, validate_answer, visible_questions,
 )
 
 
@@ -23,11 +23,15 @@ def _label(question: dict, value) -> str:
 
 
 def checkin_from_answers(registry: dict, mission: dict, answers: dict, hazard_order: list[str],
-                         measurement: dict | None = None, require_safety: bool = True) -> tuple[CheckIn, list[str]]:
+                         measurement: dict | None = None, require_complete: bool = True) -> tuple[CheckIn, list[str]]:
     """Build the CheckIn for the assessment rules plus plain-language session notes.
 
     Answers to questions that no longer apply are ignored. Unanswered, unsure
     and skipped items are listed as not assessed; they are never treated as "no".
+
+    A submission needs every required question answered. A preview of a
+    check-in still in progress (`require_complete=False`) does not: it must be
+    able to surface an urgent answer before the later questions are reached.
     """
     kept = applicable_answers(registry, mission, answers)
     questions = visible_questions(registry, mission, kept, hazard_order)
@@ -37,7 +41,7 @@ def checkin_from_answers(registry: dict, mission: dict, answers: dict, hazard_or
     not_assessed: list[str] = []
     for question in questions:
         if question["id"] not in kept:
-            if question.get("required") and (require_safety or question["domain"] != SAFETY_DOMAIN):
+            if question.get("required") and require_complete:
                 raise ValueError(f"Answer the required question first: {question['text']}")
             not_assessed.append(f"Not answered: {question['text']}")
             continue

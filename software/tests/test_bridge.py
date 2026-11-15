@@ -140,7 +140,8 @@ class BridgeTests(unittest.TestCase):
         self.assertEqual(history[0]["checkin"]["spo2"], 91)
 
     def test_urgent_safety_answer_returns_emergency_guidance_without_a_sensor(self):
-        self.ok("mission.save", {"profile": {"environment": "lunar", "phase": "surface"}})
+        # A recent EVA adds a required question later in the check-in; the safety preview must not wait for it.
+        self.ok("mission.save", {"profile": {"environment": "lunar", "phase": "surface", "eva_recent": True}})
         session = self.ok("session.start")
         preview = self.ok("session.preview", {"session_id": session["session_id"], "answers": {"safety.chest_pain": "yes"}})
         self.assertTrue(preview["urgent"])

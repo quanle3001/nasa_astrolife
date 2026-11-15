@@ -370,7 +370,7 @@ class BridgeService(QObject):
         answers = self._clean_answers(session, params.get("answers", {}))
         self.state.save_progress(session["session_id"], answers, str(params.get("position", ""))[:120])
         checkin, notes = checkin_from_answers(self.registry, session["mission"], answers,
-                                              self._hazard_order(session), require_safety=False)
+                                              self._hazard_order(session), require_complete=False)
         assessment = assess(checkin, self.catalog)
         return {"checkin": asdict(checkin), "assessment": asdict(assessment), "session_notes": notes,
                 "urgent": assessment.level == "urgent"}

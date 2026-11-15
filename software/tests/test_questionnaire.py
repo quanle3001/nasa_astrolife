@@ -207,10 +207,18 @@ class SessionMappingTests(Base):
         answers = {"safety.chest_pain": "yes"}
         self.assertTrue(has_urgent_answer(self.registry, mission, answers))
         self.assertFalse(has_urgent_answer(self.registry, mission, {"safety.chest_pain": "no", "sleep.quality": "poorly"}))
-        checkin, _notes = self.build(mission, answers, require_safety=False)
+        checkin, _notes = self.build(mission, answers, require_complete=False)
         assessment = assess(checkin, self.catalog)
         self.assertEqual(assessment.level, "urgent")
         self.assertIn("emergency", assessment.findings[0].actions[0].lower())
+
+    def test_preview_of_an_unfinished_check_in_never_blocks_on_later_required_questions(self):
+        after_eva = self.profile(environment="mars", phase="transit", eva_recent=True)
+        checkin, notes = self.build(after_eva, dict(self.safety_no), require_complete=False)
+        self.assertEqual(checkin.symptoms, frozenset())
+        self.assertIn("Not answered: Since your recent EVA or pressure change, have you noticed any new symptoms?", notes)
+        urgent, _notes = self.build(after_eva, {**self.safety_no, "safety.breathing": "yes"}, require_complete=False)
+        self.assertEqual(assess(urgent, self.catalog).level, "urgent")
 
     def test_answers_to_hidden_questions_are_ignored(self):
         mission = self.profile()
