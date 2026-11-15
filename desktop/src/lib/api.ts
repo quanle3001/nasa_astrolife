@@ -10,6 +10,8 @@ export const api: AstroLifeDesktopApi = window.astrotip ?? {
   listPorts: async () => unavailable(),
   connectSensor: async () => unavailable(),
   disconnectSensor: async () => unavailable(),
+  simulateSensor: async () => unavailable(),
+  onPpgBatch: () => () => undefined,
   assess: async () => unavailable(),
   saveAssessment: async () => unavailable(),
   listHistory: async () => unavailable(),

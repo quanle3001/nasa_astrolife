@@ -1,14 +1,15 @@
 import { motion } from "motion/react";
 import { useCalmMotion } from "@/lib/motion-preference";
-import { Cable, ChevronRight, CircleGauge, ClipboardCheck, ListChecks, LoaderCircle, LockKeyhole, PlugZap, RefreshCw, ShieldAlert, Sparkles } from "lucide-react";
+import { Activity, Cable, ChevronRight, CircleGauge, ClipboardCheck, FlaskConical, ListChecks, LoaderCircle, LockKeyhole, PlugZap, RefreshCw, ShieldAlert, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { BorderBeam } from "@/components/effects/border-beam";
 import { MissionViewport } from "@/components/hero/mission-viewport";
+import { PpgChart } from "@/components/monitor/ppg-chart";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import type { AssessmentBundle, MissionId, SerialPort } from "@/types/backend";
+import type { AssessmentBundle, MeasurementSource, MissionId, SerialPort } from "@/types/backend";
 
 export interface SensorViewState {
   connected: boolean;
@@ -24,7 +25,28 @@ export interface SensorViewState {
   lastUsableAt: number | null;
   /** Why the last connection attempt failed (backend message), kept until the next attempt. */
   fault: string | null;
+  /** "sensor" for the ESP32, "simulated" for the labelled demo stream. */
+  source: MeasurementSource | null;
+  /** Firmware window status, e.g. ready / collecting / no_contact (null on older firmware). */
+  signalStatus: string | null;
+  sampleRateHz: number | null;
+  firmware: string | null;
+  /** Agreement of recent reports: waiting / collecting / steady / changing / settling. */
+  readingState: string | null;
+  /** Result of the raw optical window check; not a clinical quality score. */
+  opticalState: string | null;
+  /** Backend receive time (ISO 8601, UTC) of the newest complete report. */
+  measuredAt: string | null;
 }
+
+/** Plain words for the engineering checks; none of these establish clinical accuracy. */
+const READING_STATE_TEXT: Record<string, string> = {
+  waiting: "Waiting for a usable report",
+  collecting: "Collecting agreeing reports",
+  settling: "Optical window still settling",
+  changing: "Recent reports disagree · hold still",
+  steady: "Recent reports agree",
+};
 
 /** Drop OS error codes such as "[Errno 2]" from what the crew reads; the full text stays in the tooltip. */
 const plainError = (message: string) => message.replace(/\[Errno \d+\]\s*/g, "").replace(/\s{2,}/g, " ").trim();
@@ -57,6 +79,19 @@ export function SensorPage({ state, mission, onReview, onCheckin, onConnectStart
       else setError("Select or enter the ESP32 serial port first.");
     } catch (reason) { setError(reason instanceof Error ? reason.message : String(reason)); }
   };
+  const simulate = async () => {
+    try { setError(""); onConnectStart("simulated stream"); await api.simulateSensor(); }
+    catch (reason) { setError(reason instanceof Error ? reason.message : String(reason)); }
+  };
+  const details = [
+    ["Source", state.source === "simulated" ? "Simulated demo stream" : state.source === "sensor" ? "ESP32 + MAX30102" : "—"],
+    ["Firmware", state.firmware || (state.connected ? "Older report-only firmware" : "—")],
+    ["Sample rate", state.sampleRateHz != null ? `${state.sampleRateHz} samples/s` : "—"],
+    ["Firmware window", state.signalStatus ?? "—"],
+    ["Optical check", state.opticalState ?? "—"],
+    ["Report consistency", state.readingState ? READING_STATE_TEXT[state.readingState] ?? state.readingState : "—"],
+    ["Last complete report", state.measuredAt ? new Date(state.measuredAt).toLocaleTimeString() : "—"],
+  ];
 
   return (
     <div className="page-grid sensor-experience">
@@ -97,6 +132,28 @@ export function SensorPage({ state, mission, onReview, onCheckin, onConnectStart
         ) : (
           <div className="command-dock-state" role="status"><span className={cn("live-pulse", state.connected && "is-live", state.connecting && "is-connecting")} />{state.status}</div>
         )}
+      </Card>
+
+      <Card className="p-5" data-testid="live-monitor">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2"><Activity className="size-4 text-space-cyan" /><h2 className="telemetry-label">Live optical pulse · PPG</h2></div>
+          {!state.connected && !state.connecting && (
+            <Button size="sm" variant="ghost" onClick={simulate} title="Runs a clearly labelled synthetic stream through the real parser. Not a measurement.">
+              <FlaskConical className="size-3.5" /> Run simulated stream
+            </Button>
+          )}
+        </div>
+        <div className="monitor-layout mt-4">
+          <PpgChart />
+          <div className="monitor-vitals" aria-label="Latest sensor estimates">
+            <div><span className="telemetry-label">Pulse</span><strong>{state.heartRate ?? "—"}</strong><small>beats / min · estimate</small></div>
+            <div><span className="telemetry-label">Blood oxygen</span><strong>{state.spo2 ?? "—"}</strong><small>% SpO₂ · estimate</small></div>
+          </div>
+        </div>
+        <dl className="monitor-details">
+          {details.map(([term, value]) => <div key={term}><dt>{term}</dt><dd>{value}</dd></div>)}
+        </dl>
+        <p className="mt-3 text-xs leading-5 text-space-subtle">A dash means the sensor could not provide a usable estimate. It is not a normal result. These engineering checks do not prove accuracy.</p>
       </Card>
 
       <section className="interpretation-grid">

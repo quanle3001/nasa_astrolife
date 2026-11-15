@@ -375,3 +375,24 @@ input, textarea { caret-color: var(--color-space-cyan); }
 /* In-app "Pause motion": freeze decorative loops in place (state spinners keep running). */
 :root[data-motion="paused"] *:not(.animate-spin), :root[data-motion="paused"] *::before, :root[data-motion="paused"] *::after { animation-play-state: paused !important; }
 :root[data-motion="paused"] .viewport-scan { display:none; }
+
+/* --------------------------------------------------------------------------
+   Live monitor: optical pulse chart, estimates and provenance
+   -------------------------------------------------------------------------- */
+.monitor-layout { display:grid; grid-template-columns:minmax(0,1fr) 200px; gap:20px; align-items:stretch; }
+.monitor-vitals { display:flex; flex-direction:column; justify-content:space-around; gap:14px; border-left:1px solid var(--panel-border); padding-left:20px; }
+.monitor-vitals > div { display:flex; flex-direction:column; gap:2px; }
+.monitor-vitals strong { font:600 44px/1.05 var(--font-display); color:var(--color-space-white); font-variant-numeric:tabular-nums; }
+.monitor-vitals small { font-size:var(--text-xs); color:var(--color-space-subtle); }
+.monitor-details { margin-top:16px; display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px 18px; border-top:1px solid var(--panel-border); padding-top:14px; }
+.monitor-details dt { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--color-space-subtle); }
+.monitor-details dd { margin-top:2px; font-size:var(--text-sm); color:var(--color-space-silver); }
+.ppg-chart .uplot { font-family:var(--font-sans); }
+.ppg-chart-idle { position:absolute; left:14px; right:6px; top:50%; height:2px; border-radius:2px; background:rgba(70,217,232,.35); pointer-events:none; }
+.provenance-badge { display:inline-flex; align-items:center; gap:6px; border:1px solid var(--panel-border); border-radius:var(--radius-pill); padding:3px 10px; font-size:11px; font-weight:600; letter-spacing:.04em; color:var(--color-space-silver); background:rgba(255,255,255,.04); white-space:nowrap; }
+.provenance-simulated { border-color:rgba(245,198,123,.5); color:var(--status-review); background:rgba(245,198,123,.08); }
+.provenance-evidence { border-color:rgba(139,124,246,.45); color:#c9c1ff; }
+.provenance-historical { border-color:rgba(142,197,255,.45); color:var(--status-watch); }
+.provenance-measurement { border-color:rgba(92,225,203,.45); color:var(--status-live); }
+.provenance-rule { border-color:rgba(201,213,228,.35); color:var(--color-space-silver); }
+@media (max-width: 1100px) { .monitor-layout { grid-template-columns:1fr; } .monitor-vitals { flex-direction:row; border-left:0; border-top:1px solid var(--panel-border); padding:14px 0 0; } }

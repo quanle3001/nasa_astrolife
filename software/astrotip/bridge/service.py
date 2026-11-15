@@ -15,16 +15,23 @@ import sys
 from threading import Lock, Thread
 from uuid import uuid4
 
-from PySide6.QtCore import QCoreApplication, QObject, Signal, Slot
+from PySide6.QtCore import QCoreApplication, QObject, QTimer, Signal, Slot
 
 from astrotip.analysis.nasa_guidance import load_catalog
+from astrotip.analysis.optical_quality import OpticalSignalQuality
+from astrotip.analysis.reading_stability import ReadingStability
 from astrotip.analysis.rules import assess
+from astrotip.bridge.ppg_batcher import PpgBatcher, contact_state
 from astrotip.inputs.sensor_serial import SerialReader, available_ports
+from astrotip.inputs.simulated_reader import SIMULATED_PORT, SimulatedReader
 from astrotip.models.health_indicator import CheckIn, SYMPTOMS
 from astrotip.storage.database import HistoryStore
 
 
 MAX_LINE_BYTES = 1_000_000
+PROTOCOL_VERSION = 2
+# Raw optical samples are flushed to the renderer at this interval.
+PPG_FLUSH_MS = 80
 # Mission labels are presentation context for the desktop shell. They are not
 # part of a CheckIn and never influence the assessment rules.
 MISSION_LABELS = {"leo": "Low Earth orbit", "lunar": "Lunar mission", "mars": "Mars / deep space"}
@@ -42,9 +49,19 @@ class InputRelay(QObject):
 
 
 class BridgeService(QObject):
-    def __init__(self, app: QCoreApplication):
+    def __init__(self, app: QCoreApplication, reader_factory=SerialReader, simulated_factory=SimulatedReader):
         super().__init__()
         self.app = app
+        self.reader_factory = reader_factory
+        self.simulated_factory = simulated_factory
+        self.source = "sensor"
+        # The teammate's monitor checks, used here exactly as in the PySide6 page.
+        self.optical_quality = OpticalSignalQuality()
+        self.stability = ReadingStability()
+        self.ppg = PpgBatcher(lambda payload: self.emit_event("sensor.ppg.batch", payload))
+        self.ppg_timer = QTimer(self)
+        self.ppg_timer.setInterval(PPG_FLUSH_MS)
+        self.ppg_timer.timeout.connect(self.ppg.flush)
         self.catalog = load_catalog()
         history_path = os.getenv("ASTROTIP_HISTORY_PATH")
         self.history = HistoryStore(Path(history_path)) if history_path else HistoryStore()
@@ -58,6 +75,7 @@ class BridgeService(QObject):
             "system.config": self.config,
             "ports.list": self.list_ports,
             "sensor.connect": self.connect_sensor,
+            "sensor.simulate": self.simulate_sensor,
             "sensor.disconnect": self.disconnect_sensor,
             "health.assess": self.create_assessment,
             "health.save": self.save_assessment,
@@ -103,7 +121,7 @@ class BridgeService(QObject):
             })
 
     def ping(self, _params):
-        return {"service": "astrotip-python", "protocol": 1, "offline": True}
+        return {"service": "astrotip-python", "protocol": PROTOCOL_VERSION, "offline": True}
 
     def config(self, _params):
         return {
@@ -126,15 +144,61 @@ class BridgeService(QObject):
         port = str(params.get("port", "")).strip()
         if not port or len(port) > 512 or "\x00" in port:
             raise ValueError("Select a valid ESP32 serial port.")
+        self._start_reader(self.reader_factory(port, self), port, "sensor")
+        return {"state": "connecting", "port": port, "baudrate": 115200, "source": "sensor"}
+
+    def simulate_sensor(self, _params):
+        """Start the clearly labelled synthetic stream (demo without hardware)."""
+        if self.reader is not None:
+            raise ValueError("A sensor connection is already active.")
+        self._start_reader(self.simulated_factory(SIMULATED_PORT, self), SIMULATED_PORT, "simulated")
+        return {"state": "connecting", "port": SIMULATED_PORT, "source": "simulated"}
+
+    def _start_reader(self, worker, port, source):
         self.active_port = port
-        worker = SerialReader(port, self)
+        self.source = source
         self.reader = worker
-        worker.connected.connect(lambda: self.emit_event("sensor.connection", {"state": "connected", "port": port}))
-        worker.status_changed.connect(lambda message: self.emit_event("sensor.status", {"message": message}))
+        self.optical_quality.reset()
+        self.stability.reset()
+        self.ppg.start_stream(source)
+        worker.connected.connect(lambda: self.emit_event(
+            "sensor.connection", {"state": "connected", "port": port, "source": source}))
+        worker.status_changed.connect(self._sensor_status)
         worker.reading_received.connect(self._sensor_reading)
+        worker.optical_sample_received.connect(self._optical_sample)
         worker.finished.connect(lambda: self._sensor_finished(worker))
+        self.ppg_timer.start()
         worker.start()
-        return {"state": "connecting", "port": port, "baudrate": 115200}
+
+    def _drop_sensor_assessment(self):
+        """A stale sensor estimate must not stay reviewable or saveable."""
+        if self.sensor_pending_id:
+            self.pending.pop(self.sensor_pending_id, None)
+            self.sensor_pending_id = None
+
+    @Slot(str)
+    def _sensor_status(self, message):
+        # Same reaction as the PySide6 monitor: an interruption restarts the checks.
+        self.optical_quality.reset(keep_stream=True)
+        self.stability.reset()
+        self._drop_sensor_assessment()
+        self.emit_event("sensor.status", {"message": message})
+
+    @Slot(object)
+    def _optical_sample(self, sample):
+        """Forward one raw sample; optical samples never become vital signs."""
+        self.optical_quality.add_sample(sample)
+        self.ppg.add(sample)
+        contact = contact_state(sample)
+        if contact != "ok" and self.sensor_pending_id:
+            # Contact was lost between reports: withdraw the current estimate now
+            # instead of waiting up to a second for the next report.
+            self.stability.reset()
+            self._drop_sensor_assessment()
+            self.emit_event("sensor.reading", {
+                "usable": False, "finger_detected": contact == "clipped", "reason": contact,
+                "source": self.source, "received_at": "",
+            })
 
     def disconnect_sensor(self, _params):
         if self.reader is None:
@@ -144,38 +208,52 @@ class BridgeService(QObject):
 
     @Slot(object)
     def _sensor_reading(self, reading):
+        optical_state = self.optical_quality.evaluate(reading.elapsed_seconds)
+        details = {
+            "finger_detected": reading.finger_detected,
+            "received_at": reading.received_at,
+            "source": self.source,
+            "signal_status": reading.signal_status,
+            "sample_rate_hz": reading.sample_rate_hz,
+            "firmware_version": reading.firmware_version,
+            "optical_state": optical_state,
+        }
         if not reading.usable:
-            self.emit_event("sensor.reading", {
-                "usable": False,
-                "finger_detected": reading.finger_detected,
-                "received_at": reading.received_at,
-            })
+            self.stability.reset()
+            self._drop_sensor_assessment()
+            self.emit_event("sensor.reading", {"usable": False, "reading_state": "waiting", **details})
             return
+        reading_state = self.stability.update(reading, signal_ready=optical_state in {"ready", "unavailable"})
         checkin = CheckIn(
             heart_rate=reading.heart_rate,
             spo2=reading.spo2,
-            signal_quality="unknown",
-            input_source="sensor",
+            # Firmware validity is not a clinically validated signal-quality score.
+            signal_quality="poor" if reading_state in {"changing", "settling"} else "unknown",
+            input_source=self.source,
             sensor_port=self.active_port,
             sensor_received_at=reading.received_at,
         )
         payload = self._assess(checkin)
-        if self.sensor_pending_id:
-            self.pending.pop(self.sensor_pending_id, None)
+        self._drop_sensor_assessment()
         self.sensor_pending_id = payload["assessment_id"]
         self.emit_event("sensor.reading", {
             "usable": True,
             "heart_rate": reading.heart_rate,
             "spo2": reading.spo2,
-            "finger_detected": reading.finger_detected,
-            "received_at": reading.received_at,
+            "reading_state": reading_state,
+            **details,
             **payload,
         })
 
     def _sensor_finished(self, worker):
         if self.reader is worker:
+            self.ppg_timer.stop()
+            self.ppg.flush()
             self.reader = None
             self.active_port = ""
+            self.optical_quality.reset()
+            self.stability.reset()
+            self._drop_sensor_assessment()
             worker.deleteLater()
             self.emit_event("sensor.connection", {"state": "disconnected"})
 
@@ -212,6 +290,7 @@ class BridgeService(QObject):
         return {"entries": self.history.list_entries()}
 
     def shutdown(self, _params):
+        self.ppg_timer.stop()
         if self.reader is not None:
             self.reader.requestInterruption()
             self.reader.wait(1500)

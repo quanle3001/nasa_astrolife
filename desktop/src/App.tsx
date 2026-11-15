@@ -10,6 +10,7 @@ import { SensorPage, type SensorViewState } from "@/components/pages/sensor-page
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { useAmbientVideo } from "@/lib/media-playback";
+import { ppgBuffer, startPpgStream } from "@/lib/ppg-store";
 import { isTypingTarget, matchShortcut } from "@/lib/shortcuts";
 import { ShortcutsDialog } from "@/components/shortcuts-dialog";
 import type { AppConfig, AssessmentBundle, BackendEvent, CheckIn, MissionId } from "@/types/backend";
@@ -17,7 +18,14 @@ import type { AppConfig, AssessmentBundle, BackendEvent, CheckIn, MissionId } fr
 const INITIAL_SENSOR: SensorViewState = {
   connected: false, connecting: false, status: "Disconnected", usable: false,
   heartRate: null, spo2: null, bundle: null, lastUpdate: null, lastUsableAt: null, fault: null,
+  source: null, signalStatus: null, sampleRateHz: null, firmware: null, readingState: null, opticalState: null, measuredAt: null,
 };
+/** Cleared whenever the link drops so no stale estimate or diagnostic stays on screen. */
+const NO_READING = {
+  usable: false, heartRate: null, spo2: null, bundle: null, lastUpdate: null, lastUsableAt: null,
+  signalStatus: null, sampleRateHz: null, firmware: null, readingState: null, opticalState: null, measuredAt: null,
+} as const;
+const text = (value: unknown) => (typeof value === "string" && value ? value : null);
 const StarBackground = lazy(() => import("@/components/effects/star-background").then((module) => ({ default: module.StarBackground })));
 const requestedPage = new URLSearchParams(window.location.search).get("page") as PageId | null;
 const initialPage: PageId = requestedPage && ["sensor", "checkin", "assessment", "history"].includes(requestedPage) ? requestedPage : "sensor";
@@ -65,13 +73,17 @@ export default function App() {
   };
 
   useEffect(() => { void start(); }, []);
+  // Raw optical samples bypass React state; see lib/ppg-store.ts.
+  useEffect(() => startPpgStream(), []);
   useEffect(() => api.onBackendEvent((message: BackendEvent) => {
     if (message.event === "backend.stopped") {
       setBackendReady(false); setSensor((current) => ({ ...current, connected: false, connecting: false, status: "Local backend stopped" }));
     } else if (message.event === "sensor.connection") {
       const state = String(message.payload.state);
       // A failure reported before disconnect stays visible (fault) instead of being replaced by "Disconnected".
-      setSensor((current) => ({ ...current, connected: state === "connected", connecting: state === "connecting", fault: state === "disconnected" ? current.fault : null, status: state === "connected" ? `Connected to ${message.payload.port ?? "sensor"} · receiving telemetry` : "Disconnected", ...(state === "disconnected" ? { usable: false, heartRate: null, spo2: null, bundle: null, lastUpdate: null, lastUsableAt: null } : {}) }));
+      const simulated = message.payload.source === "simulated";
+      if (state === "disconnected") ppgBuffer.reset();
+      setSensor((current) => ({ ...current, connected: state === "connected", connecting: state === "connecting", fault: state === "disconnected" ? current.fault : null, status: state === "connected" ? (simulated ? "Simulated stream running · not a measurement" : `Connected to ${message.payload.port ?? "sensor"} · receiving telemetry`) : "Disconnected", ...(state === "connected" ? { source: simulated ? "simulated" as const : "sensor" as const } : {}), ...(state === "disconnected" ? { ...NO_READING, source: null } : {}) }));
     } else if (message.event === "sensor.status") {
       const text = String(message.payload.message ?? "Sensor status changed");
       // Before a link is established, a status message can only be the reason it failed.
@@ -84,7 +96,13 @@ export default function App() {
         heartRate: usable && typeof message.payload.heart_rate === "number" ? message.payload.heart_rate : null,
         spo2: usable && typeof message.payload.spo2 === "number" ? message.payload.spo2 : null,
         bundle: usable && message.payload.assessment_id ? message.payload as unknown as AssessmentBundle : null,
-        status: usable ? "Receiving fresh device-valid estimates" : Boolean(message.payload.finger_detected) ? "Finger detected · hold still while estimates stabilize" : "Place your finger on the sensor and hold still",
+        signalStatus: text(message.payload.signal_status) ?? current.signalStatus,
+        sampleRateHz: typeof message.payload.sample_rate_hz === "number" ? message.payload.sample_rate_hz : current.sampleRateHz,
+        firmware: text(message.payload.firmware_version) ?? current.firmware,
+        readingState: text(message.payload.reading_state) ?? (usable ? current.readingState : "waiting"),
+        opticalState: text(message.payload.optical_state) ?? current.opticalState,
+        measuredAt: text(message.payload.received_at) ?? current.measuredAt,
+        status: usable ? (message.payload.source === "simulated" ? "Simulated stream · demo values, not a measurement" : "Receiving fresh device-valid estimates") : Boolean(message.payload.finger_detected) ? "Finger detected · hold still while estimates stabilize" : "Place your finger on the sensor and hold still",
       }));
     }
   }), []);

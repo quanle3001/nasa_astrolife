@@ -58,7 +58,10 @@ class PythonBridge {
           clearTimeout(pending.timeout);
           message.ok ? pending.resolve(message.result) : pending.reject(new Error(message.error?.message || "Backend request failed."));
         } else if (message.event && mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.webContents.send("backend:event", message);
+          // Raw optical batches arrive many times per second. They get their own
+          // channel so they never pass through the general app-state listener.
+          if (message.event === "sensor.ppg.batch") mainWindow.webContents.send("backend:ppg", message.payload);
+          else mainWindow.webContents.send("backend:event", message);
         }
       });
       this.child.once("error", (error) => { clearTimeout(timeout); reject(error); });
@@ -127,6 +130,7 @@ handle("backend:config", "system.config");
 handle("backend:ports", "ports.list");
 handle("backend:sensor-connect", "sensor.connect");
 handle("backend:sensor-disconnect", "sensor.disconnect");
+handle("backend:sensor-simulate", "sensor.simulate");
 handle("backend:assess", "health.assess");
 handle("backend:save", "health.save");
 handle("backend:history", "history.list");
@@ -175,8 +179,16 @@ async function createWindow() {
   mainWindow.once("ready-to-show", async () => {
     mainWindow.show();
     if (process.env.ASTROTIP_SCREENSHOT) {
+      // Development-only capture aid: optionally start the labelled simulated stream first.
+      if (process.env.ASTROTIP_SCREENSHOT_SIMULATE) await bridge.call("sensor.simulate").catch(() => undefined);
       const screenshotDelay = Number(process.env.ASTROTIP_SCREENSHOT_DELAY || 2800);
       await new Promise((resolve) => setTimeout(resolve, Number.isFinite(screenshotDelay) ? screenshotDelay : 2800));
+      // Development-only capture aid: bring one element into view before the capture.
+      const target = process.env.ASTROTIP_SCREENSHOT_SCROLL;
+      if (target) {
+        await mainWindow.webContents.executeJavaScript(`document.querySelector(${JSON.stringify(target)})?.scrollIntoView({ block: "center" })`).catch(() => undefined);
+        await new Promise((resolve) => setTimeout(resolve, 600));
+      }
       const image = await mainWindow.webContents.capturePage();
       await fs.promises.writeFile(process.env.ASTROTIP_SCREENSHOT, image.toPNG());
       await bridge.stop();
