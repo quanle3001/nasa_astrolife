@@ -24,6 +24,7 @@
     {"id": "radiation", "title": "NASA: Radiation-induced cancers", "url": "https://www.nasa.gov/reference/risk-of-radiation-induced-cancers/"},
     {"id": "radiation_hazard", "title": "NASA: Space radiation hazard", "url": "https://www.nasa.gov/hrp/hazard-space-radiation/"},
     {"id": "distance_hazard", "title": "NASA: Distance from Earth", "url": "https://www.nasa.gov/hrp/hazard-distance-from-earth/"},
+    {"id": "hostile_environment_hazard", "title": "NASA: Hazard: hostile and closed environments", "url": "https://www.nasa.gov/hrp/hazard-hostile-closed-environments/"},
     {"id": "systems", "title": "NASA: Systems operations support", "url": "https://www.nasa.gov/reference/risk-of-inadequate-systems-operations-support/"},
     {"id": "dynamic_loads", "title": "NASA: Injury from dynamic loads", "url": "https://www.nasa.gov/reference/risk-of-injury-from-dynamic-loads/"},
     {"id": "medlineplus_oximetry", "title": "MedlinePlus: Pulse Oximetry (general reference, not a spaceflight threshold)", "url": "https://medlineplus.gov/lab-tests/pulse-oximetry/"},
