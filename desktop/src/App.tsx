@@ -20,6 +20,7 @@ import { AssessmentPage } from "@/components/pages/assessment-page";
 import { CheckinPage } from "@/components/pages/checkin-page";
 import { DashboardPage } from "@/components/pages/dashboard-page";
 import { HistoryPage } from "@/components/pages/history-page";
+import { RadiationExplorer } from "@/components/nasa/radiation-explorer";
 import { NasaPage } from "@/components/pages/nasa-page";
 import { SensorPage } from "@/components/pages/sensor-page";
 import { ShortcutsDialog } from "@/components/shortcuts-dialog";
@@ -356,7 +357,7 @@ export default function App() {
     screenKey = `tab-${page}`;
     screen = page === "sensor" ? <SensorPage state={sensor} onReview={reviewSensor} onConnectStart={linking} />
       : page === "compass" ? <CompassPage framed={false} result={result?.result ?? null} actions={appState.actions} knowledge={knowledge} conditionTitles={conditionTitles} onToggleAction={(action) => void toggleAction(action)} />
-        : page === "nasa" ? <NasaPage knowledge={knowledge} profile={appState.mission} />
+        : page === "nasa" ? <NasaPage knowledge={knowledge} profile={appState.mission} radiation={<RadiationExplorer knowledge={knowledge} mission={appState.mission?.environment ?? "leo"} />} />
           : page === "history" ? <HistoryPage config={config} active refreshKey={historyRefresh} />
             : page === "assessment" ? <AssessmentPage config={config} bundle={quick} saved={saved} saving={saving} onSave={() => saveBundle(quick)} onEdit={() => setPage("sensor")} />
               : (

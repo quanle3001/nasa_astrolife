@@ -144,6 +144,7 @@ handle("backend:session-preview", "session.preview");
 handle("backend:session-submit", "session.submit");
 handle("backend:actions-list", "actions.list");
 handle("backend:actions-update", "actions.update");
+handle("backend:radlab", "nasa.radlab.get");
 
 ipcMain.handle("external:nasa", async (event, value) => {
   if (!validSender(event)) throw new Error("Rejected untrusted desktop request.");

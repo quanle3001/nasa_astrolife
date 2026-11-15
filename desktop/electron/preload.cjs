@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld("astrotip", {
   submitSession: (sessionId, answers, measurement) => ipcRenderer.invoke("backend:session-submit", { session_id: sessionId, answers, measurement }),
   listActions: () => ipcRenderer.invoke("backend:actions-list"),
   updateAction: (id, status) => ipcRenderer.invoke("backend:actions-update", { id, status }),
+  getRadLab: (refresh) => ipcRenderer.invoke("backend:radlab", { refresh: Boolean(refresh) }),
   openNasaSource: (url) => ipcRenderer.invoke("external:nasa", url),
   onPpgBatch: (callback) => {
     const listener = (_event, batch) => callback(batch);

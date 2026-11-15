@@ -1,3 +1,4 @@
+import type { RadLabResult } from "@/types/nasa";
 import type { Answers, AppState, FollowupAction, Knowledge, MeasurementChoice, MissionProfile, Session, SessionPreview, SubmittedSession } from "@/types/flow";
 
 export type MissionId = "leo" | "lunar" | "mars";
@@ -80,7 +81,7 @@ export interface AppConfig {
 export interface SerialPort { device: string; description: string }
 
 export interface BackendEvent {
-  event: "backend.ready" | "backend.stopped" | "sensor.connection" | "sensor.status" | "sensor.reading";
+  event: "backend.ready" | "backend.stopped" | "sensor.connection" | "sensor.status" | "sensor.reading" | "nasa.radlab.updated";
   payload: Record<string, unknown> & Partial<AssessmentBundle>;
 }
 
@@ -108,6 +109,12 @@ export interface AstroLifeDesktopApi {
   submitSession: (sessionId: string, answers: Answers, measurement: MeasurementChoice) => Promise<SubmittedSession>;
   listActions: () => Promise<{ actions: FollowupAction[] }>;
   updateAction: (id: number, status: FollowupAction["status"]) => Promise<{ action: FollowupAction }>;
+  /**
+   * Verified NASA RadLab dataset from the offline cache. With `refresh`, the
+   * backend retrieves it from NASA again and answers through a
+   * `nasa.radlab.updated` event.
+   */
+  getRadLab: (refresh?: boolean) => Promise<RadLabResult | { refreshing: true }>;
   openNasaSource: (url: string) => Promise<boolean>;
   onBackendEvent: (callback: (event: BackendEvent) => void) => () => void;
 }

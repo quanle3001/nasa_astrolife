@@ -705,3 +705,13 @@ input, textarea { caret-color: var(--color-space-cyan); }
 :root[data-motion="paused"] .hover-card { transition:opacity 140ms ease; }
 .research-toggle { margin-top:10px; display:inline-flex; align-items:center; gap:6px; border:0; background:transparent; padding:4px 0; color:var(--status-watch); font-size:var(--text-sm); font-weight:600; }
 .research-toggle:hover { color:#fff; }
+
+/* Radiation Explorer */
+.not-yours { margin-top:12px; border:1px solid rgba(142,197,255,.35); border-radius:var(--radius-md); background:rgba(142,197,255,.06); padding:10px 14px; color:var(--color-space-silver); font-size:var(--text-sm); line-height:1.6; }
+.not-yours strong { color:var(--color-space-white); }
+.radlab-instruments { margin-top:16px; display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:8px; }
+.radlab-instrument { display:flex; flex-direction:column; gap:3px; border:1px solid rgba(120,156,196,.26); border-radius:var(--radius-md); background:rgba(3,7,17,.35); padding:10px 12px; color:var(--color-space-silver); text-align:left; transition:border-color var(--duration-fast), background var(--duration-fast); }
+.radlab-instrument:hover { border-color:rgba(142,197,255,.6); }
+.radlab-instrument.is-selected { border-color:var(--status-watch); background:rgba(142,197,255,.1); color:#fff; }
+.radlab-instrument strong { font-size:var(--text-sm); }
+.radlab-instrument small { color:var(--color-space-muted); font-size:var(--text-xs); }

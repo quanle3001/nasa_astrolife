@@ -25,6 +25,7 @@ export const api: AstroLifeDesktopApi = window.astrotip ?? {
   submitSession: async () => unavailable(),
   listActions: async () => unavailable(),
   updateAction: async () => unavailable(),
+  getRadLab: async () => unavailable(),
   openNasaSource: async () => unavailable(),
   onBackendEvent: () => () => undefined,
 };
