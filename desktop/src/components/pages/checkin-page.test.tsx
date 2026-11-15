@@ -29,4 +29,19 @@ describe("CheckinPage", () => {
       input_source: "manual",
     }));
   });
+
+  it("flags a non-numeric entry inline and does not submit", async () => {
+    const onAssess = vi.fn().mockResolvedValue(undefined);
+    render(<CheckinPage config={config} mission="leo" setMission={() => undefined} onAssess={onAssess} busy={false} />);
+    const sleep = screen.getByLabelText("Sleep (hours)");
+    fireEvent.change(sleep, { target: { value: "7,5" } });
+    fireEvent.blur(sleep);
+    expect(sleep).toHaveAttribute("aria-invalid", "true");
+    expect(sleep).toHaveAccessibleDescription(/decimal point/);
+    fireEvent.click(screen.getByRole("button", { name: /Review health priorities/i }));
+    expect(onAssess).not.toHaveBeenCalled();
+    expect(sleep).toHaveFocus();
+    fireEvent.change(sleep, { target: { value: "7.5" } });
+    expect(sleep).not.toHaveAttribute("aria-invalid");
+  });
 });

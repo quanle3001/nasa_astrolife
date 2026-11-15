@@ -7,6 +7,42 @@ import type { AppConfig, CheckIn, MissionId } from "@/types/backend";
 
 const optionalNumber = (value: string) => value.trim() === "" ? null : Number(value);
 
+type NumericField = "heart_rate" | "spo2" | "sleep_hours";
+const FIELD_ORDER: NumericField[] = ["heart_rate", "spo2", "sleep_hours"];
+
+/**
+ * Format check only: is the entry a number? Range and clinical validation stay
+ * in the Python backend and are unchanged.
+ */
+function numberError(value: string) {
+  const trimmed = value.trim();
+  if (trimmed === "" || Number.isFinite(Number(trimmed))) return "";
+  return /\d,\d/.test(trimmed) ? "Use a decimal point, not a comma (for example 7.5)." : "Enter a number, or leave this blank.";
+}
+
+function NumberField({ id, label, value, onChange, onBlur, placeholder, error }: {
+  id: NumericField; label: string; value: string; onChange: (value: string) => void; onBlur: () => void;
+  placeholder: string; error: string;
+}) {
+  return (
+    <label>
+      <span>{label}</span>
+      <input
+        id={`checkin-${id}`}
+        className="control"
+        inputMode="decimal"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        onBlur={onBlur}
+        placeholder={placeholder}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? `checkin-${id}-error` : undefined}
+      />
+      {error && <small id={`checkin-${id}-error`} className="field-error">{error}</small>}
+    </label>
+  );
+}
+
 export function CheckinPage({ config, mission, setMission, onAssess, busy }: {
   config: AppConfig; mission: MissionId; setMission: (mission: MissionId) => void;
   onAssess: (checkin: CheckIn) => Promise<void>; busy: boolean;
@@ -19,12 +55,24 @@ export function CheckinPage({ config, mission, setMission, onAssess, busy }: {
   const [symptoms, setSymptoms] = useState<Set<string>>(new Set());
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<NumericField, string>>({ heart_rate: "", spo2: "", sleep_hours: "" });
+  const values: Record<NumericField, string> = { heart_rate: heartRate, spo2, sleep_hours: sleep };
+  const checkField = (field: NumericField) => setFieldErrors((current) => ({ ...current, [field]: numberError(values[field]) }));
+  const edit = (field: NumericField, setter: (value: string) => void) => (value: string) => {
+    setter(value);
+    // Clear a shown error as soon as the entry becomes valid; new errors wait for blur.
+    if (fieldErrors[field] && !numberError(value)) setFieldErrors((current) => ({ ...current, [field]: "" }));
+  };
 
   const toggleSymptom = (key: string) => setSymptoms((current) => {
     const next = new Set(current); next.has(key) ? next.delete(key) : next.add(key); return next;
   });
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setError("");
+    const errors = Object.fromEntries(FIELD_ORDER.map((field) => [field, numberError(values[field])])) as Record<NumericField, string>;
+    setFieldErrors(errors);
+    const firstInvalid = FIELD_ORDER.find((field) => errors[field]);
+    if (firstInvalid) { document.getElementById(`checkin-${firstInvalid}`)?.focus(); return; }
     try {
       await onAssess({
         mission, heart_rate: optionalNumber(heartRate), spo2: optionalNumber(spo2), signal_quality: quality,
@@ -43,10 +91,10 @@ export function CheckinPage({ config, mission, setMission, onAssess, busy }: {
         <div className="mb-5 flex items-center gap-2"><NotebookPen className="size-4 text-cyan-300" /><h2 className="text-base font-semibold text-white">Mission and observations</h2></div>
         <div className="form-grid">
           <label><span>Mission context</span><select className="control" value={mission} onChange={(event) => setMission(event.target.value as MissionId)}>{Object.entries(config.missions).map(([id, title]) => <option value={id} key={id}>{title}</option>)}</select></label>
-          <label><span>Heart rate (bpm)</span><input className="control" inputMode="decimal" value={heartRate} onChange={(event) => setHeartRate(event.target.value)} placeholder="Optional · beats per minute" /></label>
-          <label><span>Estimated SpO₂ (%)</span><input className="control" inputMode="decimal" value={spo2} onChange={(event) => setSpo2(event.target.value)} placeholder="Optional · percent" /></label>
+          <NumberField id="heart_rate" label="Heart rate (bpm)" value={heartRate} onChange={edit("heart_rate", setHeartRate)} onBlur={() => checkField("heart_rate")} placeholder="Optional · beats per minute" error={fieldErrors.heart_rate} />
+          <NumberField id="spo2" label="Estimated SpO₂ (%)" value={spo2} onChange={edit("spo2", setSpo2)} onBlur={() => checkField("spo2")} placeholder="Optional · percent" error={fieldErrors.spo2} />
           <label><span>Reading quality</span><select className="control" value={quality} onChange={(event) => setQuality(event.target.value as CheckIn["signal_quality"])}><option value="unknown">Unknown / not checked</option><option value="good">Good · stable repeated reading</option><option value="poor">Poor · motion or unstable contact</option></select></label>
-          <label><span>Sleep (hours)</span><input className="control" inputMode="decimal" value={sleep} onChange={(event) => setSleep(event.target.value)} placeholder="Optional · last 24 hours" /></label>
+          <NumberField id="sleep_hours" label="Sleep (hours)" value={sleep} onChange={edit("sleep_hours", setSleep)} onBlur={() => checkField("sleep_hours")} placeholder="Optional · last 24 hours" error={fieldErrors.sleep_hours} />
           <label><span>Prescribed exercise</span><select className="control" value={exercise} onChange={(event) => setExercise(event.target.value)}><option value="unknown">Not recorded / not applicable</option><option value="yes">Completed prescribed session</option><option value="no">Missed prescribed session</option></select></label>
         </div>
       </Card>
@@ -59,7 +107,7 @@ export function CheckinPage({ config, mission, setMission, onAssess, busy }: {
         </div>
       </Card>
       <Card className="p-5"><label className="block"><span className="mb-2 block text-xs font-medium text-space-muted">Notes for your record · not automatically analyzed</span><textarea className="control min-h-28 resize-y" maxLength={5000} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Optional: timing, activity, changes from baseline, or information for the medical team." /></label></Card>
-      {error && <div className="rounded-xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">{error}</div>}
+      {error && <div role="alert" className="rounded-xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">{error}</div>}
       <div className="sticky bottom-0 z-20 flex items-center justify-between gap-4 rounded-2xl border border-white/10 p-3"><p className="hidden text-xs text-space-subtle md:block">Assessment stays in memory until you choose Save to history.</p><Button type="submit" variant="primary" size="lg" disabled={busy} className="ml-auto"><ClipboardCheck className="size-4" />{busy ? "Reviewing…" : "Review health priorities"}</Button></div>
     </form>
   );
