@@ -44,7 +44,22 @@ export interface Finding {
   condition_id: string;
   level: PriorityLevel;
   reason: string;
+  /** Steps that involve the crew medical officer, a clinician or a mission procedure. */
   actions: string[];
+  source_ids: string[];
+  /** Simple, sourced steps the astronaut can take themselves. Empty for urgent prompts. */
+  self_care?: string[];
+}
+
+/** One measured indicator against a cited general reference; drives the colour coding. */
+export interface IndicatorStatus {
+  id: "heart_rate" | "spo2";
+  label: string;
+  value: number;
+  unit: string;
+  status: "in_reference" | "outside_reference" | "review" | "urgent";
+  reference: string;
+  text: string;
   source_ids: string[];
 }
 
@@ -53,6 +68,8 @@ export interface Assessment {
   summary: string;
   findings: Finding[];
   data_notes: string[];
+  /** Status of each measured indicator (rules 2026.11.2 and later). */
+  indicators?: IndicatorStatus[];
   created_at: string;
   catalog_reviewed_on: string;
 }

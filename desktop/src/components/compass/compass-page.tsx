@@ -4,6 +4,7 @@ import { Component, lazy, Suspense, useMemo, useState, type ReactNode } from "re
 import { BodyMap2D } from "@/components/compass/body-map-2d";
 import { COMPASS_REGIONS, regionForCondition, type RegionSummary } from "@/components/compass/regions";
 import { ActionItem } from "@/components/flow/actions-page";
+import { CareSteps } from "@/components/flow/guidance";
 import { OsdrStudyCard, studiesFor } from "@/components/nasa/osdr-study";
 import { EvidenceReports, FlowPage, LEVEL_LABELS, measurementKind, ProvenanceBadge, SourceList } from "@/components/flow/common";
 import { Card } from "@/components/ui/card";
@@ -116,6 +117,7 @@ export function CompassPage({ result, actions, knowledge, conditionTitles, onTog
                   <div key={id} className="compass-finding">
                     <div className="flex flex-wrap items-center gap-2"><span className={cn("priority-badge", `priority-${finding.level}`)}>{LEVEL_LABELS[finding.level]}</span><ProvenanceBadge kind="rule" /></div>
                     <p>{finding.reason}</p>
+                    <CareSteps finding={finding} compact />
                   </div>
                 );
               })}

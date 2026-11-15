@@ -15,7 +15,7 @@ from pathlib import Path
 import sqlite3
 from uuid import uuid4
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 _MIGRATIONS = {
     1: (
@@ -36,6 +36,12 @@ _MIGRATIONS = {
             condition_id TEXT NOT NULL, level TEXT NOT NULL, text TEXT NOT NULL, observation TEXT NOT NULL,
             status TEXT NOT NULL CHECK (status IN ('open', 'done')),
             created_at TEXT NOT NULL, completed_at TEXT)""",
+    ),
+    2: (
+        # A stable sensor aggregate belongs to the open session once captured.
+        # Keeping it separate from live telemetry lets the astronaut remove
+        # their finger, resume after a restart, and still submit that reading.
+        "ALTER TABLE assessment_sessions ADD COLUMN measurement_json TEXT",
     ),
 }
 
@@ -72,6 +78,12 @@ class AppStateStore:
         """Run a read without creating the file or the tables."""
         if not self.path.exists():
             return []
+        # Existing databases are upgraded before queries reference newer
+        # columns. A missing database remains untouched by the early return.
+        with closing(sqlite3.connect(self.path)) as connection:
+            version = connection.execute("PRAGMA user_version").fetchone()[0]
+        if version < SCHEMA_VERSION:
+            self._connect().close()
         with closing(sqlite3.connect(self.path.resolve().as_uri() + "?mode=ro", uri=True)) as connection:
             try:
                 return connection.execute(query, parameters).fetchall()
@@ -98,10 +110,11 @@ class AppStateStore:
             "session_id": row[0], "started_at": row[1], "updated_at": row[2], "status": row[3],
             "registry_version": row[4], "mission": json.loads(row[5]), "answers": json.loads(row[6]),
             "position": row[7], "entry_id": row[8], "result": json.loads(row[9]) if row[9] else None,
+            "measurement": json.loads(row[10]) if row[10] else None,
         }
 
     _SESSION_COLUMNS = ("id, started_at, updated_at, status, registry_version, mission_json, answers_json, "
-                        "position, entry_id, result_json")
+                        "position, entry_id, result_json, measurement_json")
 
     def start_session(self, mission: dict, registry_version: str) -> dict:
         """Open a new session; an unfinished older one is closed as abandoned, not deleted."""
@@ -138,6 +151,27 @@ class AppStateStore:
         if not updated:
             raise ValueError("This check-in session is no longer open.")
         return self.get_session(session_id)
+
+    def save_measurement(self, session_id: str, measurement: dict) -> dict:
+        """Latch the first stable aggregate captured for an open session.
+
+        Sensor reports continue arriving after the first stable window. The
+        conditional update prevents them from silently replacing the value the
+        user is about to review and avoids a database write on every report.
+        """
+        with closing(self._connect()) as connection, connection:
+            updated = connection.execute(
+                "UPDATE assessment_sessions SET measurement_json = ?, updated_at = ? "
+                "WHERE id = ? AND status = 'in_progress' AND measurement_json IS NULL",
+                (json.dumps(measurement), _now(), session_id)).rowcount
+        session = self.get_session(session_id)
+        if session is None or session["status"] != "in_progress":
+            raise ValueError("This check-in session is no longer open.")
+        # A second stable window is intentionally a successful no-op: return
+        # the first capture so the caller can keep publishing the latched data.
+        if not updated and session["measurement"] is None:
+            raise ValueError("The stable measurement could not be saved.")
+        return session
 
     def complete_session(self, session_id: str, answers: dict, entry_id: int | None, result: dict, actions: list[dict]) -> list[dict]:
         """Mark a session submitted and record its follow-up actions in one transaction."""

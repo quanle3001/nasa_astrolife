@@ -110,11 +110,14 @@ another module or mounting.
 | Quality | `analysis/optical_quality.py`, `analysis/reading_stability.py` | Engineering checks on contact, clipping, continuity and timing, and on agreement between recent reports |
 | Forward samples | `bridge/ppg_batcher.py` | Batches raw samples for the chart with device sequence and time unchanged |
 | Forward estimates | `bridge/service.py` → `sensor.reading` | Firmware values with `usable`, signal status, sample rate, firmware version |
-| Withdraw | `bridge/service.py` | Contact loss, a device error, a stale report or a disconnect clears the current estimate at once |
-| Use in a check-in | `session.submit` | The backend saves the median of three agreeing reports; contact loss or disagreement resets the window, and the interface cannot supply the numbers |
+| Withdraw live state | `bridge/service.py` | Contact loss, a device error, a stale report or a disconnect clears the live estimate at once; it does not erase a session capture already completed |
+| Capture for a check-in | `bridge/service.py` + `AppStateStore` | The first median of three agreeing reports is latched in the open session with source, port, time, method and report count |
+| Use in a check-in | `session.submit` | The backend reads the saved session snapshot; the interface cannot supply or replace the sensor numbers |
 
-A missing or invalid estimate is shown as "No reading". It is never shown as a
-normal value, and it is stored as unassessed.
+A missing or invalid live estimate is shown as "No reading". It is never shown
+as a normal live value. If a stable session snapshot was already saved, the
+measurement screen keeps that separately, identifies it as saved, and lets the
+astronaut continue after removing their finger.
 
 The chart shows the infrared optical pulse (PPG), with the red channel
 optional and dashed. It is not an ECG. A display-only filter removes slow

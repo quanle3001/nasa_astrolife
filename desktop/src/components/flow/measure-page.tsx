@@ -6,14 +6,18 @@ import { SensorDock } from "@/components/monitor/sensor-dock";
 import type { SensorViewState } from "@/components/monitor/sensor-state";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import type { MeasurementChoice, NoMeasurementReason } from "@/types/flow";
+import { MeasureGuide } from "@/components/flow/guidance";
+import type { CapturedMeasurement, MeasurementChoice, MeasurementGuide, NoMeasurementReason, Source } from "@/types/flow";
 
 type Fallback = "manual" | NoMeasurementReason;
 const optionalNumber = (text: string) => (text.trim() === "" ? null : Number(text));
 const formatError = (text: string) => (text.trim() === "" || Number.isFinite(Number(text)) ? "" : "Enter a number, or leave this blank.");
 
-/** What still stands between the astronaut and a usable sensor reading. */
-function sensorStep(sensor: SensorViewState): string {
+/** What still stands between the astronaut and a saved sensor reading. */
+function sensorStep(sensor: SensorViewState, measurement: CapturedMeasurement | null): string {
+  if (measurement) {
+    return `Measurement saved for this check-in from ${measurement.report_count} agreeing reports. You can remove your finger and continue.`;
+  }
   if (sensor.measurementReady) return `Stable measurement ready from ${sensor.samplesRequired} agreeing reports.`;
   if (sensor.usable) {
     if (sensor.readingState === "changing") return "Recent readings disagree. Keep your finger still while a fresh window is collected.";
@@ -27,17 +31,20 @@ function sensorStep(sensor: SensorViewState): string {
 /**
  * Step 7: the pulse and blood-oxygen reading from the ESP32 + MAX30102.
  *
- * The sensor reading is a required part of every check-in. It is never copied
- * from this screen: continuing tells the backend to use its own newest valid
- * reading, so a stale or invalid value cannot be submitted.
+ * The sensor reading is a required part of every check-in. Once a stable
+ * window is captured, the backend stores it with the open session. Continuing
+ * asks the backend to use that saved snapshot; live telemetry is never copied
+ * back from this screen.
  *
  * If the hardware genuinely cannot be used, a secondary path records values
  * from another instrument or the reason no measurement was possible. That
  * keeps a check-in from being lost, and the result then says the measurement
  * is missing instead of treating it as normal.
  */
-export function MeasurePage({ sensor, onConnectStart, onBack, onSubmit, busy, error, aside }: {
-  sensor: SensorViewState; onConnectStart: (port: string) => void; onBack: () => void;
+export function MeasurePage({ sensor, measurement, onConnectStart, onBack, onSubmit, busy, error, aside, guide, sources }: {
+  /** Sourced instructions for taking the reading; shown open until a reading is saved. */
+  guide?: MeasurementGuide; sources?: Source[];
+  sensor: SensorViewState; measurement: CapturedMeasurement | null; onConnectStart: (port: string) => void; onBack: () => void;
   onSubmit: (measurement: MeasurementChoice) => void; busy: boolean; error: string; aside?: React.ReactNode;
 }) {
   const [fallbackOpen, setFallbackOpen] = useState(false);
@@ -62,17 +69,37 @@ export function MeasurePage({ sensor, onConnectStart, onBack, onSubmit, busy, er
   return (
     <FlowPage
       wide title="Measure your pulse and blood oxygen"
-      lead="Every check-in includes a reading from your fingertip sensor. Rest a fingertip on the lit window and hold still for a few seconds."
-      onBack={onBack} onNext={() => onSubmit({ use: "sensor" })} nextDisabled={!sensor.measurementReady} busy={busy}
-      nextLabel={sensor.source === "simulated" ? "Continue with simulated demo values" : "Use this reading and see my findings"}
-      aside={<>{!sensor.measurementReady && <span className="flow-hint">Waiting for three agreeing reports</span>}{aside}</>}
+      lead={measurement
+        ? "Your stable reading is saved with this check-in. You can remove your finger now and continue when you are ready."
+        : "Every check-in includes a reading from your fingertip sensor. Rest a fingertip on the lit window and hold still for a few seconds."}
+      onBack={onBack} onNext={() => onSubmit({ use: "sensor" })} nextDisabled={!measurement} busy={busy}
+      nextLabel={measurement?.input_source === "simulated" ? "Continue with saved simulated demo values" : "Use saved reading and see my findings"}
+      aside={<>{!measurement && <span className="flow-hint">Waiting for three agreeing reports</span>}{aside}</>}
     >
-      <p className={cn("measure-status", sensor.measurementReady && "is-ready")} role="status">
+      <p className={cn("measure-status", measurement && "is-ready")} role="status">
         <span className="measure-required">Required</span>
-        {sensorStep(sensor)}
-        {sensor.measurementReady && <ProvenanceBadge kind={sensor.source === "simulated" ? "simulated" : "measurement"} />}
+        {sensorStep(sensor, measurement)}
+        {measurement && <ProvenanceBadge kind={measurement.input_source === "simulated" ? "simulated" : "measurement"} />}
       </p>
+      {measurement && (
+        <section className="measure-choice" aria-labelledby="saved-measurement-title">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 id="saved-measurement-title" className="text-base font-semibold text-space-white">Saved measurement</h2>
+              <p className="mt-1 text-sm leading-6 text-space-muted">
+                Median of {measurement.report_count} agreeing reports, kept with this check-in for findings and history.
+              </p>
+            </div>
+          </div>
+          <dl className="fact-grid mt-4" aria-label="Saved pulse and blood oxygen">
+            <div><dt>Heart rate</dt><dd>{measurement.heart_rate ?? "Not measured"}{measurement.heart_rate != null && " bpm"}</dd></div>
+            <div><dt>Blood oxygen</dt><dd>{measurement.spo2 ?? "Not measured"}{measurement.spo2 != null && "% SpO₂"}</dd></div>
+            <div><dt>Saved from</dt><dd>{measurement.report_count}/{measurement.reports_required} reports</dd></div>
+          </dl>
+        </section>
+      )}
       <SensorDock state={sensor} onConnectStart={onConnectStart} autoConnect />
+      <MeasureGuide guide={guide} sources={sources ?? []} open={!measurement} />
       <LiveMonitor state={sensor} onSimulate={simulate} />
       {(error || simulateError) && <div role="alert" className="flow-error">{error || `The simulated stream could not start: ${simulateError}`}</div>}
 

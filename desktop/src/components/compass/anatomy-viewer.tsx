@@ -32,7 +32,7 @@ const DEFAULT_LAYERS: Record<AnatomySystem, boolean> = { skin: false, skeleton: 
 const isExcluded = (structure: AnatomyStructure) => structure.system === "skin" || structure.category === "Reproductive";
 /** Space kept around a selected region when the camera flies to it, in metres. */
 const FOCUS_PADDING = 0.17;
-const HOVER = new Color("#cdd7df");
+const HOVER = new Color("#c9d5e4");
 const SELECTED = new Color("#9dcddc");
 const PROMPT = new Color("#f5c67b");
 const NONE = new Color("#000000");
@@ -243,7 +243,7 @@ export default function AnatomyViewer({ selected, highlighted, onSelect, calm, r
         </div>
         <Canvas frameloop={spinning ? "always" : "demand"} dpr={[1, 1.75]} camera={{ fov: 32, position: [0, 1, 4.2] }} role="group" aria-label="3D anatomical model with selectable region labels. Drag to rotate, scroll to zoom. The same regions are listed as buttons below.">
           <ambientLight intensity={1.15} />
-          <hemisphereLight args={["#cdd7df", "#062b43", 1.2]} />
+          <hemisphereLight args={["#c9d5e4", "#0c1424", 1.2]} />
           <directionalLight position={[2.5, 4, 3.5]} intensity={2.2} />
           <directionalLight position={[-3, 2, -2.5]} intensity={0.9} />
           <Suspense fallback={null}>

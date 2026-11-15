@@ -56,7 +56,8 @@ bool readSample(int index)
     // Restart the measurement rather than calculate on silently dropped data.
     if (collected >= STORAGE_SIZE)
     {
-      while (sensor.available()) sensor.nextSample();
+      while (sensor.available())
+        sensor.nextSample();
       sensor.clearFIFO();
       Serial.println("ERROR: Sample backlog; collecting a fresh measurement.");
       return false;
@@ -224,7 +225,8 @@ void loop()
   if (!initialized)
   {
     sensor.clearFIFO();
-    while (sensor.available()) sensor.nextSample();
+    while (sensor.available())
+      sensor.nextSample();
     const uint32_t start = millis();
     for (int i = 0; i < SAMPLE_COUNT; ++i)
     {

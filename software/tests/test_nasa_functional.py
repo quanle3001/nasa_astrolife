@@ -151,7 +151,8 @@ class EvidenceTraceTests(Base):
         self.assertNotEqual(leo["mission_title"], mars["mission_title"])
 
     def test_sensor_measurements_are_traced_to_their_nasa_risk_with_their_source(self):
-        measurement = {"heart_rate": 72, "spo2": 91, "input_source": "sensor", "sensor_port": "COM7", "sensor_received_at": "2026-11-15T08:00:00+00:00"}
+        # 112 bpm is outside the general resting reference, so the heart rate raises its own prompt.
+        measurement = {"heart_rate": 112, "spo2": 91, "input_source": "sensor", "sensor_port": "COM7", "sensor_received_at": "2026-11-15T08:00:00+00:00"}
         entries = {e["condition_id"]: e for e in self.trace(self.profile(), dict(self.safety_no), measurement)}
         self.assertEqual(entries["hypoxia"]["observations"], [{
             "kind": "measurement", "observation_id": "measurement:spo2@2026-11-15T08:00:00+00:00", "indicator_id": "spo2",
@@ -166,7 +167,7 @@ class EvidenceTraceTests(Base):
         from astrotip.analysis.rules import RULES_VERSION
         profile = self.profile(environment="mars", phase="transit")
         answers = {**self.safety_no, "sleep.quality": "poorly", "sleep.hours": 4.5}
-        entries = {e["condition_id"]: e for e in self.trace(profile, answers, {"heart_rate": 72, "spo2": 98, "input_source": "sensor", "sensor_port": "COM7", "sensor_received_at": "2026-11-15T08:00:00+00:00"})}
+        entries = {e["condition_id"]: e for e in self.trace(profile, answers, {"heart_rate": 112, "spo2": 98, "input_source": "sensor", "sensor_port": "COM7", "sensor_received_at": "2026-11-15T08:00:00+00:00"})}
         sleep = entries["sleep"]["traceability"]
         self.assertEqual(sleep["nasa_risk_ids"], [100])
         self.assertIn("sleep", sleep["nasa_source_ids"])

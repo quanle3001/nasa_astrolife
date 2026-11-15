@@ -177,7 +177,7 @@ class DesktopFlowTests(unittest.TestCase):
         self.assertEqual(saved["checkin"]["sensor_received_at"], "2026-11-14T20:00:00+00:00")
 
     def test_background_research_is_not_presented_as_a_sensor_result(self):
-        self.window.run_assessment(CheckIn(spo2=98, heart_rate=72))
+        self.window.run_assessment(CheckIn(spo2=98, heart_rate=112))
         content = self.window.assessment_page.content.toPlainText()
         self.assertIn("Suggested next steps", content)
         self.assertNotIn("B-Complex", content)

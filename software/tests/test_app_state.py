@@ -1,6 +1,7 @@
 """Persistence of the mission profile, check-in sessions and follow-up actions."""
 
 from contextlib import closing
+import json
 from pathlib import Path
 import sqlite3
 import sys
@@ -16,6 +17,17 @@ from astrotip.storage.database import HistoryStore
 
 MISSION = {"environment": "mars", "phase": "transit", "mission_day": 120, "eva_recent": False, "gravity_transition_recent": False}
 ACTION = {"condition_id": "sleep", "level": "watch", "text": "Review fatigue with the crew.", "observation": "Reported: poor sleep."}
+MEASUREMENT = {
+    "heart_rate": 73,
+    "spo2": 98,
+    "signal_quality": "unknown",
+    "input_source": "sensor",
+    "sensor_port": "COM7",
+    "sensor_received_at": "2026-11-15T08:00:00+00:00",
+    "aggregation": "median",
+    "report_count": 3,
+    "reports_required": 3,
+}
 
 
 class AppStateTests(unittest.TestCase):
@@ -47,6 +59,20 @@ class AppStateTests(unittest.TestCase):
         self.assertEqual(resumed["session_id"], session["session_id"])
         self.assertEqual(resumed["answers"], {"sleep.quality": "poorly"})
         self.assertEqual((resumed["position"], resumed["status"], resumed["mission"]), ("sleep.hours", "in_progress", MISSION))
+
+    def test_first_stable_measurement_is_latched_and_survives_a_restart(self):
+        session = self.store.start_session(MISSION, "2026.11.1")
+        self.assertIsNone(session["measurement"])
+        captured = self.store.save_measurement(session["session_id"], MEASUREMENT)
+        self.assertEqual(captured["measurement"], MEASUREMENT)
+
+        replacement = {**MEASUREMENT, "heart_rate": 91, "spo2": 95}
+        still_captured = self.store.save_measurement(session["session_id"], replacement)
+        self.assertEqual(still_captured["measurement"], MEASUREMENT)
+        self.assertEqual(AppStateStore(self.path).open_session()["measurement"], MEASUREMENT)
+
+        new_session = self.store.start_session(MISSION, "2026.11.1")
+        self.assertIsNone(new_session["measurement"])
 
     def test_starting_again_abandons_the_old_session_without_deleting_it(self):
         first = self.store.start_session(MISSION, "2026.11.1")
@@ -95,6 +121,26 @@ class AppStateTests(unittest.TestCase):
         self.assertEqual(history.list_entries(), before)
         history.save(checkin, assess(checkin))
         self.assertEqual(len(history.list_entries()), 2)
+
+    def test_version_one_open_session_is_upgraded_with_an_empty_measurement(self):
+        with closing(sqlite3.connect(self.path)) as connection:
+            connection.execute(
+                """CREATE TABLE assessment_sessions (
+                    id TEXT PRIMARY KEY, started_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+                    status TEXT NOT NULL, registry_version TEXT NOT NULL, mission_json TEXT NOT NULL,
+                    answers_json TEXT NOT NULL, position TEXT NOT NULL DEFAULT '',
+                    entry_id INTEGER, result_json TEXT)""")
+            connection.execute(
+                "INSERT INTO assessment_sessions VALUES (?, ?, ?, 'in_progress', ?, ?, '{}', '', NULL, NULL)",
+                ("legacy", "2026-11-15T08:00:00+00:00", "2026-11-15T08:00:00+00:00", "2026.11.1",
+                 json.dumps(MISSION)))
+            connection.execute("PRAGMA user_version = 1")
+            connection.commit()
+        resumed = self.store.open_session()
+        self.assertEqual(resumed["session_id"], "legacy")
+        self.assertIsNone(resumed["measurement"])
+        with closing(sqlite3.connect(self.path)) as connection:
+            self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], SCHEMA_VERSION)
 
     def test_history_is_readable_when_the_guided_flow_created_the_file_first(self):
         self.store.save_mission(MISSION)

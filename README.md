@@ -23,7 +23,7 @@ It runs offline on one computer. Nothing is sent anywhere.
 | 2. Hazards | Reads NASA's five hazards of human spaceflight | Orders them for the mission and shows the check-in plan that follows from that order |
 | 3. Safety screen | Ticks urgent symptoms or "none of these" | Shows emergency guidance immediately if anything is ticked |
 | 4. Questions | Answers one question at a time | Adapts: follow-ups appear and disappear, and each card says why it is asked |
-| 5. Measurement | Rests a fingertip on the sensor | Shows the live optical pulse, heart rate and SpO₂ from the firmware |
+| 5. Measurement | Rests a fingertip on the sensor until three reports agree | Saves their median for the open check-in, then allows the fingertip to be removed before continuing |
 | 6. Findings | Reads the prompts | Runs the Python rules and traces each prompt: mission → hazard → NASA risk → observation → rule → follow-up |
 | 7. Health Compass | Explores a 3D body | Shows recorded values, prompts and NASA research per body region |
 | 8. Actions | Marks follow-ups done, or reassesses | Stores them locally |

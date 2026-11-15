@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "reviewed_on": "2026-11-15",
+  "note": "Simple, general self-care steps and measurement instructions shown with AstroLife's prompts. Each step restates guidance from the cited source in plain words: NASA Human Research Program risk pages for spaceflight countermeasures, and MedlinePlus (U.S. National Library of Medicine) or the FDA for general health guidance. They are not prescriptions, not NASA flight procedures and not a substitute for the crew medical officer. Urgent findings show only the emergency action.",
+  "measurement": {
+    "title": "How to take a good fingertip reading",
+    "steps": [
+      {"text": "Warm your hand and let it relax. Keep it resting below the level of your heart.", "source_ids": ["fda_oximeter_basics"]},
+      {"text": "Use a clean fingertip with no nail polish, and cover the lit window completely with the soft pad of the finger.", "source_ids": ["fda_oximeter_basics"]},
+      {"text": "Sit still and do not move the hand that is on the sensor.", "source_ids": ["fda_oximeter_basics"]},
+      {"text": "Wait until the numbers stop changing. AstroLife saves the reading only after three reports agree.", "source_ids": ["fda_oximeter_basics"]},
+      {"text": "For a resting pulse, rest for at least 10 minutes first.", "source_ids": ["medlineplus_pulse"]}
+    ],
+    "meaning": [
+      {"indicator": "heart_rate", "label": "Pulse (heart rate)", "text": "How many times your heart beats in a minute. The general resting reference for adults is 60 to 100 beats per minute; well-trained people can rest at 40 to 60. Activity, stress and caffeine raise it.", "source_ids": ["medlineplus_pulse"]},
+      {"indicator": "spo2", "label": "Blood oxygen (SpO2)", "text": "An estimate of how much oxygen your blood is carrying. General guidance treats 92% or lower as a reason to contact a clinician and 88% or lower as needing immediate attention. Cold hands, movement, poor circulation, skin pigmentation and nail polish can make the estimate wrong, so how you feel matters as much as the number.", "source_ids": ["medlineplus_oximetry", "fda_oximeter_basics"]}
+    ]
+  },
+  "triggers": {
+    "vision_changes": {
+      "self_care": [
+        {"text": "Write down when the change started, whether it affects one eye or both, and any headache.", "source_ids": ["sans"]},
+        {"text": "Keep to the planned eye-monitoring schedule.", "source_ids": ["sans"]}
+      ]
+    },
+    "dizziness": {
+      "self_care": [
+        {"text": "Keep still and rest while it lasts. Avoid sudden movements and sudden changes of position.", "source_ids": ["medlineplus_dizziness"]},
+        {"text": "Move slowly and keep something to hold on to.", "source_ids": ["medlineplus_dizziness"]},
+        {"text": "Tell a crewmate, and do not pilot, operate equipment or do demanding tasks until it has passed.", "source_ids": ["medlineplus_dizziness", "vestibular"]},
+        {"text": "Get help at once if it comes with chest pain, shortness of breath, fainting, weakness, or a change in vision or speech.", "source_ids": ["medlineplus_dizziness"]}
+      ]
+    },
+    "palpitations": {
+      "self_care": [
+        {"text": "Sit down and rest. After at least 10 minutes of rest, measure your pulse again and note the result.", "source_ids": ["medlineplus_pulse"]}
+      ]
+    },
+    "fatigue": {
+      "self_care": [
+        {"text": "Protect your scheduled sleep period, and go to bed and get up at the same time each day.", "source_ids": ["sleep", "medlineplus_sleep"]},
+        {"text": "Avoid caffeine in the afternoon and evening.", "source_ids": ["medlineplus_sleep"]}
+      ]
+    },
+    "poor_sleep": {
+      "self_care": [
+        {"text": "Protect your scheduled sleep period, and go to bed and get up at the same time each day.", "source_ids": ["sleep", "medlineplus_sleep"]},
+        {"text": "Avoid caffeine in the afternoon and evening.", "source_ids": ["medlineplus_sleep"]},
+        {"text": "Keep your sleep station cool, dark and quiet, and put screens and other distractions away.", "source_ids": ["medlineplus_sleep"]},
+        {"text": "Relax before sleep, for example by reading or listening to calm music. If you cannot fall asleep after 20 minutes, get up and do something relaxing.", "source_ids": ["medlineplus_sleep"]},
+        {"text": "Follow the mission's day and night lighting plan.", "source_ids": ["sleep"]}
+      ]
+    },
+    "low_sleep": {
+      "self_care": [
+        {"text": "Adults need 7 to 9 hours of sleep a day. Protect your next scheduled sleep period.", "source_ids": ["medlineplus_sleep", "sleep"]},
+        {"text": "Avoid caffeine in the afternoon and evening, and keep your sleep station cool, dark and quiet.", "source_ids": ["medlineplus_sleep"]}
+      ]
+    },
+    "mood_concern": {
+      "self_care": [
+        {"text": "Keep your planned contact with family and with behavioral-health support.", "source_ids": ["behavioral"]},
+        {"text": "Use your protected self-care time, for example for journaling.", "source_ids": ["behavioral"]}
+      ]
+    },
+    "team_conflict": {
+      "self_care": [
+        {"text": "Use the team's practiced communication and conflict-resolution routine.", "source_ids": ["teamwork"]},
+        {"text": "Raise strain that does not resolve with the crew lead.", "source_ids": ["teamwork"]}
+      ]
+    },
+    "fever_or_infection": {
+      "self_care": [
+        {"text": "Write down your symptoms, such as feverishness, a rash or sores, and when they started.", "source_ids": ["immune"]},
+        {"text": "Follow the crew's infection-prevention procedures so others are protected.", "source_ids": ["microbes"]}
+      ]
+    },
+    "poor_intake": {
+      "self_care": [
+        {"text": "Follow the mission nutrition plan, and note missed meals or poor appetite.", "source_ids": ["nutrition"]},
+        {"text": "Report foods that are unavailable, poorly tolerated or unappealing so the menu can be adjusted.", "source_ids": ["nutrition"]}
+      ]
+    },
+    "muscle_weakness": {
+      "self_care": [
+        {"text": "Note which tasks feel harder than usual and any missed exercise sessions.", "source_ids": ["fitness"]},
+        {"text": "Keep to your prescribed resistance and aerobic exercise schedule.", "source_ids": ["fitness"]}
+      ]
+    },
+    "bone_pain": {
+      "self_care": [
+        {"text": "Write down where the pain is, when it started and any injury.", "source_ids": ["bone"]}
+      ]
+    },
+    "missed_exercise": {
+      "self_care": [
+        {"text": "Return to your prescribed resistance and aerobic exercise schedule; it is NASA's main countermeasure for muscle and bone loss.", "source_ids": ["fitness", "bone"]}
+      ]
+    },
+    "heart_rate_outside_reference": {
+      "self_care": [
+        {"text": "Rest for at least 10 minutes, then measure again with a warm, still hand.", "source_ids": ["medlineplus_pulse", "fda_oximeter_basics"]}
+      ]
+    },
+    "poor_signal": {
+      "self_care": [
+        {"text": "Measure again with a warm, relaxed hand held below heart level, a clean fingertip without nail polish, and no movement.", "source_ids": ["fda_oximeter_basics"]}
+      ]
+    }
+  }
+}

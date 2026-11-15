@@ -1,6 +1,7 @@
 import { Activity, AlertTriangle, ClipboardCheck, Compass, Database, ListTodo, Orbit, PlayCircle, Radiation, RotateCcw, Settings2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { Magnetic, PointerGlow } from "@/components/effects/interactive";
+import { IndicatorStatusList } from "@/components/flow/guidance";
 import { UrgentPanel } from "@/components/flow/urgent-panel";
 import { ActionItem } from "@/components/flow/actions-page";
 import { LEVEL_LABELS, measurementKind, ProvenanceBadge } from "@/components/flow/common";
@@ -107,6 +108,7 @@ export function DashboardPage({ state, knowledge, config, sensor, onStartCheckin
             <>
               <div className="tile-vitals"><div><strong>{checkin.heart_rate ?? "—"}</strong><small>bpm</small></div><div><strong>{checkin.spo2 ?? "—"}</strong><small>% SpO₂</small></div></div>
               {kind && <ProvenanceBadge kind={kind} />}
+              <IndicatorStatusList indicators={latest?.assessment.indicators} compact />
               <p className="tile-note">{checkin.sensor_received_at ? `${checkin.input_source === "simulated" ? "Simulated" : "Measured"} ${when(checkin.sensor_received_at)}` : "From your latest check-in"} · {checkin.input_source === "simulated" ? "demo values, not a measurement" : "estimates, not validated"}</p>
             </>
           ) : <p className="empty-line">No measurement in your latest check-in. Pulse and oxygen are unassessed.</p>}

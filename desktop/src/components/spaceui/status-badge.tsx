@@ -16,7 +16,7 @@ const indicator = cva("relative inline-flex size-2 rounded-full", {
   variants: {
     status: {
       online: "bg-[var(--status-live)]",
-      offline: "bg-[#355468]",
+      offline: "bg-[#4b5a70]",
       warning: "bg-[var(--status-review)]",
       info: "bg-space-cyan",
     },

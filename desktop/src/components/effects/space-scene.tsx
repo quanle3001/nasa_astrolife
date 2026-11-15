@@ -25,7 +25,9 @@ const MODEL_SCALE = 1 / 37;
 const POSES: Record<RenderedAstronautPose, { position: [number, number, number]; scale: number }> = {
   hero: { position: [1.7, -0.1, -2], scale: 1 },
   // Upper right, fully above the setup cards and clear of their controls.
-  side: { position: [3.75, 1.8, -3.4], scale: 0.44 },
+  // Raised and reduced so its feet stay above the mission cards at the
+  // demo window size, including when the cursor pulls it downward.
+  side: { position: [3.75, 2.08, -3.4], scale: 0.38 },
   // Leaves toward the same edge as the supporting pose before unmounting.
   hidden: { position: [4.8, 1.7, -4.2], scale: 0.002 },
 };
@@ -55,7 +57,7 @@ function Astronaut({ pose, pointer, calm }: { pose: RenderedAstronautPose; point
     const visible = pose !== "hidden";
     const px = calm || !visible ? 0 : pointer.current.x;
     const py = calm || !visible ? 0 : pointer.current.y;
-    const reach = pose === "hero" ? 1 : pose === "side" ? 0.5 : 0;
+    const reach = pose === "hero" ? 1 : pose === "side" ? 0.25 : 0;
     const drift = calm || !visible ? 0 : Math.sin(time * 0.55) * 0.07;
     // The astronaut floats toward the cursor and turns to face it.
     target.position.x += (targetPose.position[0] + px * 0.55 * reach - target.position.x) * ease;
@@ -108,7 +110,7 @@ export default function SpaceScene({ reducedMotion, astronaut }: {
               key, rim and fill lights reveal the model's original textures,
               seams, folds, helmet and life-support equipment. */}
           <ambientLight intensity={0.08} />
-          <hemisphereLight args={["#ffffff", "#062b43", 0.22]} />
+          <hemisphereLight args={["#ffffff", "#0c1424", 0.22]} />
           <directionalLight position={[-4, 5, 4]} intensity={2.9} color="#ffffff" />
           <directionalLight position={[4.5, 2, -3]} intensity={2.1} color="#e3f3f7" />
           <directionalLight position={[1, -3, 3]} intensity={0.45} color="#b8cbd2" />

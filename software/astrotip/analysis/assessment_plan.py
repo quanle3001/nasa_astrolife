@@ -218,7 +218,8 @@ def build_trace(catalog: dict, mission_context: dict, registry: dict, indicators
                            for report in hrr["conditions"][finding.condition_id]],
             "observations": observations,
             "rule_reason": finding.reason,
-            "actions": list(finding.actions),
+            # Everything that becomes a follow-up: the astronaut's own steps, then the crew steps.
+            "actions": [*finding.self_care, *finding.actions],
             # Identifiers that make the finding auditable end to end.
             "traceability": {
                 "nasa_source_ids": list(finding.source_ids),

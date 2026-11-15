@@ -47,7 +47,7 @@ React renderer (desktop/src)
 | 4 | Hazards | NASA's five hazards, ordered for this mission, with the check-in plan | `mission.plan` → `assessment_plan.build_plan` |
 | 5 | Safety screen | Nine urgent items, the same for every mission | `session.preview` → `rules.assess` |
 | 6 | Questions | One question at a time, follow-ups appear and disappear | `questionnaire-machine.ts`, re-checked in `questionnaire/registry.py` |
-| 7 | Measurement | Live optical pulse, heart rate and SpO₂ from the firmware | `sensor.*` events |
+| 7 | Measurement | Live optical pulse plus a durable stable heart-rate/SpO₂ snapshot for this session | `sensor.*` events + `assessment_sessions.measurement_json` |
 | 8 | Findings | Prompts, measurement quality, what was reported, trends, NASA context | `session.submit` → `rules.assess` + `build_trace` |
 | 9 | Health Compass | 3D or 2D body view; pick a region to see its information | `components/compass` |
 | 10 | Actions | Follow-up actions, mark done, reassess | `actions.list`, `actions.update` |
@@ -86,7 +86,7 @@ Event: `{"event": "sensor.reading", "payload": {...}}`
 | `backend.ready` | Same payload as `system.ping`, sent once at start |
 | `sensor.connection` | `state`, `port`, `source` (`sensor` or `simulated`) |
 | `sensor.status` | Text status and faults from the reader |
-| `sensor.reading` | Firmware estimates, `usable`, `signal_status`, `sample_rate_hz`, `firmware_version`, `optical_state`, `reading_state`, `source`, and an assessment |
+| `sensor.reading` | Firmware estimates, live quality fields and assessment; once stable, `captured_measurement` contains the session's latched median and report metadata |
 | `sensor.ppg.batch` | `stream_id`, `batch_seq`, `source`, `seq[]`, `t_ms[]`, `red[]`, `ir[]`, `dropped`, `contact` |
 | `nasa.radlab.updated` | Result of a refresh |
 
@@ -98,10 +98,13 @@ only for `https://*.nasa.gov`.
 
 ### Where a measurement comes from
 
-`session.submit` does **not** accept heart rate or SpO₂ from the renderer. With
-`{"use": "sensor"}` the backend uses the median of its own three latest
-agreeing firmware reports (`latest_sensor_checkin`). Contact loss or disagreement
-clears that window. A check-in without a reading needs
+`session.submit` does **not** accept heart rate or SpO₂ from the renderer. The
+first stable window of three agreeing firmware reports is reduced to a median
+for heart rate and SpO₂, then saved once in the open session. With
+`{"use": "sensor"}` the backend uses that captured snapshot. Contact loss,
+disagreement or a disconnect still clears the live estimate, but it does not
+delete a completed session capture; the astronaut can remove their finger and
+continue, including after restarting the app. A check-in without a reading needs
 `{"use": "none", "reason": "sensor_unavailable" | "no_stable_reading"}` and is
 stored as unassessed, never as normal. Values typed from another instrument are
 stored as `manual`.
@@ -143,12 +146,14 @@ One SQLite file, by default `<LOCALAPPDATA or ~/.local/share>/AstroTip/history.s
 |---|---|---|
 | `checkins` | `HistoryStore` | Saved check-ins with their assessment (unchanged from earlier versions) |
 | `mission_profile` | `AppStateStore` | The one mission profile |
-| `assessment_sessions` | `AppStateStore` | Sessions: in progress, submitted or abandoned, with answers and result |
+| `assessment_sessions` | `AppStateStore` | Sessions: in progress, submitted or abandoned, with answers, first stable measurement aggregate, and result |
 | `followup_actions` | `AppStateStore` | Actions created by a submitted session, open or done |
 
-The schema version is `PRAGMA user_version`. An older file is upgraded in place
-by adding tables. Nothing is written until there is something to save. The file
-is not encrypted, and the app says so.
+The schema version is `PRAGMA user_version` (currently 2). An older file is
+upgraded in place; version 2 adds nullable `measurement_json` to sessions. The
+capture stores only the bounded aggregate and provenance metadata, never the
+25 Hz raw PPG samples. Nothing is written until there is something to save. The
+file is not encrypted, and the app says so.
 
 ## Traceability
 
@@ -202,3 +207,30 @@ everywhere.
 
 `python software/run.py` starts the earlier Qt interface. It uses the same
 Python modules and stays as a fallback monitor.
+
+## Assessment engine (rules 2026.11.2)
+
+`analysis/rules.py` turns one check-in into prompts. It is a fixed set of
+rules, not a model.
+
+| Input | Rule | Result |
+|---|---|---|
+| A reported symptom | `OBSERVATION_RULES` maps it to a health topic and a level | "Act now" for emergency signs, "Medical review", or "Follow up" |
+| SpO2 | General MedlinePlus references: 88% or lower, 92% or lower | Act now, or contact a clinician |
+| Heart rate | General adult resting reference of 60 to 100 bpm (MedlinePlus) | Inside: no prompt. Outside: "Follow up" with a recheck step |
+| Signal quality "poor" | | "Follow up": measure again |
+| Sleep under 6 hours, missed exercise | App reminders, not clinical cut-offs | "Follow up" |
+
+Every non-urgent prompt carries two lists. **What you can do now** holds
+simple steps from `resources/care_guidance.json`; each step restates a cited
+source (NASA risk pages, MedlinePlus, FDA) and the file is validated at start.
+**When to involve the crew** holds the escalation step. Urgent prompts show the
+emergency action only. Both lists become follow-up actions.
+
+`Assessment.indicators` gives each measured value a status for colour coding:
+teal inside the reference, amber outside it or at the clinician reference, red
+at the urgent reference. A value inside a reference never means "healthy"; with
+nothing triggered the summary says the check-in is not a medical clearance.
+
+The same file supplies "How to take a good fingertip reading" and what the two
+numbers mean, shown on the Measurement and Findings screens.

@@ -89,7 +89,7 @@ const PRESENTATION: Record<MissionId, Pick<MissionMedia, "title" | "description"
   lunar: {
     title: "Lunar Mission",
     description: "Earth appears above the Apollo 17 lunar roving vehicle during surface operations at Taurus-Littrow.",
-    short: "Apollo surface reference", color: "#cdd7df", focus: "38% 42%", video_zoom: 1, video_segment: null,
+    short: "Apollo surface reference", color: "#c9d5e4", focus: "38% 42%", video_zoom: 1, video_segment: null,
   },
   mars: {
     title: "Mars / Deep Space",

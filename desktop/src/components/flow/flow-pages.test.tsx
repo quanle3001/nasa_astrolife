@@ -5,7 +5,7 @@ import hrrEvidence from "../../../../software/resources/hrr_evidence.json";
 import missionContext from "../../../../software/resources/mission_context.json";
 import registry from "../../../../software/resources/question_registry.json";
 import type { AppConfig, Assessment, CheckIn } from "@/types/backend";
-import type { Answers, AssessmentPlan, EvidenceTraceEntry, FollowupAction, Knowledge, MissionProfile, SessionResult } from "@/types/flow";
+import type { Answers, AssessmentPlan, CapturedMeasurement, EvidenceTraceEntry, FollowupAction, Knowledge, MissionProfile, SessionResult } from "@/types/flow";
 
 const noTrends = { algorithm_version: "history-descriptive-1.0", entries_considered: 1, simulated_excluded: 1, limits: "Descriptive only. AstroLife has no personal baseline or approved mission limit and does not interpret a change.",
   indicators: { heart_rate: { label: "Heart rate", unit: "bpm", count: 1, points: [] }, spo2: { label: "Estimated SpO2", unit: "%", count: 1, points: [] } } };
@@ -240,12 +240,17 @@ describe("QuestionsPage", () => {
 });
 
 describe("MeasurePage", () => {
-  const renderPage = (sensor = INITIAL_SENSOR) => {
+  const savedMeasurement = (fields: Partial<CapturedMeasurement> = {}): CapturedMeasurement => ({
+    heart_rate: 72, spo2: 98, signal_quality: "unknown", input_source: "sensor",
+    sensor_port: "/dev/cu.usbserial-0001", sensor_received_at: "2026-11-15T08:00:00+00:00",
+    aggregation: "median", report_count: 3, reports_required: 3, ...fields,
+  });
+  const renderPage = (sensor = INITIAL_SENSOR, measurement: CapturedMeasurement | null = null) => {
     const onSubmit = vi.fn();
-    render(<MeasurePage sensor={sensor} onConnectStart={() => undefined} onBack={() => undefined} onSubmit={onSubmit} busy={false} error="" />);
+    render(<MeasurePage sensor={sensor} measurement={measurement} onConnectStart={() => undefined} onBack={() => undefined} onSubmit={onSubmit} busy={false} error="" />);
     return onSubmit;
   };
-  const primary = () => screen.getByRole("button", { name: /Use this reading and see my findings/ });
+  const primary = () => screen.getByRole("button", { name: /Use saved reading and see my findings/ });
 
   it("requires the sensor reading and says what is still missing", () => {
     const onSubmit = renderPage();
@@ -273,18 +278,34 @@ describe("MeasurePage", () => {
   });
 
   it("asks the backend for its own sensor reading instead of sending numbers", () => {
-    const onSubmit = renderPage({ ...INITIAL_SENSOR, connected: true, usable: true, measurementReady: true, heartRate: 72, spo2: 98, source: "sensor", readingState: "steady", samplesCollected: 3 });
+    const measurement = savedMeasurement();
+    const onSubmit = renderPage({ ...INITIAL_SENSOR, connected: true, usable: true, measurementReady: true, heartRate: 72, spo2: 98, source: "sensor", readingState: "steady", samplesCollected: 3 }, measurement);
     expect(screen.getByText("Your sensor measurement")).toBeInTheDocument();
-    expect(screen.getByText(/Stable measurement ready from 3 agreeing reports/)).toBeInTheDocument();
+    expect(screen.getByText(/Measurement saved for this check-in from 3 agreeing reports/)).toBeInTheDocument();
+    expect(screen.getByText(/Median of 3 agreeing reports/)).toBeInTheDocument();
+    expect(screen.getByText("72 bpm")).toBeInTheDocument();
+    expect(screen.getByText("98% SpO₂")).toBeInTheDocument();
+    fireEvent.click(primary());
+    expect(onSubmit).toHaveBeenCalledWith({ use: "sensor" });
+  });
+
+  it("keeps Continue enabled from the saved snapshot after live contact is lost", () => {
+    const onSubmit = renderPage(INITIAL_SENSOR, savedMeasurement());
+    expect(screen.getByText(/You can remove your finger and continue/)).toBeInTheDocument();
+    expect(screen.queryByText("Waiting for three agreeing reports")).not.toBeInTheDocument();
+    expect(primary()).toBeEnabled();
     fireEvent.click(primary());
     expect(onSubmit).toHaveBeenCalledWith({ use: "sensor" });
   });
 
   it("labels simulated data", () => {
-    renderPage({ ...INITIAL_SENSOR, connected: true, usable: true, measurementReady: true, heartRate: 72, spo2: 98, source: "simulated", readingState: "steady", samplesCollected: 3 });
+    renderPage(
+      { ...INITIAL_SENSOR, connected: true, usable: true, measurementReady: true, heartRate: 72, spo2: 98, source: "simulated", readingState: "steady", samplesCollected: 3 },
+      savedMeasurement({ input_source: "simulated", sensor_port: "simulated://max30102" }),
+    );
     expect(screen.getByText("Simulated data · not a measurement")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Continue with simulated demo values/ })).toBeEnabled();
-    expect(screen.queryByRole("button", { name: /Use this reading/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Continue with saved simulated demo values/ })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: /Use saved reading/ })).not.toBeInTheDocument();
   });
 
   it("never dead-ends when the hardware fails, but needs a stated reason", () => {
@@ -327,7 +348,7 @@ describe("FindingsPage", () => {
   it("keeps measurement, reported observations, trends, rule prompts and NASA research in separate sections", async () => {
     render(<FindingsPage result={result()} entryId={5} config={config} knowledge={knowledge} onNext={() => undefined} />);
     expect(screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent)).toEqual([
-      "Follow-up prompts", "Measurement quality", "What you reported", "Compared with earlier saved measurements", "NASA scientific context",
+      "Follow-up prompts", "Your measurement", "What you reported", "Compared with earlier saved measurements", "NASA scientific context",
     ]);
     expect(screen.getByText("Your sensor measurement")).toBeInTheDocument();
     expect(screen.getByText("91%")).toBeInTheDocument();

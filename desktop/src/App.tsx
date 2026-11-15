@@ -35,7 +35,7 @@ import { astronautPoseForView, screenMotion } from "@/lib/transitions";
 import { questionnaireView } from "@/questions/engine";
 import { applyAnswer, questionnaireMachine } from "@/questions/questionnaire-machine";
 import type { AppConfig, Assessment, AssessmentBundle, BackendEvent, CheckIn } from "@/types/backend";
-import type { Answers, AnswerValue, AppState, AssessmentPlan, FollowupAction, Knowledge, MeasurementChoice, MissionProfile, Question, Session, SessionResult } from "@/types/flow";
+import type { Answers, AnswerValue, AppState, AssessmentPlan, CapturedMeasurement, FollowupAction, Knowledge, MeasurementChoice, MissionProfile, Question, Session, SessionResult } from "@/types/flow";
 
 /** Cleared whenever the link drops so no stale estimate or diagnostic stays on screen. */
 const NO_READING = {
@@ -185,6 +185,17 @@ export default function App() {
       const usable = Boolean(event.payload.usable);
       const measurementReady = Boolean(event.payload.measurement_ready);
       const receivedAt = Date.now();
+      const captured = event.payload.captured_measurement;
+      if (captured && typeof captured === "object") {
+        const measurement = captured as CapturedMeasurement;
+        // A captured window belongs to the open check-in, not to the live
+        // connection. Keep it when contact is lost or the sensor disconnects.
+        setSession((current) => current ? { ...current, measurement } : current);
+        setAppState((current) => ({
+          ...current,
+          open: current.open ? { ...current.open, measurement } : current.open,
+        }));
+      }
       setSensor((current) => ({
         ...current, usable, measurementReady, lastUpdate: receivedAt, lastUsableAt: usable ? receivedAt : current.lastUsableAt,
         heartRate: usable && typeof event.payload.heart_rate === "number" ? event.payload.heart_rate : null,
@@ -366,7 +377,7 @@ export default function App() {
   } else if (view === "questions" && questionView) {
     screen = <QuestionsPage view={questionView} knowledge={knowledge} plan={plan} index={questionIndex} onIndex={(index) => sendQuestionnaire({ type: "GOTO", index })} onAnswer={answerQuestion} onBack={() => send({ type: "BACK" })} onDone={() => send({ type: "NEXT" })} aside={exitAside} notice={notice} error={flowError} />;
   } else if (view === "measure") {
-    screen = <MeasurePage sensor={sensor} onConnectStart={linking} onBack={() => send({ type: "BACK" })} onSubmit={(measurement) => void submitCheckin(measurement)} busy={flowBusy} error={flowError} aside={exitAside} />;
+    screen = <MeasurePage guide={knowledge.care_guidance?.measurement} sources={knowledge.catalog.sources} sensor={sensor} measurement={session?.measurement ?? null} onConnectStart={linking} onBack={() => send({ type: "BACK" })} onSubmit={(measurement) => void submitCheckin(measurement)} busy={flowBusy} error={flowError} aside={exitAside} />;
   } else if (view === "findings" && result) {
     screen = <FindingsPage result={result.result} entryId={result.entryId} config={config} knowledge={knowledge} onNext={() => send({ type: "NEXT" })} onExit={onboarded ? () => send({ type: "EXIT" }) : undefined} />;
   } else if (view === "compass") {

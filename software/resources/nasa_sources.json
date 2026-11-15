@@ -29,7 +29,11 @@
     {"id": "dynamic_loads", "title": "NASA: Injury from dynamic loads", "url": "https://www.nasa.gov/reference/risk-of-injury-from-dynamic-loads/"},
     {"id": "medlineplus_oximetry", "title": "MedlinePlus: Pulse Oximetry (general reference, not a spaceflight threshold)", "url": "https://medlineplus.gov/lab-tests/pulse-oximetry/"},
     {"id": "fda_oximetry", "title": "FDA: Pulse Oximeters", "url": "https://www.fda.gov/medical-devices/products-and-medical-procedures/pulse-oximeters"},
-    {"id": "medlineplus_emergencies", "title": "MedlinePlus: Recognizing medical emergencies (general reference)", "url": "https://medlineplus.gov/ency/article/001927.htm"}
+    {"id": "medlineplus_emergencies", "title": "MedlinePlus: Recognizing medical emergencies (general reference)", "url": "https://medlineplus.gov/ency/article/001927.htm"},
+    {"id": "medlineplus_pulse", "title": "MedlinePlus: Pulse (general resting reference, not a spaceflight limit)", "url": "https://medlineplus.gov/ency/article/003399.htm"},
+    {"id": "medlineplus_sleep", "title": "MedlinePlus: Healthy Sleep (general reference)", "url": "https://medlineplus.gov/healthysleep.html"},
+    {"id": "medlineplus_dizziness", "title": "MedlinePlus: Dizziness (general home care)", "url": "https://medlineplus.gov/ency/article/003093.htm"},
+    {"id": "fda_oximeter_basics", "title": "FDA: Pulse Oximeter Basics (how to take a reading)", "url": "https://www.fda.gov/consumers/consumer-updates/pulse-oximeter-basics"}
   ],
   "hazards": [
     {"id": "radiation", "title": "Space radiation"},

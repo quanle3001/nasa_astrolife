@@ -7,8 +7,8 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from astrotip.analysis.nasa_guidance import CONDITION_IDS, load_catalog
-from astrotip.analysis.rules import assess
-from astrotip.models.health_indicator import CheckIn
+from astrotip.analysis.rules import EMERGENCY_ACTION, OBSERVATION_RULES, assess
+from astrotip.models.health_indicator import SYMPTOMS, CheckIn
 
 
 def findings_by_id(assessment):
@@ -136,8 +136,103 @@ class AssessmentTests(unittest.TestCase):
         self.assertEqual(finding.level, "urgent")
         self.assertIn("86", finding.reason)
         self.assertIn("confusion", finding.reason)
-        self.assertIn("signal quality", finding.reason)
+        self.assertIn("poor signal", finding.reason)
         self.assertEqual(len(finding.actions), len(set(finding.actions)))
+        self.assertEqual(finding.self_care, (), "An urgent prompt shows the emergency action only")
+
+
+class GuidanceTests(unittest.TestCase):
+    """Self-care steps, the heart-rate reference and indicator status (rules 2026.11.2)."""
+
+    @classmethod
+    def setUpClass(cls):
+        from astrotip.analysis.care_guidance import load_care_guidance
+        cls.catalog = load_catalog()
+        cls.guidance = load_care_guidance(cls.catalog)
+
+    def assess(self, **fields):
+        return assess(CheckIn(**fields), self.catalog, self.guidance)
+
+    def test_a_clean_reading_raises_no_prompt_and_is_still_not_a_clearance(self):
+        result = self.assess(heart_rate=72, spo2=98, input_source="sensor")
+        self.assertEqual(result.level, "info")
+        self.assertIn("not a medical clearance", result.summary)
+        self.assertTrue(all(finding.level == "info" for finding in result.findings))
+        self.assertTrue(any("inside the general adult resting reference of 60 to 100" in note for note in result.data_notes))
+        self.assertTrue(any("not validated" in note for note in result.data_notes), "Unknown signal quality is explained, not flagged")
+        self.assertEqual([(item["id"], item["status"]) for item in result.indicators], [("heart_rate", "in_reference"), ("spo2", "in_reference")])
+
+    def test_heart_rate_outside_the_cited_reference_prompts_a_recheck_not_a_diagnosis(self):
+        for value, side in ((112, "above"), (48, "below")):
+            with self.subTest(value=value):
+                result = self.assess(heart_rate=value, spo2=98)
+                finding = findings_by_id(result)["cardiovascular"]
+                self.assertEqual(finding.level, "watch")
+                self.assertIn(f"{side} the general adult resting reference of 60 to 100 bpm", finding.reason)
+                self.assertIn("not a diagnosis", finding.reason)
+                self.assertIn("Rest for at least 10 minutes", finding.self_care[0])
+                self.assertIn("medlineplus_pulse", finding.source_ids)
+                self.assertEqual(result.indicators[0]["status"], "outside_reference")
+        self.assertEqual(findings_by_id(self.assess(heart_rate=60, spo2=98))["cardiovascular"].level, "info")
+        self.assertEqual(findings_by_id(self.assess(heart_rate=100, spo2=98))["cardiovascular"].level, "info")
+
+    def test_oxygen_status_uses_the_same_references_as_the_prompts(self):
+        self.assertEqual(self.assess(spo2=98).indicators[0]["status"], "in_reference")
+        self.assertEqual(self.assess(spo2=92).indicators[0]["status"], "review")
+        self.assertEqual(self.assess(spo2=88).indicators[0]["status"], "urgent")
+        simulated = self.assess(spo2=98, heart_rate=72, input_source="simulated").indicators
+        self.assertTrue(all("Simulated demo value" in item["text"] for item in simulated))
+        self.assertEqual(self.assess().indicators, ())
+
+    def test_only_a_poor_signal_asks_for_a_second_reading(self):
+        self.assertEqual(findings_by_id(self.assess(spo2=98))["hypoxia"].level, "info")
+        poor = findings_by_id(self.assess(spo2=98, signal_quality="poor"))["hypoxia"]
+        self.assertEqual(poor.level, "watch")
+        self.assertIn("may be wrong", poor.reason)
+        self.assertIn("warm, relaxed hand", poor.self_care[0])
+
+    def test_non_urgent_prompts_carry_simple_sourced_steps(self):
+        result = self.assess(symptoms={"poor_sleep", "dizziness", "mood_concern"}, sleep_hours=4.5, exercise_completed=False)
+        found = findings_by_id(result)
+        self.assertTrue(any("same time each day" in step for step in found["sleep"].self_care))
+        self.assertTrue(any("7 to 9 hours" in step for step in found["sleep"].self_care))
+        self.assertIn("medlineplus_sleep", found["sleep"].source_ids)
+        self.assertTrue(any("Keep still and rest" in step for step in found["vestibular"].self_care))
+        self.assertTrue(any("family" in step for step in found["behavioral"].self_care))
+        self.assertTrue(found["fitness"].self_care and found["bone"].self_care)
+        for finding in result.findings:
+            if finding.level != "info":
+                self.assertTrue(finding.self_care, finding.condition_id)
+                self.assertTrue(finding.actions, "Every prompt also says when to involve the crew")
+                self.assertEqual(len(finding.self_care), len(set(finding.self_care)))
+                self.assertTrue(set(finding.source_ids) <= {source["id"] for source in self.catalog["sources"]})
+
+    def test_urgent_prompts_show_the_emergency_action_and_nothing_else(self):
+        result = self.assess(symptoms={"chest_pain", "palpitations", "dizziness"}, heart_rate=130)
+        heart = findings_by_id(result)["cardiovascular"]
+        self.assertEqual((heart.level, heart.self_care), ("urgent", ()))
+        self.assertIn(EMERGENCY_ACTION, heart.actions)
+        self.assertTrue(findings_by_id(result)["vestibular"].self_care, "A separate non-urgent prompt keeps its own steps")
+
+    def test_guidance_file_must_use_known_triggers_and_catalog_sources(self):
+        import copy
+        from astrotip.analysis.care_guidance import validate_care_guidance
+        validate_care_guidance(self.guidance, self.catalog)
+        for change in (
+            lambda g: g["triggers"].update(headache={"self_care": [{"text": "x", "source_ids": ["sleep"]}]}),
+            lambda g: g["triggers"]["dizziness"]["self_care"][0].update(source_ids=["not_a_source"]),
+            lambda g: g["triggers"]["dizziness"]["self_care"][0].update(text=" "),
+            lambda g: g["triggers"]["dizziness"].update(self_care=[]),
+            lambda g: g["measurement"].update(steps=[]),
+            lambda g: g["measurement"]["meaning"].pop(),
+        ):
+            broken = copy.deepcopy(self.guidance)
+            change(broken)
+            with self.assertRaises(ValueError):
+                validate_care_guidance(broken, self.catalog)
+        self.assertTrue(set(self.guidance["triggers"]) - {"low_sleep", "missed_exercise", "heart_rate_outside_reference", "poor_signal"} <= set(SYMPTOMS))
+        urgent = {key for key, (_condition, level) in OBSERVATION_RULES.items() if level == "urgent"}
+        self.assertFalse(urgent & set(self.guidance["triggers"]), "Urgent symptoms have no self-care steps")
 
 
 if __name__ == "__main__":

@@ -21,6 +21,7 @@ from astrotip.analysis.assessment_plan import build_plan, build_trace, load_indi
 from astrotip.analysis.history_trends import summarize_history
 from astrotip.analysis.hrr_evidence import load_hrr_evidence
 from astrotip.analysis.mission_context import load_mission_context, validate_profile
+from astrotip.analysis.care_guidance import load_care_guidance
 from astrotip.analysis.nasa_guidance import load_catalog
 from astrotip.analysis.optical_quality import OpticalSignalQuality
 from astrotip.analysis.reading_stability import ReadingStability
@@ -78,6 +79,7 @@ class BridgeService(QObject):
         self.ppg_timer.setInterval(PPG_FLUSH_MS)
         self.ppg_timer.timeout.connect(self.ppg.flush)
         self.catalog = load_catalog()
+        self.care_guidance = load_care_guidance(self.catalog)
         history_path = os.getenv("ASTROTIP_HISTORY_PATH")
         self.history = HistoryStore(Path(history_path)) if history_path else HistoryStore()
         self.mission_context = load_mission_context(self.catalog)
@@ -209,11 +211,31 @@ class BridgeService(QObject):
         worker.start()
 
     def _drop_sensor_assessment(self):
-        """A stale sensor estimate must not stay reviewable or saveable."""
+        """Withdraw live quick-assessment state without touching a session capture."""
         self.latest_sensor_checkin = None
         if self.sensor_pending_id:
             self.pending.pop(self.sensor_pending_id, None)
             self.sensor_pending_id = None
+
+    def _capture_session_measurement(self, checkin):
+        """Latch the first stable aggregate for the open guided-flow session."""
+        session = self.state.open_session()
+        if session is None:
+            return None
+        if session["measurement"] is None:
+            measurement = {
+                "heart_rate": checkin.heart_rate,
+                "spo2": checkin.spo2,
+                "signal_quality": checkin.signal_quality,
+                "input_source": checkin.input_source,
+                "sensor_port": checkin.sensor_port,
+                "sensor_received_at": checkin.sensor_received_at,
+                "aggregation": "median",
+                "report_count": self.stability.sample_count,
+                "reports_required": self.stability.REPORT_COUNT,
+            }
+            session = self.state.save_measurement(session["session_id"], measurement)
+        return session["measurement"]
 
     @Slot(str)
     def _sensor_status(self, message):
@@ -300,6 +322,7 @@ class BridgeService(QObject):
             sensor_received_at=reading.received_at,
         )
         payload = self._assess(checkin)
+        captured_measurement = self._capture_session_measurement(checkin)
         self._drop_sensor_assessment()
         self.sensor_pending_id = payload["assessment_id"]
         self.latest_sensor_checkin = checkin
@@ -311,6 +334,7 @@ class BridgeService(QObject):
             **progress,
             **details,
             **payload,
+            **({"captured_measurement": captured_measurement} if captured_measurement else {}),
         })
 
     def _sensor_finished(self, worker):
@@ -333,7 +357,7 @@ class BridgeService(QObject):
         return CheckIn(**params)
 
     def _assess(self, checkin):
-        assessment = assess(checkin, self.catalog)
+        assessment = assess(checkin, self.catalog, self.care_guidance)
         assessment_id = uuid4().hex
         self.pending[assessment_id] = (checkin, assessment)
         return {
@@ -365,7 +389,8 @@ class BridgeService(QObject):
     def get_knowledge(self, _params):
         """Everything the guided flow shows that comes from curated data files."""
         return {"catalog": self.catalog, "mission_context": self.mission_context, "registry": self.registry,
-                "hrr_evidence": self.hrr_evidence, "indicators": self.indicators, "osdr_studies": self.osdr_studies}
+                "hrr_evidence": self.hrr_evidence, "indicators": self.indicators, "osdr_studies": self.osdr_studies,
+                "care_guidance": self.care_guidance}
 
     def get_mission(self, _params):
         return {"profile": self.state.get_mission()}
@@ -432,15 +457,29 @@ class BridgeService(QObject):
         self.state.save_progress(session["session_id"], answers, str(params.get("position", ""))[:120])
         checkin, notes = checkin_from_answers(self.registry, session["mission"], answers,
                                               self._hazard_order(session), require_complete=False)
-        assessment = assess(checkin, self.catalog)
+        assessment = assess(checkin, self.catalog, self.care_guidance)
         return {"checkin": asdict(checkin), "assessment": asdict(assessment), "session_notes": notes,
                 "urgent": assessment.level == "urgent"}
 
-    def _measurement(self, params):
-        """Resolve the measurement for a submission; sensor values never come from the renderer."""
+    @staticmethod
+    def _checkin_measurement(measurement):
+        """Remove capture metadata before building the health CheckIn."""
+        return {
+            field: measurement.get(field)
+            for field in (
+                "heart_rate", "spo2", "signal_quality", "input_source",
+                "sensor_port", "sensor_received_at",
+            )
+        }
+
+    def _measurement(self, params, session=None):
+        """Resolve submission data from backend state, never renderer-supplied sensor values."""
         measurement = params.get("measurement") or {"use": "none"}
         use = measurement.get("use")
         if use == "sensor":
+            captured = session.get("measurement") if session else None
+            if captured is not None:
+                return self._checkin_measurement(captured)
             latest = self.latest_sensor_checkin
             if latest is None:
                 raise ValueError("No current sensor reading is available. Hold still for a fresh reading, enter values manually, or continue without a measurement.")
@@ -464,15 +503,16 @@ class BridgeService(QObject):
         # Check the answers first, so a missing required answer is reported before a missing reading.
         checkin_from_answers(self.registry, session["mission"], answers, self._hazard_order(session))
         checkin, notes = checkin_from_answers(self.registry, session["mission"], answers,
-                                              self._hazard_order(session), self._measurement(params))
+                                              self._hazard_order(session), self._measurement(params, session))
         reason = (params.get("measurement") or {}).get("reason")
         if checkin.heart_rate is None and checkin.spo2 is None and reason in NO_MEASUREMENT_REASONS:
             notes.append(f"Reason given: {NO_MEASUREMENT_REASONS[reason]}.")
-        assessment = assess(checkin, self.catalog)
+        assessment = assess(checkin, self.catalog, self.care_guidance)
         entry_id = self.history.save(checkin, assessment)
         actions = [
             {"condition_id": finding.condition_id, "level": finding.level, "text": action, "observation": finding.reason}
-            for finding in assessment.findings if finding.level != "info" for action in finding.actions
+            # The astronaut's own steps come first, then the steps that involve the crew.
+            for finding in assessment.findings if finding.level != "info" for action in (*finding.self_care, *finding.actions)
         ]
         trace = build_trace(self.catalog, self.mission_context, self.registry, self.indicators, self.hrr_evidence,
                             session["mission"], answers, checkin, assessment)

@@ -127,6 +127,15 @@ export interface Knowledge {
   hrr_evidence: HrrEvidence;
   /** Space-biology study records from the NASA OSDR Biological Data API. */
   osdr_studies?: OsdrStudies;
+  /** Sourced self-care steps and measurement instructions. */
+  care_guidance?: { reviewed_on: string; note: string; measurement: MeasurementGuide };
+}
+
+/** How to take the fingertip reading and what its two numbers mean. */
+export interface MeasurementGuide {
+  title: string;
+  steps: { text: string; source_ids: string[] }[];
+  meaning: { indicator: "heart_rate" | "spo2"; label: string; text: string; source_ids: string[] }[];
 }
 
 /** One OSDR study: fields as NASA reports them, plus why AstroLife shows it. */
@@ -277,6 +286,23 @@ export interface AssessmentPlan {
   safety_question_count: number;
 }
 
+/**
+ * The first stable sensor window captured for an open check-in. The backend
+ * stores this bounded aggregate with the session so later live-sensor changes
+ * cannot revoke a completed measurement step.
+ */
+export interface CapturedMeasurement {
+  heart_rate: number | null;
+  spo2: number | null;
+  signal_quality: "unknown" | "good" | "poor";
+  input_source: "sensor" | "simulated";
+  sensor_port: string | null;
+  sensor_received_at: string | null;
+  aggregation: "median";
+  report_count: number;
+  reports_required: number;
+}
+
 export interface Session {
   session_id: string;
   started_at: string;
@@ -288,6 +314,8 @@ export interface Session {
   position: string;
   entry_id: number | null;
   result: SessionResult | null;
+  /** Durable stable reading for this session; independent of live telemetry. */
+  measurement: CapturedMeasurement | null;
 }
 
 export interface SubmittedSession extends SessionResult {
@@ -303,8 +331,8 @@ export type NoMeasurementReason = "sensor_unavailable" | "no_stable_reading";
 
 /**
  * Which measurement to include. The sensor reading is the expected choice and
- * its values are read by the backend, not sent from here. Leaving the
- * measurement out is only accepted with a reason.
+ * its values come from the backend's saved session snapshot, not from this
+ * request. Leaving the measurement out is only accepted with a reason.
  */
 export type MeasurementChoice =
   | { use: "sensor" }

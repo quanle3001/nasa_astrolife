@@ -19,7 +19,7 @@ export function SeriesChart({ hours, values, label, overlay, color = "#9dcddc", 
   useEffect(() => {
     const element = host.current;
     if (!element) return undefined;
-    const axis = { stroke: "#8eabb7", grid: { stroke: "rgba(86,146,169,.14)", width: 1 }, ticks: { stroke: "rgba(86,146,169,.24)", width: 1 } };
+    const axis = { stroke: "#7c8ca3", grid: { stroke: "rgba(86,146,169,.14)", width: 1 }, ticks: { stroke: "rgba(86,146,169,.24)", width: 1 } };
     const clock = (hour: number) => `${String(Math.floor(hour)).padStart(2, "0")}:${String(Math.round((hour % 1) * 60) % 60).padStart(2, "0")}`;
     const plot = new uPlot({
       width: Math.max(element.clientWidth, 280), height,

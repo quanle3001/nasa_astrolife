@@ -142,6 +142,10 @@ class BridgeSensorTests(unittest.TestCase):
         self.service.connect_sensor({"port": "COM7"})
         return self.service.reader
 
+    def start_session(self):
+        self.service.state.save_mission({"environment": "leo", "phase": "orbit"})
+        return self.service.start_session({})
+
     def test_raw_samples_reach_the_renderer_in_order_without_becoming_vitals(self):
         reader = self.connect()
         self.assertTrue(self.service.ppg_timer.isActive())
@@ -186,6 +190,46 @@ class BridgeSensorTests(unittest.TestCase):
         self.assertEqual((event["heart_rate"], event["spo2"]), (73, 98))
         self.assertEqual((self.service.latest_sensor_checkin.heart_rate,
                           self.service.latest_sensor_checkin.spo2), (73, 98))
+
+    def test_session_capture_survives_contact_loss_and_can_be_submitted(self):
+        session = self.start_session()
+        reader = self.connect()
+        for elapsed, heart_rate, spo2 in ((30, 72, 98), (31, 75, 97), (32, 73, 99)):
+            reader.reading_received.emit(reading(heart_rate, spo2, elapsed))
+
+        captured = self.events("sensor.reading")[-1]["captured_measurement"]
+        self.assertEqual((captured["heart_rate"], captured["spo2"]), (73, 98))
+        self.assertEqual((captured["aggregation"], captured["report_count"], captured["reports_required"]),
+                         ("median", 3, 3))
+        self.assertEqual(self.service.state.open_session()["measurement"], captured)
+
+        reader.optical_sample_received.emit(sample(1, infrared=1200))
+        self.assertIsNone(self.service.latest_sensor_checkin)
+        resumed = self.service.state.open_session()
+        self.assertEqual(resumed["measurement"], captured)
+
+        safety = {question["id"]: "no" for question in self.service.registry["questions"]
+                  if question["domain"] == "safety"}
+        result = self.service.submit_session({
+            "session_id": session["session_id"],
+            "answers": safety,
+            "measurement": {"use": "sensor"},
+        })
+        self.assertEqual((result["checkin"]["heart_rate"], result["checkin"]["spo2"]), (73, 98))
+        self.assertEqual(result["checkin"]["input_source"], "sensor")
+
+    def test_later_stable_windows_do_not_replace_the_session_capture(self):
+        self.start_session()
+        reader = self.connect()
+        for elapsed in (30, 31, 32):
+            reader.reading_received.emit(reading(72, 98, elapsed))
+        first = self.service.state.open_session()["measurement"]
+        for elapsed in (33, 34, 35):
+            reader.reading_received.emit(reading(80, 96, elapsed))
+        latest_event = self.events("sensor.reading")[-1]
+        self.assertEqual((latest_event["heart_rate"], latest_event["spo2"]), (80, 96))
+        self.assertEqual(latest_event["captured_measurement"], first)
+        self.assertEqual(self.service.state.open_session()["measurement"], first)
 
     def test_invalid_report_stays_unavailable(self):
         reader = self.connect()
@@ -239,6 +283,7 @@ class BridgeSensorTests(unittest.TestCase):
             self.service.simulate_sensor({})
 
     def test_simulated_stream_is_labelled_everywhere(self):
+        self.start_session()
         self.service.simulate_sensor({})
         reader = self.service.reader
         self.assertEqual(self.events("sensor.connection")[-1]["source"], "simulated")
@@ -257,6 +302,8 @@ class BridgeSensorTests(unittest.TestCase):
         self.assertEqual(event["source"], "simulated")
         self.assertEqual(event["checkin"]["input_source"], "simulated")
         self.assertEqual(event["checkin"]["sensor_port"], "simulated")
+        self.assertEqual(event["captured_measurement"]["input_source"], "simulated")
+        self.assertEqual(self.service.state.open_session()["measurement"]["input_source"], "simulated")
 
 
 class SimulatedProtocolTests(unittest.TestCase):

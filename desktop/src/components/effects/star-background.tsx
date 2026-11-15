@@ -16,7 +16,7 @@ export function StarField({ reducedMotion }: { reducedMotion: boolean }) {
   return (
     <group rotation={[0, 0, Math.PI / 4]}>
       <Points ref={ref} positions={sphere as Float32Array} stride={3} frustumCulled>
-        <PointMaterial transparent color="#cdd7df" size={0.0024} sizeAttenuation depthWrite={false} opacity={0.8} />
+        <PointMaterial transparent color="#f1f6ff" size={0.0024} sizeAttenuation depthWrite={false} opacity={0.8} />
       </Points>
     </group>
   );

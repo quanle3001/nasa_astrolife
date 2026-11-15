@@ -18,7 +18,7 @@ const STATE_TEXT: Record<PpgState, string> = {
 };
 
 function chartOptions(width: number, height: number, showRed: boolean): uPlot.Options {
-  const axis = { stroke: "#8eabb7", grid: { stroke: "rgba(86,146,169,.14)", width: 1 }, ticks: { stroke: "rgba(86,146,169,.24)", width: 1 } };
+  const axis = { stroke: "#7c8ca3", grid: { stroke: "rgba(86,146,169,.14)", width: 1 }, ticks: { stroke: "rgba(86,146,169,.24)", width: 1 } };
   return {
     width, height,
     legend: { show: false },

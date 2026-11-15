@@ -2,6 +2,7 @@ import { Activity, BookOpen, ClipboardList, ListChecks, TrendingUp } from "lucid
 import { useEffect, useState, type ReactNode } from "react";
 import { FALLBACK_URGENT_ACTION, UrgentPanel } from "@/components/flow/urgent-panel";
 import { EvidenceReports, EvidenceTrace, FlowPage, LEVEL_LABELS, TraceAudit, measurementKind, ProvenanceBadge, SourceList } from "@/components/flow/common";
+import { CareSteps, IndicatorStatusList, MeasureGuide } from "@/components/flow/guidance";
 import { PointerGlow } from "@/components/effects/interactive";
 import { Card } from "@/components/ui/card";
 import { api } from "@/lib/api";
@@ -47,7 +48,7 @@ export function FindingsPage({ result, entryId, config, knowledge, onNext, onExi
   const notAssessed = notes.filter((note) => /^(Unsure|Skipped|Not answered):/.test(note));
   const otherNotes = notes.filter((note) => !/^(Unsure|Skipped|Not answered):/.test(note) && !note.startsWith("These items"));
   const trendRows: TrendIndicator[] = trends && trends !== "unavailable" ? Object.values(trends.indicators).filter((indicator) => indicator.count >= 2) : [];
-  const qualityNotes = assessment.data_notes.filter((note) => /signal quality|pulse oximeters|spo2 was not provided|heart rate was not provided|spo2 prompts/i.test(note));
+  const qualityNotes = assessment.data_notes.filter((note) => /signal quality|pulse oximeters|spo2 was not provided|heart rate was not provided|spo2 prompts|resting reference/i.test(note));
 
   return (
     <FlowPage wide title="What your check-in shows"
@@ -62,13 +63,13 @@ export function FindingsPage({ result, entryId, config, knowledge, onNext, onExi
       {assessment.level === "urgent" && <UrgentPanel assessment={assessment} conditionTitles={config.condition_titles} sources={catalog.sources} />}
 
       <Section icon={ListChecks} title="Follow-up prompts" badge={<ProvenanceBadge kind="rule" />}>
-        {flagged.length === 0 && <p className="empty-line">No follow-up prompt was triggered by what was entered. This is not a health clearance.</p>}
+        {flagged.length === 0 && <p className="empty-line">Nothing you entered needs follow-up right now. This is not a health clearance: what you did not report or measure remains unassessed. Keep to your exercise, sleep and nutrition plan, and check in again tomorrow.</p>}
         <div className="finding-list">
           {flagged.map((finding) => (
             <article key={finding.condition_id} className="finding-item">
               <header><h3>{config.condition_titles[finding.condition_id] ?? finding.condition_id}</h3><span className={cn("priority-badge", `priority-${finding.level}`)}>{LEVEL_LABELS[finding.level]}</span></header>
               <p>{finding.reason}</p>
-              {finding.actions.length > 0 ? <ul className="dot-list">{[...new Set(finding.actions)].map((action) => <li key={action}>{action}</li>)}</ul> : assessment.level === "urgent" && <p>{FALLBACK_URGENT_ACTION}</p>}
+              {finding.actions.length > 0 || (finding.self_care?.length ?? 0) > 0 ? <CareSteps finding={finding} /> : assessment.level === "urgent" && <p>{FALLBACK_URGENT_ACTION}</p>}
               {trace.get(finding.condition_id) && <><EvidenceTrace entry={trace.get(finding.condition_id)!} /><TraceAudit entry={trace.get(finding.condition_id)!} /></>}
             </article>
           ))}
@@ -76,14 +77,18 @@ export function FindingsPage({ result, entryId, config, knowledge, onNext, onExi
         {later.length > 0 && <p className="empty-line">{later.length} lower-priority prompt{later.length > 1 ? "s are" : " is"} saved in your Action Center for after the urgent concern is handled.</p>}
       </Section>
 
-      <Section icon={Activity} title="Measurement quality" badge={kind ? <ProvenanceBadge kind={kind} /> : undefined}>
+      <Section icon={Activity} title="Your measurement" badge={kind ? <ProvenanceBadge kind={kind} /> : undefined}>
         {hasMeasurement ? (
+          <>
+          <IndicatorStatusList indicators={assessment.indicators} sources={catalog.sources} />
           <dl className="fact-grid">
-            <div><dt>Heart rate</dt><dd>{checkin.heart_rate != null ? `${checkin.heart_rate} bpm` : "Not available"}</dd></div>
-            <div><dt>Estimated SpO₂</dt><dd>{checkin.spo2 != null ? `${checkin.spo2}%` : "Not available"}</dd></div>
+            {!assessment.indicators?.length && <div><dt>Heart rate</dt><dd>{checkin.heart_rate != null ? `${checkin.heart_rate} bpm` : "Not available"}</dd></div>}
+            {!assessment.indicators?.length && <div><dt>Estimated SpO₂</dt><dd>{checkin.spo2 != null ? `${checkin.spo2}%` : "Not available"}</dd></div>}
             <div><dt>Signal quality</dt><dd>{checkin.signal_quality === "good" ? "Good (self-reported)" : checkin.signal_quality === "poor" ? "Poor or still settling" : "Unknown"}</dd></div>
             <div><dt>Measured</dt><dd>{checkin.sensor_received_at ? when(checkin.sensor_received_at) : "Time not recorded"}</dd></div>
           </dl>
+          <MeasureGuide guide={knowledge.care_guidance?.measurement} sources={catalog.sources} />
+          </>
         ) : <p className="empty-line">No measurement was included. Pulse and oxygen are unassessed, not normal.</p>}
         <ul className="dot-list muted">{qualityNotes.map((note) => <li key={note}>{note}</li>)}</ul>
       </Section>

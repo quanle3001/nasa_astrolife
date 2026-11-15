@@ -62,16 +62,15 @@ Full license texts are reproduced in `desktop/THIRD_PARTY_NOTICES.md`.
 Tokens live in `desktop/src/styles.css`:
 
 - **Colors** (`@theme`, generates Tailwind utilities such as `bg-space-surface`):
-  `space-black #03070c`, `space-bg #071019`, `space-surface #062b43`,
-  `space-elevated #0a3852`, `space-border #356f86`, `space-blue #5692a9`,
-  `space-cyan #9dcddc`, `space-white #f2f7fa`, `space-silver #cdd7df`,
-  `space-muted #aac0ca`, `space-subtle #8eabb7`, and atmospheric
-  `space-violet #78a9ba`. The five reference swatches are `#062b43`,
-  `#044568`, `#5692a9`, `#9dcddc`, and `#cdd7df`; the darker and text tokens
-  extend that supplied palette for depth and accessible contrast. The two
-  darkest tokens now make the major canvas near-black; blue is reserved for
-  atmospheric light, surfaces and interaction accents instead of filling the
-  entire background.
+  `space-black #02040b`, `space-bg #060a16`, `space-surface #0c1424`,
+  `space-elevated #141e34`, `space-border #263a54`, `space-blue #5692a9`,
+  `space-cyan #9dcddc`, `space-white #f1f6ff`, `space-silver #c9d5e4`,
+  `space-muted #a5b4c8`, `space-subtle #7c8ca3`, and evidence violet
+  `#8b7cf6`. This restores the original midnight-neutral surface hierarchy and
+  its semantic violet research role without restoring the original electric
+  blue. Ocean blue and ice cyan from the later palette remain the interaction,
+  focus, chart, and atmospheric accents. The canvas stays near-black; blue is
+  never the main page fill.
 - **Status colors** (`--status-urgent/review/watch/info/live`): clinical
   meaning only, never decorative; unchanged from the original priority colors.
 - **Surfaces:** `--panel-bg` (30–46% tint with a 12px blur: dark enough to read
@@ -243,6 +242,14 @@ Writing rules used on every screen:
 - Simulated data is named as simulated wherever it appears.
 - Urgent guidance is shown before anything else, on the findings screen and on
   the dashboard.
+
+The measurement step separates live telemetry from the saved check-in value.
+Python captures the first stable median of three agreeing firmware reports and
+stores that bounded aggregate with the open session. The screen then shows the
+saved heart rate, SpO₂, method and report count, tells the astronaut they may
+remove their finger, and enables Continue from the saved snapshot. Later
+contact loss can withdraw the live chart and numbers without revoking the
+completed step. Simulated captures keep their warning label.
 
 Reused from the existing UI rather than rebuilt: `MissionSelector`,
 `MissionViewport`, the Space UI `StatusBadge`, `Card`, `Button`, the Radix
