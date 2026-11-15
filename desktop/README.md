@@ -73,21 +73,21 @@ cd desktop
 npm start
 ```
 
-Build an unpacked macOS application containing a one-file Python sidecar:
+Build a macOS installer containing the Python backend (after installing
+`software/requirements-dev.txt` with the repository's venv Python):
 
 ```bash
 cd desktop
-python -m pip install -r ../software/requirements-dev.txt
-npm run package:dir
-open release/mac-arm64/AstroLife.app
+npm run package:mac
+npm run package:verify
 ```
 
-The sidecar is created by PyInstaller and copied into the app's Resources
-directory. It includes the Python rule catalog and requires no public listener or
-separate Python installation at runtime. Build the application on each target
-platform; PyInstaller output is platform-specific. Packaging has not been re-run
-since pandas and Pydantic were added to the backend; verify the packaged app
-before relying on it.
+On Windows use `npm run package:win` followed by `npm run package:verify`.
+Use `npm run package:dir` for an unpacked app without an installer. Output is in
+`release/`. Build on the target OS with matching Python and Node architectures.
+The app bundles Python and its reference data; users need no development tools.
+See [the release guide](../docs/RELEASING.md) for full setup, installation,
+GitHub Actions downloads, signing, and verification instructions.
 
 The original PySide6 interface remains available during migration:
 

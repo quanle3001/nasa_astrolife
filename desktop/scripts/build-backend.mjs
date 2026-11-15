@@ -2,10 +2,11 @@ import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { delimiter, resolve } from "node:path";
 import process from "node:process";
+import runtime from "../electron/backend-runtime.cjs";
 
 const desktopRoot = resolve(import.meta.dirname, "..");
 const repoRoot = resolve(desktopRoot, "..");
-const python = process.env.ASTROTIP_PYTHON || resolve(repoRoot, ".venv", "bin", "python");
+const python = process.env.ASTROTIP_PYTHON || runtime.venvPython(repoRoot);
 
 if (!existsSync(python)) {
   throw new Error(`Python runtime not found: ${python}`);

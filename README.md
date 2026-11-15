@@ -50,6 +50,12 @@ astronaut's exposure.
 
 ## Quick start
 
+For a clickable application, see [Desktop installers and releases](docs/RELEASING.md).
+The packaging commands produce a macOS DMG or a Windows Setup EXE with the
+AstroLife icon; the Windows installer creates desktop and Start Menu shortcuts.
+Python and Node.js are bundled for users of the installed app. GitHub Actions
+is configured to build macOS Apple Silicon, macOS Intel, and Windows x64 packages.
+
 You need Python 3.11+ and Node.js. From the repository root:
 
 ```bash
