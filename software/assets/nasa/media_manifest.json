@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "notice": "Decorative NASA media. NASA does not endorse AstroTip.",
   "api": "https://images-api.nasa.gov",
   "assets": [
@@ -29,7 +29,19 @@
       "local_path": "images/lunar.jpg",
       "asset_url": "http://images-assets.nasa.gov/image/as17-134-20473/as17-134-20473~medium.jpg",
       "metadata_url": "https://images-assets.nasa.gov/image/as17-134-20473/metadata.json",
-      "source_url": "https://images.nasa.gov/details/as17-134-20473"
+      "source_url": "https://images.nasa.gov/details/as17-134-20473",
+      "video": {
+        "nasa_id": "GSFC_20190513_m4714_Lee_Lincoln_Scarp_Moon_Flyover",
+        "title": "Lee Lincoln Scarp at the Apollo 17 Landing Site",
+        "classification": "Data visualization · LRO terrain flyover, not footage",
+        "credit": "GSFC",
+        "date_created": "2019-05-13T00:00:00Z",
+        "media_type": "video",
+        "local_path": "videos/lunar.mp4",
+        "size_bytes": 2246666,
+        "asset_url": "http://images-assets.nasa.gov/video/GSFC_20190513_m4714_Lee_Lincoln_Scarp_Moon_Flyover/GSFC_20190513_m4714_Lee_Lincoln_Scarp_Moon_Flyover~preview.mp4",
+        "source_url": "https://images.nasa.gov/details/GSFC_20190513_m4714_Lee_Lincoln_Scarp_Moon_Flyover"
+      }
     },
     {
       "mission": "mars",
@@ -43,7 +55,19 @@
       "local_path": "images/mars.jpg",
       "asset_url": "http://images-assets.nasa.gov/image/PIA24264/PIA24264~medium.jpg",
       "metadata_url": "https://images-assets.nasa.gov/image/PIA24264/metadata.json",
-      "source_url": "https://images.nasa.gov/details/PIA24264"
+      "source_url": "https://images.nasa.gov/details/PIA24264",
+      "video": {
+        "nasa_id": "JPL-20210222-M2020f-0002-NASA’S Perseverance Rover’s First 360 View of Mars",
+        "title": "NASA’S Perseverance Rover’s First 360 View of Mars",
+        "classification": "Real rover imagery · Mastcam-Z panorama pan",
+        "credit": "JPL",
+        "date_created": "2021-02-22T00:00:00Z",
+        "media_type": "video",
+        "local_path": "videos/mars.mp4",
+        "size_bytes": 2181643,
+        "asset_url": "http://images-assets.nasa.gov/video/JPL-20210222-M2020f-0002-NASA’S Perseverance Rover’s First 360 View of Mars/JPL-20210222-M2020f-0002-NASA’S Perseverance Rover’s First 360 View of Mars~preview.mp4",
+        "source_url": "https://images.nasa.gov/details/JPL-20210222-M2020f-0002-NASA%E2%80%99S%20Perseverance%20Rover%E2%80%99s%20First%20360%20View%20of%20Mars"
+      }
     }
   ]
 }
