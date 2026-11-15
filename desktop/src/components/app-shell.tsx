@@ -1,6 +1,7 @@
 import { motion, useReducedMotion } from "motion/react";
-import { Activity, ClipboardCheck, Database, HeartPulse, Orbit, Radio, Sparkles, UserRound } from "lucide-react";
+import { ClipboardCheck, Database, HeartPulse, Orbit, Sparkles, UserRound } from "lucide-react";
 import type { ReactNode } from "react";
+import { StatusBadge } from "@/components/spaceui/status-badge";
 import { MISSIONS } from "@/lib/missions";
 import { cn } from "@/lib/utils";
 import type { MissionId } from "@/types/backend";
@@ -39,8 +40,8 @@ export function AppShell({ page, setPage, mission, connected, backendReady, chil
         </nav>
 
         <div className="app-no-drag nav-status">
-          <span className={cn("signal-dot", backendReady && "is-online")} title={backendReady ? "Python backend ready" : "Backend offline"}><Radio className="size-3.5" /></span>
-          <span className={cn("signal-dot", connected && "is-linked")} title={connected ? "Sensor connected" : "No sensor connected"}><Activity className="size-3.5" /></span>
+          <StatusBadge status={backendReady ? "online" : "warning"} primaryText={backendReady ? "Backend" : "Backend offline"} aria-label={backendReady ? "Local Python backend ready" : "Local Python backend offline"} className="nav-badge" />
+          <StatusBadge status={connected ? "online" : "offline"} primaryText={connected ? "Sensor live" : "No sensor"} animated={connected} aria-label={connected ? "Sensor connected" : "No sensor connected"} className="nav-badge" />
           <span className="mission-chip"><Orbit className="size-3.5" style={{ color: missionData.color }} /><span>{mission.toUpperCase()}</span></span>
         </div>
       </header>
