@@ -279,6 +279,9 @@ input, textarea { caret-color: var(--color-space-cyan); }
 .command-dock-title small { margin-top:2px; color:var(--color-space-subtle); font-size:var(--text-label); letter-spacing:.08em; }
 .command-dock-control { display:grid; grid-template-columns:1fr auto auto; gap:8px; }
 .command-dock-state { display:flex; min-width:0; align-items:center; gap:9px; overflow:hidden; color:var(--color-space-muted); font-size:var(--text-xs); white-space:nowrap; text-overflow:ellipsis; }
+.command-dock-state.is-fault { grid-column:1 / -1; align-items:flex-start; overflow:visible; border:1px solid rgba(245,198,123,.3); border-radius:var(--radius-md); background:rgba(245,198,123,.07); padding:10px 12px; color:#f3dcb4; line-height:1.5; white-space:normal; }
+.command-dock-state.is-fault b { color:var(--status-review); font-weight:650; }
+.live-pulse.is-fault { margin-top:5px; background:var(--status-review); box-shadow:0 0 0 4px rgba(245,198,123,.15); }
 .interpretation-grid { display:grid; grid-template-columns:1.5fr .5fr; gap:18px; }
 .interpretation-card,.privacy-card { min-height:190px; border-radius:var(--radius-xl); padding:24px; }
 .empty-interpretation { margin-top:35px; display:flex; align-items:center; gap:14px; color:var(--color-space-subtle); }

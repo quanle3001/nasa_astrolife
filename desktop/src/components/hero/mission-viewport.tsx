@@ -14,6 +14,7 @@ export interface ViewportTelemetry {
   spo2: number | null;
   lastUpdate?: number | null;
   lastUsableAt?: number | null;
+  fault?: string | null;
 }
 
 /**
@@ -57,7 +58,7 @@ export function MissionViewport({ mission, telemetry }: { mission: MissionId; te
   const valuesStale = telemetry.connected && isStale(telemetry.lastUsableAt, now);
   const linkStale = telemetry.connected && isStale(telemetry.lastUpdate, now);
   const linkDetail = telemetry.connecting ? "Opening serial port"
-    : !telemetry.connected ? "Not connected"
+    : !telemetry.connected ? (telemetry.fault ? "Connection failed" : "Not connected")
     : telemetry.lastUpdate == null ? "Waiting for data"
     : linkStale ? `No new data · ${formatAge(telemetry.lastUpdate, now)}`
     : `Updated ${formatClock(telemetry.lastUpdate)}`;
@@ -102,7 +103,7 @@ export function MissionViewport({ mission, telemetry }: { mission: MissionId; te
         <span>
           <small>Sensor link</small>
           <strong className="viewport-link-state" role="status">{telemetry.connected ? (linkStale ? "Stalled" : "Online") : telemetry.connecting ? "Linking" : "Standby"}</strong>
-          <span className={cn("viewport-link-detail", linkStale && "is-warning")}>{linkDetail}</span>
+          <span className={cn("viewport-link-detail", (linkStale || (!telemetry.connected && telemetry.fault)) && "is-warning")}>{linkDetail}</span>
         </span>
       </motion.div>
     </ProximityGrid>

@@ -14,7 +14,7 @@ import type { AppConfig, AssessmentBundle, BackendEvent, CheckIn, MissionId } fr
 
 const INITIAL_SENSOR: SensorViewState = {
   connected: false, connecting: false, status: "Disconnected", usable: false,
-  heartRate: null, spo2: null, bundle: null, lastUpdate: null, lastUsableAt: null,
+  heartRate: null, spo2: null, bundle: null, lastUpdate: null, lastUsableAt: null, fault: null,
 };
 const StarBackground = lazy(() => import("@/components/effects/star-background").then((module) => ({ default: module.StarBackground })));
 const requestedPage = new URLSearchParams(window.location.search).get("page") as PageId | null;
@@ -67,9 +67,12 @@ export default function App() {
       setBackendReady(false); setSensor((current) => ({ ...current, connected: false, connecting: false, status: "Local backend stopped" }));
     } else if (message.event === "sensor.connection") {
       const state = String(message.payload.state);
-      setSensor((current) => ({ ...current, connected: state === "connected", connecting: state === "connecting", status: state === "connected" ? `Connected to ${message.payload.port ?? "sensor"} · receiving telemetry` : "Disconnected", ...(state === "disconnected" ? { usable: false, heartRate: null, spo2: null, bundle: null, lastUpdate: null, lastUsableAt: null } : {}) }));
+      // A failure reported before disconnect stays visible (fault) instead of being replaced by "Disconnected".
+      setSensor((current) => ({ ...current, connected: state === "connected", connecting: state === "connecting", fault: state === "disconnected" ? current.fault : null, status: state === "connected" ? `Connected to ${message.payload.port ?? "sensor"} · receiving telemetry` : "Disconnected", ...(state === "disconnected" ? { usable: false, heartRate: null, spo2: null, bundle: null, lastUpdate: null, lastUsableAt: null } : {}) }));
     } else if (message.event === "sensor.status") {
-      setSensor((current) => ({ ...current, status: String(message.payload.message ?? "Sensor status changed"), usable: false, heartRate: null, spo2: null, bundle: null }));
+      const text = String(message.payload.message ?? "Sensor status changed");
+      // Before a link is established, a status message can only be the reason it failed.
+      setSensor((current) => ({ ...current, status: text, fault: current.connected ? null : text, usable: false, heartRate: null, spo2: null, bundle: null }));
     } else if (message.event === "sensor.reading") {
       const usable = Boolean(message.payload.usable);
       const receivedAt = Date.now();
@@ -117,7 +120,7 @@ export default function App() {
       <Suspense fallback={null}><StarBackground reducedMotion={reducedMotion} /></Suspense>
       <div className="mission-atmosphere" data-mission={mission} aria-hidden="true" />
       <AppShell page={page} setPage={setPage} mission={mission} connected={sensor.connected} backendReady={backendReady} disclaimer={config.disclaimer}>
-        <PageStage active={page === "sensor"}><SensorPage state={sensor} mission={mission} onReview={reviewSensor} onCheckin={() => setPage("checkin")} /></PageStage>
+        <PageStage active={page === "sensor"}><SensorPage state={sensor} mission={mission} onReview={reviewSensor} onCheckin={() => setPage("checkin")} onConnectStart={(port) => setSensor((current) => ({ ...current, connecting: true, fault: null, status: `Opening ${port}…` }))} /></PageStage>
         <PageStage active={page === "checkin"}><CheckinPage config={config} mission={mission} setMission={setMission} onAssess={assess} busy={busy} /></PageStage>
         <PageStage active={page === "assessment"}><AssessmentPage config={config} bundle={latest} saved={saved} saving={saving} onSave={save} onEdit={() => setPage("checkin")} /></PageStage>
         <PageStage active={page === "history"}><HistoryPage config={config} active={page === "history"} refreshKey={historyRefresh} /></PageStage>

@@ -22,10 +22,16 @@ export interface SensorViewState {
   lastUpdate: number | null;
   /** Client time of the newest usable reading. */
   lastUsableAt: number | null;
+  /** Why the last connection attempt failed (backend message), kept until the next attempt. */
+  fault: string | null;
 }
 
-export function SensorPage({ state, mission, onReview, onCheckin }: {
+/** Drop OS error codes such as "[Errno 2]" from what the crew reads; the full text stays in the tooltip. */
+const plainError = (message: string) => message.replace(/\[Errno \d+\]\s*/g, "").replace(/\s{2,}/g, " ").trim();
+
+export function SensorPage({ state, mission, onReview, onCheckin, onConnectStart }: {
   state: SensorViewState; mission: MissionId; onReview: (bundle: AssessmentBundle) => void; onCheckin: () => void;
+  onConnectStart: (port: string) => void;
 }) {
   const reduced = useCalmMotion();
   const portInput = useRef<HTMLInputElement>(null);
@@ -47,7 +53,7 @@ export function SensorPage({ state, mission, onReview, onCheckin }: {
     try {
       setError("");
       if (state.connected || state.connecting) await api.disconnectSensor();
-      else if (port.trim()) await api.connectSensor(port.trim());
+      else if (port.trim()) { onConnectStart(port.trim()); await api.connectSensor(port.trim()); }
       else setError("Select or enter the ESP32 serial port first.");
     } catch (reason) { setError(reason instanceof Error ? reason.message : String(reason)); }
   };
@@ -83,7 +89,14 @@ export function SensorPage({ state, mission, onReview, onCheckin }: {
           <Button onClick={refresh} disabled={state.connected || state.connecting} size="icon" aria-label="Refresh serial ports"><RefreshCw className="size-4" /></Button>
           <Button variant="primary" onClick={toggle} className="min-w-28" aria-busy={state.connecting || undefined}>{state.connecting ? <><LoaderCircle className="size-4 animate-spin" /> Cancel</> : state.connected ? "Disconnect" : "Initiate link"}</Button>
         </div>
-        <div className="command-dock-state"><span className={cn("live-pulse", state.connected && "is-live", state.connecting && "is-connecting")} />{error || state.status}</div>
+        {error || state.fault ? (
+          <div className="command-dock-state is-fault" role="alert" title={error || state.fault || undefined}>
+            <span className="live-pulse is-fault" />
+            <span><b>{error ? "Can't start the link." : "Couldn't connect to the sensor."}</b> {plainError(error || state.fault || "")}</span>
+          </div>
+        ) : (
+          <div className="command-dock-state" role="status"><span className={cn("live-pulse", state.connected && "is-live", state.connecting && "is-connecting")} />{state.status}</div>
+        )}
       </Card>
 
       <section className="interpretation-grid">
