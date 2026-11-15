@@ -111,6 +111,19 @@ ESP32 + MAX30102  ──USB serial──►  Python backend  ──JSON lines─
 The interface never scores anything. Answers and measurements go to Python,
 and Python runs the rules.
 
+## Hardware and mechanical housing
+
+AstroLife's hardware has three parts:
+
+| Part | What it does |
+|---|---|
+| Electronics | An ESP32 microcontroller wired to a MAX30102 optical pulse sensor over I²C. The firmware estimates heart rate and SpO₂ from the fingertip and sends them to the computer over USB |
+| Mechanical housing | Designed by Ben Vo. The enclosure that holds the ESP32, the MAX30102 and their wiring in one unit, keeps the sensor open for a fingertip, and lets the USB cable run out to the computer |
+| Desktop app | Reads the sensor over USB, runs the check-in and shows the results |
+
+The housing design files are not in this repository yet. Wiring and
+flashing are in [docs/HARDWARE.md](docs/HARDWARE.md).
+
 ## Repository layout
 
 ```text
