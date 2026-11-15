@@ -83,7 +83,7 @@ export function SensorPage({ state, onReview }: { state: SensorViewState; onRevi
       <section className="sensor-hero">
         <motion.div className="sensor-hero-copy" initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: .7 }}>
           <div className="welcome-pill"><Sparkles className="size-3.5" /> NASA-inspired crew health console</div>
-          <h1>Mission health,<br /><span className="gradient-text">in orbit.</span></h1>
+          <h1><span className="nowrap">Mission health,</span><br /><span className="gradient-text">in orbit.</span></h1>
           <p>Connect local biomedical telemetry, record how the crew feels, and turn observations into clear next steps—without sending health data to the cloud.</p>
           <div className="hero-facts">
             <span><b>01</b> Private Python analysis</span>

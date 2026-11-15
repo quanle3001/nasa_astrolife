@@ -21,7 +21,7 @@ button:disabled { cursor: default; }
   backdrop-filter: blur(22px);
 }
 .telemetry-label { font-size: 10px; line-height: 1.2; font-weight: 750; letter-spacing: .16em; text-transform: uppercase; color: #8296af; }
-.status-chip { display: inline-flex; height: 32px; align-items: center; gap: 7px; border: 1px solid rgba(255,255,255,.09); border-radius: 10px; background: rgba(255,255,255,.035); padding: 0 10px; font-size: 9px; font-weight: 750; letter-spacing: .08em; color: #9aacc0; }
+.status-chip { display: inline-flex; height: 32px; align-items: center; gap: 7px; border: 1px solid rgba(255,255,255,.09); border-radius: 10px; background: rgba(255,255,255,.035); padding: 0 10px; font-size: 10px; font-weight: 750; letter-spacing: .08em; color: #9aacc0; }
 .page-grid { margin: 0 auto; display: grid; width: min(1280px, 100%); gap: 18px; padding: 22px 24px 52px; }
 .page-heading { display: flex; min-height: 86px; align-items: flex-end; justify-content: space-between; gap: 18px; padding: 4px 4px 8px; }
 .page-heading h1 { margin-top: 14px; font-size: clamp(2.5rem, 5vw, 4.8rem); line-height: .98; font-weight: 620; letter-spacing: -.055em; color: #f4f8ff; }
@@ -48,9 +48,8 @@ select.control option { background: #0c1a30; color: #eaf2fb; }
 .mission-atmosphere[data-mission="mars"] { background: radial-gradient(circle at 78% 18%, rgba(181,91,51,.22), transparent 34%), radial-gradient(circle at 36% 92%, rgba(103,44,70,.14), transparent 38%), #080711; }
 .mission-card::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at var(--pointer-x,70%) var(--pointer-y,20%), rgba(255,255,255,.12), transparent 38%); opacity: 0; transition: opacity .25s; }
 .mission-card:hover::after { opacity: 1; }
-.border-beam { overflow: hidden; }
+.border-beam { overflow: hidden; padding: 1.5px; -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
 .border-beam::after { content: ""; position: absolute; inset: -60%; background: conic-gradient(from 0deg, transparent 0 72%, rgba(72,213,233,.0) 78%, rgba(72,213,233,.95) 84%, rgba(148,111,255,.8) 89%, transparent 95%); animation: border-beam-spin var(--beam-duration) linear var(--beam-delay) infinite; }
-.border-beam::before { content: ""; position: absolute; z-index: 1; inset: 1px; border-radius: inherit; background: transparent; }
 @keyframes border-beam-spin { to { transform: rotate(1turn); } }
 @keyframes fade-in { from { opacity: 0 } to { opacity: 1 } }
 .app-drag-region { -webkit-app-region: drag; }
@@ -72,7 +71,7 @@ select.control option { background: #0c1a30; color: #eaf2fb; }
 /* Space Portfolio-inspired immersive shell */
 .cosmic-app { isolation: isolate; z-index:10; }
 .cosmic-scroll { height: 100vh; overflow: auto; padding-top: 96px; position: relative; z-index: 5; }
-.black-hole-crown { pointer-events: none; position: fixed; z-index: 2; top: -335px; left: 0; width: 100%; height: 650px; overflow: hidden; opacity: .82; mix-blend-mode: screen; }
+.black-hole-crown { pointer-events: none; position: fixed; z-index: 2; top: -335px; left: 0; width: 100%; height: 650px; overflow: hidden; opacity: .82; mix-blend-mode: screen; -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent 100%); mask-image: linear-gradient(to bottom, #000 45%, transparent 100%); }
 .black-hole-crown video { width: 100%; height: 100%; object-fit: cover; transform: rotate(180deg) scaleX(1.2); filter: saturate(1.25) contrast(1.08); }
 
 .space-navbar { position: fixed; z-index: 50; top: 18px; left: 24px; right: 24px; height: 64px; display: grid; grid-template-columns: minmax(210px,1fr) auto minmax(210px,1fr); align-items: center; border: 1px solid rgba(172,136,255,.17); border-radius: 22px; background: rgba(3,0,20,.46); box-shadow: 0 18px 60px rgba(20,0,70,.25), inset 0 1px rgba(255,255,255,.045); backdrop-filter: blur(24px); padding: 0 18px 0 74px; }
@@ -82,7 +81,7 @@ select.control option { background: #0c1a30; color: #eaf2fb; }
 .brand-orbit::after { transform: rotate(-48deg); }
 .brand-copy { display:flex; flex-direction:column; gap: 2px; }
 .brand-copy strong { font-size: 14px; letter-spacing: .16em; }
-.brand-copy small { color:#9f8cd6; font-size:7px; font-weight:800; letter-spacing:.16em; }
+.brand-copy small { color:#9f8cd6; font-size:10px; font-weight:800; letter-spacing:.16em; }
 
 .nav-capsule { display:flex; align-items:center; gap:3px; justify-self:center; border:1px solid rgba(131,83,246,.28); border-radius:999px; background:rgba(11,4,35,.56); padding:5px; box-shadow:0 0 35px rgba(112,66,248,.12); }
 .nav-capsule-item { position:relative; display:flex; height:38px; align-items:center; gap:7px; border:0; border-radius:999px; background:transparent; padding:0 15px; color:#9d96b4; font-size:11px; font-weight:650; transition:color .2s; }
@@ -92,7 +91,7 @@ select.control option { background: #0c1a30; color: #eaf2fb; }
 .signal-dot { display:grid; width:32px; height:32px; place-items:center; border:1px solid rgba(255,255,255,.1); border-radius:50%; background:rgba(255,255,255,.035); color:#716b86; }
 .signal-dot.is-online { border-color:rgba(107,235,203,.3); color:#74e8d0; box-shadow:0 0 18px rgba(104,222,200,.12); }
 .signal-dot.is-linked { border-color:rgba(69,213,240,.4); color:#53dbef; box-shadow:0 0 18px rgba(72,213,233,.18); }
-.mission-chip { display:flex; height:32px; align-items:center; gap:6px; border:1px solid rgba(255,255,255,.1); border-radius:999px; background:rgba(255,255,255,.035); padding:0 11px; color:#b3aac9; font-size:9px; font-weight:800; letter-spacing:.1em; }
+.mission-chip { display:flex; height:32px; align-items:center; gap:6px; border:1px solid rgba(255,255,255,.1); border-radius:999px; background:rgba(255,255,255,.035); padding:0 11px; color:#b3aac9; font-size:10px; font-weight:800; letter-spacing:.1em; }
 .space-footer { margin:0 auto 24px; display:flex; width:min(1240px,calc(100% - 48px)); align-items:center; justify-content:center; gap:7px; border-top:1px solid rgba(255,255,255,.07); padding-top:16px; color:#554d70; font-size:9px; letter-spacing:.08em; text-transform:uppercase; }
 
 .welcome-pill { display:inline-flex; width:max-content; align-items:center; gap:8px; border:1px solid rgba(139,92,246,.48); border-radius:999px; background:rgba(55,27,110,.25); box-shadow:inset 0 0 18px rgba(112,66,248,.1); padding:7px 12px; color:#bca9ff; font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
@@ -100,13 +99,14 @@ select.control option { background: #0c1a30; color: #eaf2fb; }
 
 /* Antigravity telemetry hero */
 .sensor-experience { width:min(1320px,100%); }
-.sensor-hero { min-height:520px; display:grid; grid-template-columns:minmax(430px,.92fr) minmax(500px,1.08fr); align-items:center; gap:20px; }
+.sensor-hero { min-height:520px; display:grid; grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr); align-items:center; gap:20px; }
 .sensor-hero-copy { padding:30px 0 30px 22px; }
-.sensor-hero-copy h1 { margin:26px 0 0; max-width:650px; color:white; font-size:clamp(4rem,6.2vw,6.3rem); font-weight:570; letter-spacing:-.065em; line-height:.86; }
+.sensor-hero-copy h1 { margin:26px 0 0; max-width:650px; color:white; font-size:clamp(3.1rem,5.4vw,5.9rem); font-weight:570; letter-spacing:-.055em; line-height:.98; padding-bottom:.06em; }
+.sensor-hero-copy h1 .nowrap { white-space:nowrap; }
 .sensor-hero-copy > p { margin-top:28px; max-width:570px; color:#a19ab4; font-size:15px; line-height:1.8; }
 .hero-facts { margin-top:30px; display:flex; flex-wrap:wrap; gap:10px 20px; color:#8c829f; font-size:10px; letter-spacing:.05em; text-transform:uppercase; }
 .hero-facts span { display:flex; align-items:center; gap:7px; }
-.hero-facts b { color:#7be5ef; font-family:ui-monospace,monospace; font-size:9px; }
+.hero-facts b { color:#7be5ef; font-family:ui-monospace,monospace; font-size:10px; }
 
 .orbital-telemetry { position:relative; width:min(590px,100%); aspect-ratio:1.14; margin:0 auto; perspective:900px; }
 .orbit-grid { position:absolute; inset:8% 4%; opacity:.22; background-image:linear-gradient(rgba(138,103,222,.25) 1px,transparent 1px),linear-gradient(90deg,rgba(138,103,222,.25) 1px,transparent 1px); background-size:44px 44px; mask-image:radial-gradient(circle,black 18%,transparent 72%); }
@@ -116,7 +116,7 @@ select.control option { background: #0c1a30; color: #eaf2fb; }
 .orbit-ring-three { width:92%; height:72%; border-color:rgba(65,196,225,.13); transform:translate(-50%,-50%) rotate(62deg); }
 .orbit-core { position:absolute; left:50%; top:50%; display:flex; width:142px; height:142px; align-items:center; justify-content:center; flex-direction:column; border:1px solid rgba(175,135,255,.35); border-radius:38px; background:linear-gradient(145deg,rgba(71,31,145,.5),rgba(3,8,31,.9)); box-shadow:0 0 70px rgba(111,62,219,.35),inset 0 1px rgba(255,255,255,.12); transform:translate(-50%,-50%) rotate(4deg); color:#c5b2ff; backdrop-filter:blur(16px); }
 .orbit-core svg { filter:drop-shadow(0 0 13px #9d6cff); }
-.orbit-core small { margin-top:10px; color:#84759e; font-size:8px; letter-spacing:.22em; }
+.orbit-core small { margin-top:10px; color:#9a8fb4; font-size:10px; letter-spacing:.22em; }
 .orbit-core strong { margin-top:2px; color:white; font-size:13px; letter-spacing:.12em; }
 .orbit-core-halo { position:absolute; inset:-18px; border:1px solid rgba(126,80,229,.22); border-radius:46px; animation:halo-pulse 3s ease-in-out infinite; }
 .metric-pod { position:absolute; z-index:4; display:flex; min-width:165px; align-items:center; gap:10px; border:1px solid rgba(171,139,240,.22); border-radius:18px; background:linear-gradient(140deg,rgba(34,23,71,.78),rgba(5,8,28,.78)); box-shadow:0 18px 50px rgba(0,0,0,.32),inset 0 1px rgba(255,255,255,.06); padding:12px 14px; backdrop-filter:blur(20px); }
@@ -124,7 +124,7 @@ select.control option { background: #0c1a30; color: #eaf2fb; }
 .metric-pod-oxygen { right:0; top:24%; }
 .metric-pod-link { right:8%; bottom:12%; min-width:152px; }
 .metric-pod-icon { display:grid; width:36px; height:36px; place-items:center; border-radius:12px; background:rgba(112,66,248,.18); color:#c09cff; }
-.metric-pod small { display:block; color:#746c8c; font-size:7px; font-weight:800; letter-spacing:.14em; }
+.metric-pod small { display:block; color:#8f88a6; font-size:10px; font-weight:800; letter-spacing:.14em; }
 .metric-pod strong { display:block; margin-top:3px; color:#f8f5ff; font-family:ui-monospace,monospace; font-size:19px; }
 .metric-pod em { color:#746c8c; font-family:inherit; font-size:9px; font-style:normal; font-weight:500; }
 .live-pulse { width:9px; height:9px; flex:none; border-radius:50%; background:#5e5870; box-shadow:0 0 0 4px rgba(94,88,112,.1); }
@@ -140,7 +140,7 @@ select.control option { background: #0c1a30; color: #eaf2fb; }
 .command-dock-title { display:flex; min-width:180px; align-items:center; gap:10px; color:#a789ff; }
 .command-dock-title span { display:flex; flex-direction:column; }
 .command-dock-title b { color:#e6ddff; font-size:10px; letter-spacing:.12em; }
-.command-dock-title small { margin-top:2px; color:#655c79; font-size:7px; letter-spacing:.08em; }
+.command-dock-title small { margin-top:2px; color:#8f88a6; font-size:10px; letter-spacing:.08em; }
 .command-dock-control { display:grid; grid-template-columns:1fr auto auto; gap:8px; }
 .command-dock-state { display:flex; min-width:0; align-items:center; gap:9px; overflow:hidden; color:#8b829e; font-size:10px; white-space:nowrap; text-overflow:ellipsis; }
 .interpretation-grid { display:grid; grid-template-columns:1.5fr .5fr; gap:18px; }
@@ -164,10 +164,9 @@ select.control option { background: #0c1a30; color: #eaf2fb; }
 .checkin-experience .sticky { border-color:rgba(155,113,244,.24); border-radius:22px; background:rgba(15,8,42,.8); }
 
 @media (max-width: 1120px) {
-  .space-navbar { grid-template-columns:1fr auto auto; padding-left:70px; }
+  .space-navbar { grid-template-columns:auto minmax(0,1fr) auto; gap:12px; padding-left:70px; }
   .brand-copy { display:none; }
-  .sensor-hero { grid-template-columns:.85fr 1.15fr; }
-  .sensor-hero-copy h1 { font-size:4.3rem; }
+  .sensor-hero { grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); }
   .nav-capsule-item { padding:0 11px; }
   .sensor-command-dock { grid-template-columns:1fr; }
   .command-dock-control { grid-template-columns:1fr auto auto; }

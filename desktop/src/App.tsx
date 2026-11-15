@@ -116,7 +116,7 @@ export default function App() {
         <PageStage active={page === "checkin"}><CheckinPage config={config} mission={mission} setMission={setMission} onAssess={assess} busy={busy} /></PageStage>
         <PageStage active={page === "assessment"}><AssessmentPage config={config} bundle={latest} saved={saved} saving={saving} onSave={save} onEdit={() => setPage("checkin")} /></PageStage>
         <PageStage active={page === "history"}><HistoryPage config={config} active={page === "history"} refreshKey={historyRefresh} /></PageStage>
-        <footer className="mt-4 border-t border-white/[.08] px-1 pt-3 text-[10px] leading-4 text-slate-600">{config.disclaimer}</footer>
+        <footer className="mx-auto mt-4 w-[min(1280px,calc(100%-48px))] border-t border-white/[.08] pt-3 text-[11px] leading-5 text-slate-400">{config.disclaimer}</footer>
       </AppShell>
     </div>
   );
