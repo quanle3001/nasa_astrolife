@@ -4,7 +4,7 @@ import * as random from "maath/random";
 import { Suspense, useMemo, useRef } from "react";
 import type { Points as ThreePoints } from "three";
 
-function StarField({ reducedMotion }: { reducedMotion: boolean }) {
+export function StarField({ reducedMotion }: { reducedMotion: boolean }) {
   const ref = useRef<ThreePoints>(null);
   const sphere = useMemo(() => random.inSphere(new Float32Array(2400), { radius: 1.25 }), []);
   useFrame((_state, delta) => {

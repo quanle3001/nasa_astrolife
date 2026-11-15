@@ -113,3 +113,17 @@ AstroLife changes how the models are displayed, not the model files: each
 structure is coloured from the package catalog, structures can be highlighted or
 faded, and the skin surface and reproductive structures are never rendered. The
 models are an educational reference, not a scan of any person and not for diagnosis.
+
+## NASA astronaut model (decorative)
+
+`public/models/nasa-astronaut.glb` is the "Astronaut" model from NASA 3D Resources
+(https://science.nasa.gov/3d-resources/astronaut/, source: DigitalSpace Corporation),
+downloaded unchanged on 2026-11-15 (SHA-256 d18c1414…0ce2820). NASA's 3D Resources
+repository describes its assets as "free and without copyright" and points to NASA's
+media usage guidelines (https://www.nasa.gov/nasa-brand-center/images-and-media):
+NASA is acknowledged as the source and no NASA endorsement is implied. The model is
+decoration on the welcome and mission screens. It is not the anatomy viewer and
+shows no health information.
+
+`public/draco/` holds the Draco mesh decoder distributed with three.js (Google
+Draco, Apache-2.0), needed to read that model without a network connection.

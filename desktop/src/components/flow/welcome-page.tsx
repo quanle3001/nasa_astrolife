@@ -8,8 +8,10 @@ import { useCalmMotion } from "@/lib/motion-preference";
  * First screen of the guided journey. `visual` is the decorative scene (the
  * NASA astronaut model when 3D is available); it never carries information.
  */
-export function WelcomePage({ onBegin, onResume, resumeLabel, visual }: {
+export function WelcomePage({ onBegin, onResume, resumeLabel, visual, credit }: {
   onBegin: () => void; onResume?: () => void; resumeLabel?: string; visual?: ReactNode;
+  /** Credit line for the decorative scene behind the page. */
+  credit?: string;
 }) {
   const reduced = useCalmMotion();
   return (
@@ -23,6 +25,7 @@ export function WelcomePage({ onBegin, onResume, resumeLabel, visual }: {
           {onResume && <Button size="lg" onClick={onResume}><RotateCcw className="size-4" /> {resumeLabel ?? "Resume Previous Mission"}</Button>}
         </div>
         <p className="welcome-note">Built for the NASA Space Apps Challenge 2026. Everything stays on this computer. AstroLife is an educational prototype, not a diagnosis or a certified medical device.</p>
+        {credit && <p className="welcome-note welcome-credit">{credit}</p>}
       </motion.div>
       <div className="welcome-visual" aria-hidden="true">{visual}</div>
     </div>

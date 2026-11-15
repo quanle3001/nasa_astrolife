@@ -50,6 +50,7 @@ const text = (value: unknown) => (typeof value === "string" && value ? value : n
 const message = (reason: unknown) => (reason instanceof Error ? reason.message : String(reason)).replace(/^Error invoking remote method '[^']+': (Error: )?/, "");
 
 const StarBackground = lazy(() => import("@/components/effects/star-background").then((module) => ({ default: module.StarBackground })));
+const SpaceScene = lazy(() => import("@/components/effects/space-scene"));
 const requestedPage = new URLSearchParams(window.location.search).get("page") as PageId | null;
 
 /** One screen of the app; cross-fades and slides when the screen changes. */
@@ -305,11 +306,14 @@ export default function App() {
   const linking = (port: string) => setSensor((current) => ({ ...current, connecting: true, fault: null, status: `Opening ${port}…` }));
 
   const compassOpen = view === "compass" || (view === "dashboard" && page === "compass");
+  // The decorative astronaut leads on the welcome screen, steps aside while the mission is
+  // set up, and leaves before any question or measurement is shown.
+  const astronaut = view === "welcome" ? "hero" as const : view === "mission" || view === "context" || view === "hazards" ? "side" as const : null;
 
   let screen: ReactNode = null;
   let screenKey: string = view;
   if (view === "welcome") {
-    screen = <WelcomePage onBegin={() => send({ type: "NEXT" })} onResume={appState.open ? resume : undefined} resumeLabel="Resume Previous Mission" visual={<ParticleField className="welcome-particles" />} />;
+    screen = <WelcomePage onBegin={() => send({ type: "NEXT" })} onResume={appState.open ? resume : undefined} resumeLabel="Resume Previous Mission" visual={<ParticleField className="welcome-particles" />} credit="3D astronaut: NASA 3D Resources, model by DigitalSpace Corporation. Decorative only." />;
   } else if (view === "mission") {
     screen = <MissionPage mission={profile.environment} onChange={(environment) => setProfile((current) => ({ ...current, environment, phase: knowledge.mission_context.missions[environment].phases.includes(current.phase) ? current.phase : knowledge.mission_context.missions[environment].phases[0] }))} onBack={() => send({ type: "BACK" })} onNext={() => send({ type: "NEXT" })} />;
   } else if (view === "context") {
@@ -373,7 +377,7 @@ export default function App() {
         </video>
       </div>
       {/* One WebGL scene at a time: the starfield yields to the 3D anatomy viewer. */}
-      {!compassOpen && <Suspense fallback={null}><StarBackground reducedMotion={reducedMotion} /></Suspense>}
+      {!compassOpen && <Suspense fallback={null}><SpaceScene reducedMotion={reducedMotion} astronaut={astronaut} mission={mission} /></Suspense>}
       <div className="mission-atmosphere" data-mission={mission} aria-hidden="true" />
       <AppShell
         page={page} setPage={setPage} mission={mission} connected={sensor.connected} backendReady={backendReady} disclaimer={config.disclaimer}
