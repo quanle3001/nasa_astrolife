@@ -53,7 +53,7 @@ and what changed.
 | `desktop/src/components/spaceui/status-badge.tsx` | Space UI — `src/registry/components/spaceui/status-badge` | MIT, © 2026 Space UI | Inline mode only; statuses reduced to online/offline/warning/info; token colors; ping only for a live link and off under reduced motion; `role="status"`. |
 | `desktop/src/components/effects/border-beam.tsx` + `.border-beam` CSS | Magic UI — Border Beam | MIT, © Magic UI | Conic gradient masked to a 1.5px ring with `mask-composite: exclude`. |
 | `desktop/src/components/effects/star-background.tsx` | Space Portfolio — `components/main/star-background.tsx` | MIT, © 2024 Sanidhya Kumar Verma | Ported to Vite; lazy chunk; reduced-motion aware. |
-| `desktop/public/videos/blackhole.webm` | Space Portfolio — `public/videos/blackhole.webm` | MIT, © 2024 Sanidhya Kumar Verma | Hue-shifted and desaturated in CSS; strongest on Telemetry, dimmed on other pages; paused while a mission clip plays, when hidden, and under reduced motion. |
+| `desktop/public/videos/blackhole.webm` | Space Portfolio — `public/videos/blackhole.webm` | MIT, © 2024 Sanidhya Kumar Verma | Hue-shifted and desaturated in CSS; fully staged on Home, reduced to a faint spatial landmark on guided pages, and slightly stronger on Telemetry; paused while a mission clip plays, when hidden, and under reduced motion. |
 
 Full license texts are reproduced in `desktop/THIRD_PARTY_NOTICES.md`.
 
@@ -74,8 +74,8 @@ Tokens live in `desktop/src/styles.css`:
   entire background.
 - **Status colors** (`--status-urgent/review/watch/info/live`): clinical
   meaning only, never decorative; unchanged from the original priority colors.
-- **Surfaces:** `--panel-bg` (50–62% tint with a 4px blur: dark enough to read
-  over the starfield, open enough to let the cursor light through),
+- **Surfaces:** `--panel-bg` (30–46% tint with a 12px blur: dark enough to read
+  over the starfield while preserving the space scene behind it),
   `--panel-border`, `--panel-border-hover`, `--panel-highlight`,
   `--shadow-panel`, `--shadow-float`, `--shadow-lift`.
 - **Radius** `--radius-sm/md/lg/xl/pill`; **spacing** `--space-1…8`,

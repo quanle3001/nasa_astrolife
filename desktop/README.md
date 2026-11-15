@@ -122,7 +122,7 @@ reviews are documented in [`docs/UI_UX.md`](../docs/UI_UX.md).
 - Space UI (MIT) adaptations in `src/components/spaceui/`: ProximityGrid
   (Interactive Grid Hero), FrostBlurred and StatusBadge.
 - Space Portfolio (MIT) atmosphere: lazy R3F starfield, black-hole crown
-  (desaturated; strongest on Telemetry, dimmed on clinical pages) and
+  (desaturated; fully staged on Home, dimmed on clinical pages) and
   translucent glass surfaces.
 - Magic UI border beam on the selected mission card, masked to a ring.
 - Motion for overlapping page continuity, astronaut pose continuity, guided

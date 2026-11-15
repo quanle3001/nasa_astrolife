@@ -410,7 +410,7 @@ export default function App() {
 
   return (
     <div className="relative isolate min-h-screen overflow-hidden bg-space-black">
-      <div className="black-hole-crown" data-page={view === "welcome" ? "sensor" : view} aria-hidden="true">
+      <div className="black-hole-crown" data-page={view} aria-hidden="true">
         <video ref={crownVideo} muted loop playsInline preload="auto">
           <source src="./videos/blackhole.webm" type="video/webm" />
         </video>
