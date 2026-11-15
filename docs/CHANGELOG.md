@@ -202,7 +202,7 @@ See `git log --oneline -- docs README.md` for the commits.
 | `3d411f4` | "Measure again" for a saved reading; tests for guidance, indicators and follow-up actions |
 
 | `96a2950` | Documentation for the new guidance; challenge and rubric check |
-| (next commit) | Intro page on every launch; decoration colours of the reviewed version with the blue palette on components; faster 3D Compass picking; 2D map removed; badges no longer wrap |
+| `bea060e` | Intro page on every launch; decoration colours of the reviewed version with the blue palette on components; faster 3D Compass picking; 2D map removed; badges no longer wrap |
 
 The challenge and rubric check is in `CHALLENGE_REVIEW.md`.
 
