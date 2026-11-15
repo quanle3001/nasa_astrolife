@@ -36,8 +36,13 @@ describe("MissionSelector", () => {
   });
 
   it("marks the active mission in text and labels clip types", () => {
-    render(<MissionSelector value="mars" onChange={() => undefined} />);
-    expect(screen.getByRole("radio", { name: /Active mission/i })).toHaveAttribute("aria-checked", "true");
+    const { rerender } = render(<MissionSelector value="mars" onChange={() => undefined} />);
+    expect(screen.getByRole("radio", { name: /Mars \/ Deep Space/i })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByText("Active mission")).toHaveAttribute("aria-hidden", "true");
+
+    rerender(<MissionSelector value="lunar" onChange={() => undefined} />);
+    expect(screen.getByRole("radio", { name: /Lunar Mission/i })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getAllByText("Active mission").every((badge) => badge.getAttribute("aria-hidden") === "true")).toBe(true);
     expect(screen.getByText("Visualization")).toBeInTheDocument();
     expect(screen.getByText("Footage")).toBeInTheDocument();
     expect(screen.getByText(/NASA \/ JPL · PIA24264/)).toBeInTheDocument();

@@ -2,7 +2,7 @@
 
 This document covers the interface in `desktop/`: which open-source UI work
 was researched and reused (with source and license), the design system, the
-NASA media rules, the guided flow, the Health Compass, cursor-reactive motion,
+NASA media rules, the guided flow, the Health Compass, the motion architecture,
 and the design reviews with what they changed.
 
 The interface is React + TypeScript + Tailwind v4 in Electron. The Python
@@ -11,7 +11,7 @@ process. Nothing below changes health logic, thresholds, firmware or storage.
 
 Contents: 1 Research · 2 Adapted components · 3 Design system · 4 NASA media ·
 5 First design review · 6 Brand · 7 Guided flow · 8 Health Compass ·
-9 Cursor-reactive motion · 10 Second design review · 11 Qt fallback
+9 Motion architecture · 10 Second design review · 11 Qt fallback
 
 ## 1. Research summary
 
@@ -53,7 +53,7 @@ and what changed.
 | `desktop/src/components/spaceui/status-badge.tsx` | Space UI — `src/registry/components/spaceui/status-badge` | MIT, © 2026 Space UI | Inline mode only; statuses reduced to online/offline/warning/info; token colors; ping only for a live link and off under reduced motion; `role="status"`. |
 | `desktop/src/components/effects/border-beam.tsx` + `.border-beam` CSS | Magic UI — Border Beam | MIT, © Magic UI | Conic gradient masked to a 1.5px ring with `mask-composite: exclude`. |
 | `desktop/src/components/effects/star-background.tsx` | Space Portfolio — `components/main/star-background.tsx` | MIT, © 2024 Sanidhya Kumar Verma | Ported to Vite; lazy chunk; reduced-motion aware. |
-| `desktop/public/videos/blackhole.webm` | Space Portfolio — `public/videos/blackhole.webm` | MIT, © 2024 Sanidhya Kumar Verma | Hue-shifted from violet to blue in CSS; full strength on Telemetry, dimmed on clinical pages; paused while a mission clip plays, when hidden, and under reduced motion. |
+| `desktop/public/videos/blackhole.webm` | Space Portfolio — `public/videos/blackhole.webm` | MIT, © 2024 Sanidhya Kumar Verma | Hue-shifted and desaturated in CSS; strongest on Telemetry, dimmed on other pages; paused while a mission clip plays, when hidden, and under reduced motion. |
 
 Full license texts are reproduced in `desktop/THIRD_PARTY_NOTICES.md`.
 
@@ -62,13 +62,16 @@ Full license texts are reproduced in `desktop/THIRD_PARTY_NOTICES.md`.
 Tokens live in `desktop/src/styles.css`:
 
 - **Colors** (`@theme`, generates Tailwind utilities such as `bg-space-surface`):
-  `space-black #02121b`, `space-bg #041f2e`, `space-surface #062b43`,
+  `space-black #03070c`, `space-bg #071019`, `space-surface #062b43`,
   `space-elevated #0a3852`, `space-border #356f86`, `space-blue #5692a9`,
   `space-cyan #9dcddc`, `space-white #f2f7fa`, `space-silver #cdd7df`,
   `space-muted #aac0ca`, `space-subtle #8eabb7`, and atmospheric
   `space-violet #78a9ba`. The five reference swatches are `#062b43`,
   `#044568`, `#5692a9`, `#9dcddc`, and `#cdd7df`; the darker and text tokens
-  extend that supplied palette for depth and accessible contrast.
+  extend that supplied palette for depth and accessible contrast. The two
+  darkest tokens now make the major canvas near-black; blue is reserved for
+  atmospheric light, surfaces and interaction accents instead of filling the
+  entire background.
 - **Status colors** (`--status-urgent/review/watch/info/live`): clinical
   meaning only, never decorative; unchanged from the original priority colors.
 - **Surfaces:** `--panel-bg` (50–62% tint with a 4px blur: dark enough to read
@@ -98,13 +101,21 @@ Shared UI language:
 
 ### Motion budget
 
+Motion has three jobs: preserve place between screens, confirm an action, and
+support the Home hero. Screen changes use short overlapping opacity/depth
+transitions; progress, selections and controls respond to state changes; the
+astronaut supplies the only large spatial gesture. Routine controls use
+160–240 ms feedback and screen entrances use 340 ms, with exits deliberately
+shorter. Generic staggered or scroll-driven reveals are not used.
+
 Decorative motion is compositor-only (transforms and opacity): star rotation,
-orbital tracks, Ken Burns drift, scan sweep. Cards that hold values being read
-do not move. The proximity grid and the cursor effects (§9) animate only on
+orbital tracks, Ken Burns drift and scan sweep. Cards that hold values being
+read do not drift. The proximity grid and cursor effects (§9) react only to
 pointer movement. One WebGL scene runs at a time: the star and astronaut scene
 is unmounted while the 3D anatomy viewer is open. The navbar's "Pause motion"
-control and `prefers-reduced-motion` disable all of it, hide the crown video
-and stop autoplay; state and focus feedback remain.
+control and `prefers-reduced-motion` stop ambient loops and spatial travel,
+hide the crown video and stop autoplay; immediate color, border, focus and
+semantic state feedback remains.
 
 ## 4. NASA media
 
@@ -257,31 +268,63 @@ map has the same functions and is the fallback when WebGL is unavailable.
 A highlight means "there is a prompt to review here". It never means something
 is wrong there, and an unmarked region is never called healthy.
 
-The NASA astronaut model is separate and decorative. It appears only on the
-welcome and mission-context screens. Neutral three-point studio lighting keeps
-the original suit white while revealing its textured seams, equipment and
-helmet; the model retains its existing gentle cursor-facing motion.
+The NASA astronaut model is separate and decorative. It leads the welcome
+screen at full scale, glides to a smaller upper-right supporting pose on both
+mission-selection screens, then exits before health questions begin. Keeping
+one mounted model through those poses prevents the second-page disappearance
+and makes Home the main visual moment. Neutral three-point studio lighting
+keeps the original suit white while revealing its textured seams, equipment
+and helmet. Under reduced motion the model snaps to its final pose and the
+demand-rendered scene invalidates exactly one frame so the framebuffer cannot
+retain the previous large pose.
 
-## 9. Cursor-reactive motion
+## 9. Motion architecture
 
 The user asked for the feel of modern cursor-reactive sites (Antigravity was
-the reference) on a dark space theme. The rule adopted: **the interface
-answers the cursor, and nothing moves on its own over content.**
+the reference) on a dark space theme, then clarified that motion should support
+the whole experience rather than only the astronaut. The rule adopted:
+**Home owns the large motion; the rest of the interface responds to navigation,
+selection, focus and progress.**
 
 | Effect | Where | Implementation |
 |---|---|---|
+| Screen continuity | Every top-level screen | `AnimatePresence` overlaps a 160 ms exit with a 340 ms entrance; exiting content becomes inert and hidden from assistive technology |
+| Astronaut continuity | Welcome → mission → mission context | One R3F model eases from hero to supporting pose, then toward the edge before unmounting |
+| Navigation and progress | Header tabs and guided stepper | Shared-layout active tab; step labels and counts crossfade with 3–4 px travel; step dots retain the persistent position |
+| Mission selection | Mission cards | Restrained lift, 1.02 media scale, video crossfade and animated "Active mission" confirmation; radio semantics and visible text carry the state |
+| Control feedback | Buttons, chips, fields and instrument options | Tokenized 120–240 ms border, background, press and focus response; context groups brighten on `:focus-within` |
 | Cursor aura | Whole window, behind content | `CursorAura` in `effects/interactive.tsx`: one window listener, one style write per frame |
 | Surface spotlight | Panels, hazard cards, question cards, options | A radial light at the pointer position, above the surface's background and below its content |
 | Lift and press | Buttons, options, chips, instrument cards | `translate` on hover, settle on press; the primary button has a sheen |
 | Magnetic primary action | Flow "Continue" and dashboard actions | `Magnetic`, a few pixels toward the cursor |
-| Scroll settle | Dashboard tiles, hazard cards, page sections | CSS scroll-driven animation; content starts dimmed, never invisible |
 | Particle field | Welcome screen | Canvas 2D, particles yield to the cursor |
-| Astronaut | Welcome, mission context | Turns and drifts toward the cursor |
 | Anatomy hover card | Health Compass | Follows the pointer inside the viewer |
 
-All of it is written with Motion, CSS and Canvas 2D that were already in the
-project. No animation library was added. Everything is disabled by "Pause
-motion" and by the OS reduced-motion setting.
+All of it is written with Motion, CSS and Canvas 2D already in the project.
+Motion 14.14.0 is MIT licensed; no transition package or new dependency was
+added. `MotionPreferenceProvider` maps the in-app pause control and the OS
+preference into one calm-motion decision. Calm mode removes spatial travel,
+pointer tracking, autoplay and looping beams while retaining immediate final
+states and short color/border feedback. Screen changes snap immediately so old
+and new content cannot be double-exposed. Urgent content is never delayed or
+hidden behind animation.
+
+### Transition review (2026-11-15)
+
+Impeccable's animation and polish guidance and UI/UX Pro Max's accessibility,
+interaction and reduced-motion rules were applied to the built Electron app.
+The Impeccable launcher binary was unavailable, so its documented manual
+fallback was used with normal-motion and paused-motion capture scripts.
+
+The review kept the astronaut as the single focal gesture, removed generic
+scroll-settle reveals, shortened the primary-button sheen, limited mission
+media zoom, made button transitions property-specific, and stopped the
+selected-card beam in calm mode. It also verified that focus does not remain
+inside the inert outgoing screen, state is never indicated by motion or color
+alone, and reduced motion renders the correct astronaut pose without travel.
+The transition helper and astronaut view mapping are unit tested in
+`desktop/src/lib/transitions.test.ts`; the animated header's visible and
+accessible progress state is covered in `app-shell.test.tsx`.
 
 ## 10. Second design review: the guided flow
 

@@ -41,6 +41,19 @@ describe("AppShell", () => {
     expect(screen.getByRole("group", { name: "Guided check-in, step 4 of 9: Safety screen" })).toBeInTheDocument();
   });
 
+  it("updates the visible and accessible step state together", () => {
+    const base = { page: "dashboard" as const, setPage: () => undefined, mission: "leo" as const, connected: false, backendReady: true, disclaimer: "x" };
+    const { rerender } = render(<AppShell {...base} flow={{ index: 0, total: 9, label: "Choose mission" }}><p /></AppShell>);
+    expect(screen.getByText("Choose mission")).toBeInTheDocument();
+    expect(screen.getByText("1 / 9")).toBeInTheDocument();
+
+    rerender(<AppShell {...base} flow={{ index: 1, total: 9, label: "Mission context" }}><p /></AppShell>);
+    const stepper = screen.getByRole("group", { name: "Guided check-in, step 2 of 9: Mission context" });
+    expect(stepper).toBeInTheDocument();
+    expect(screen.getByText("Mission context")).toHaveAttribute("aria-hidden", "true");
+    expect(screen.getByText("2 / 9")).toHaveAttribute("aria-hidden", "true");
+  });
+
   it("keeps the health-concern report reachable from the header", () => {
     const report = vi.fn();
     render(<AppShell page="dashboard" setPage={() => undefined} mission="leo" connected={false} backendReady disclaimer="x" onReportConcern={report} flow={{ index: 0, total: 9, label: "Choose mission" }}><p /></AppShell>);

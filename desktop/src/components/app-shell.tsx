@@ -1,4 +1,4 @@
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useCalmMotion, useMotionPreference } from "@/lib/motion-preference";
 import { AlertTriangle, Compass, Database, HeartPulse, Keyboard, LayoutDashboard, Orbit, Pause, Play, Radiation, Sparkles } from "lucide-react";
 import { ARIA_MOD, MOD } from "@/lib/shortcuts";
@@ -22,6 +22,44 @@ export const NAV = [
 /** Position in the guided flow, shown instead of the tabs while a flow step is open. */
 export interface FlowProgress { index: number; total: number; label: string }
 
+/**
+ * Keeps progress changes legible without turning the fixed header into a
+ * distraction. Labels and counts move only a few pixels; the existing dots
+ * carry the persistent sense of direction through the guided assessment.
+ */
+function FlowStepper({ flow, reduced }: { flow: FlowProgress; reduced: boolean }) {
+  const change = reduced ? {
+    initial: false as const,
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+    transition: { duration: 0 },
+  } : {
+    initial: { opacity: 0, y: 4 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -3 },
+    transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const },
+  };
+  return (
+    <div className="flow-stepper app-no-drag" role="group" aria-label={flow.index >= 0 ? `Guided check-in, step ${flow.index + 1} of ${flow.total}: ${flow.label}` : flow.label}>
+      <span className="flow-stepper-copy">
+        <AnimatePresence initial={false} mode="popLayout">
+          <motion.span key={`${flow.index}-${flow.label}`} className="flow-stepper-label" aria-hidden="true" {...change}>{flow.label}</motion.span>
+        </AnimatePresence>
+      </span>
+      <span className="flow-stepper-dots" aria-hidden="true">
+        {Array.from({ length: flow.total }, (_value, index) => <i key={index} className={cn(index < flow.index && "is-done", index === flow.index && "is-current")} />)}
+      </span>
+      {flow.index >= 0 && (
+        <span className="flow-stepper-count-slot">
+          <AnimatePresence initial={false} mode="popLayout">
+            <motion.span key={flow.index} className="flow-stepper-count" aria-hidden="true" {...change}>{flow.index + 1} / {flow.total}</motion.span>
+          </AnimatePresence>
+        </span>
+      )}
+    </div>
+  );
+}
+
 export function AppShell({ page, setPage, mission, connected, simulated, backendReady, disclaimer, onShowShortcuts, onReportConcern, flow, onHome, scrollKey, children }: {
   page: PageId; setPage: (page: PageId) => void; mission: MissionId; connected: boolean; backendReady: boolean; disclaimer: string;
   /** True while the labelled demo stream is running instead of the ESP32. */
@@ -42,7 +80,8 @@ export function AppShell({ page, setPage, mission, connected, simulated, backend
   // Each screen starts at its top, and keyboard focus moves with it instead of staying on a control that is gone.
   useEffect(() => {
     scroller.current?.scrollTo({ top: 0 });
-    if (document.activeElement === document.body || !document.body.contains(document.activeElement)) scroller.current?.focus({ preventScroll: true });
+    const active = document.activeElement;
+    if (active === document.body || !document.body.contains(active) || active?.closest("[inert]")) scroller.current?.focus({ preventScroll: true });
   }, [page, scrollKey]);
   return (
     <div className="cosmic-app relative min-h-screen text-space-white" data-mission={mission}>
@@ -53,13 +92,7 @@ export function AppShell({ page, setPage, mission, connected, simulated, backend
         </button>
 
         {flow ? (
-          <div className="flow-stepper app-no-drag" role="group" aria-label={flow.index >= 0 ? `Guided check-in, step ${flow.index + 1} of ${flow.total}: ${flow.label}` : flow.label}>
-            <span className="flow-stepper-label">{flow.label}</span>
-            <span className="flow-stepper-dots" aria-hidden="true">
-              {Array.from({ length: flow.total }, (_value, index) => <i key={index} className={cn(index < flow.index && "is-done", index === flow.index && "is-current")} />)}
-            </span>
-            {flow.index >= 0 && <span className="flow-stepper-count">{flow.index + 1} / {flow.total}</span>}
-          </div>
+          <FlowStepper flow={flow} reduced={reduced} />
         ) : (
           <nav className="nav-capsule app-no-drag" aria-label="Primary navigation">
             {NAV.map(({ id, label, icon: Icon }, index) => (

@@ -122,21 +122,25 @@ reviews are documented in [`docs/UI_UX.md`](../docs/UI_UX.md).
 - Space UI (MIT) adaptations in `src/components/spaceui/`: ProximityGrid
   (Interactive Grid Hero), FrostBlurred and StatusBadge.
 - Space Portfolio (MIT) atmosphere: lazy R3F starfield, black-hole crown
-  (blue-shifted; full strength on Telemetry, dimmed on clinical pages) and
+  (desaturated; strongest on Telemetry, dimmed on clinical pages) and
   translucent glass surfaces.
 - Magic UI border beam on the selected mission card, masked to a ring.
-- Motion for page and card transitions and the mission-image cross-fade;
+- Motion for overlapping page continuity, astronaut pose continuity, guided
+  progress and mission-selection feedback;
   Radix Dialog/Tooltip/Slot; Lucide icons.
-- Cursor-reactive feedback (cursor aura, surface spotlight, lift and press,
-  scroll settle) written with Motion, CSS and Canvas 2D.
+- Cursor-reactive feedback (cursor aura, surface spotlight, lift and press)
+  written with Motion, CSS and Canvas 2D. Generic scroll reveals are avoided so
+  state changes and the Home astronaut remain the focal motion.
 - The Health Compass uses `open-anatomy-3d` models through React Three Fiber,
   bundled locally; a 2D body map is the fallback without WebGL.
 - "Pause motion" in the navbar and `prefers-reduced-motion` stop all decorative
   motion and video autoplay while keeping state and focus feedback.
 
 One WebGL scene runs at a time: the star and astronaut scene is unmounted while
-the 3D anatomy viewer is open. Both are lazy chunks. Clinical content and urgent
-actions never wait on animation.
+the 3D anatomy viewer is open. Both are lazy chunks. The astronaut remains
+mounted from Home through mission setup so it can glide from hero to supporting
+pose without disappearing. Clinical content and urgent actions never wait on
+animation.
 
 ## NASA media
 

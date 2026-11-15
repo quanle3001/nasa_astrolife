@@ -1,4 +1,4 @@
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useCalmMotion } from "@/lib/motion-preference";
 import { CheckCircle2, ExternalLink, Film, Maximize2, Orbit, PlayCircle } from "lucide-react";
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
@@ -43,7 +43,7 @@ function MissionCard({ media, selected, onSelect, onPreview, onKeyDown, buttonRe
       data-selected={selected || undefined}
       style={{ "--accent": media.color } as React.CSSProperties}
       whileHover={reduced ? undefined : { y: -4 }}
-      transition={{ type: "spring", stiffness: 260, damping: 26 }}
+      transition={{ type: "spring", stiffness: 260, damping: 26, delay: 0 }}
       onPointerEnter={() => setEngaged(true)}
       onPointerLeave={() => setEngaged(false)}
       onFocus={() => setEngaged(true)}
@@ -84,9 +84,20 @@ function MissionCard({ media, selected, onSelect, onPreview, onKeyDown, buttonRe
         <span className="hud-brackets" aria-hidden="true"><i /><i /><i /><i /></span>
         <FrostBlurred side="bottom" height="46%" tint={0.55} />
         <span className="mission-card-top">
-          <span className={cn("mission-card-eyebrow", selected && "is-selected")}>
-            {selected && <><CheckCircle2 className="size-3.5" /> Active mission</>}
-          </span>
+          <AnimatePresence initial={false}>
+            {selected && (
+              <motion.span
+                className="mission-card-eyebrow is-selected"
+                aria-hidden="true"
+                initial={reduced ? false : { opacity: 0, scale: 0.94 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={reduced ? undefined : { opacity: 0, scale: 0.96 }}
+                transition={{ duration: reduced ? 0 : 0.18 }}
+              >
+                <CheckCircle2 className="size-3.5" /> Active mission
+              </motion.span>
+            )}
+          </AnimatePresence>
           {kind && <span className="mission-card-kind" title={media.video?.classification}><Film className="size-3" /> {kind}</span>}
         </span>
         <span className="mission-card-body">

@@ -1,6 +1,6 @@
 import { useMachine } from "@xstate/react";
 import { AlertTriangle, LoaderCircle, RotateCcw } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useIsPresent } from "motion/react";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AppShell, NAV, type FlowProgress, type PageId } from "@/components/app-shell";
 import { CompassPage } from "@/components/compass/compass-page";
@@ -31,6 +31,7 @@ import { useAmbientVideo } from "@/lib/media-playback";
 import { useCalmMotion } from "@/lib/motion-preference";
 import { ppgBuffer, startPpgStream } from "@/lib/ppg-store";
 import { isTypingTarget, matchShortcut } from "@/lib/shortcuts";
+import { astronautPoseForView, screenMotion } from "@/lib/transitions";
 import { questionnaireView } from "@/questions/engine";
 import { applyAnswer, questionnaireMachine } from "@/questions/questionnaire-machine";
 import type { AppConfig, Assessment, AssessmentBundle, BackendEvent, CheckIn } from "@/types/backend";
@@ -56,11 +57,21 @@ const StarBackground = lazy(() => import("@/components/effects/star-background")
 const SpaceScene = lazy(() => import("@/components/effects/space-scene"));
 const requestedPage = new URLSearchParams(window.location.search).get("page") as PageId | null;
 
-/** One screen of the app; cross-fades and slides when the screen changes. */
+/** One screen of the app; overlapping depth transitions preserve continuity. */
 function Screen({ children }: { children: ReactNode }) {
   const reduced = useCalmMotion();
+  const present = useIsPresent();
+  const transition = screenMotion(reduced);
   return (
-    <motion.section initial={reduced ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={reduced ? undefined : { opacity: 0, y: -8, transition: { duration: 0.12, ease: "easeIn" } }} transition={{ duration: reduced ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }}>
+    <motion.section
+      className="screen-transition"
+      inert={!present}
+      aria-hidden={present ? undefined : true}
+      initial={transition.initial}
+      animate={transition.animate}
+      exit={transition.exit}
+      transition={transition.transition}
+    >
       {children}
     </motion.section>
   );
@@ -334,10 +345,9 @@ export default function App() {
   const linking = (port: string) => setSensor((current) => ({ ...current, connecting: true, fault: null, status: `Opening ${port}…` }));
 
   const compassOpen = view === "compass" || (view === "dashboard" && page === "compass");
-  // The decorative astronaut leads on the welcome screen, steps aside while the mission is
-  // set up, and leaves before any question or measurement is shown.
-  // Only where there is room beside the content: the mission cards and the hazard list fill the page.
-  const astronaut = view === "welcome" ? "hero" as const : view === "context" ? "side" as const : null;
+  // The astronaut is the home-page hero, then glides into a supporting pose
+  // across both mission setup pages before leaving the health-content flow.
+  const astronaut = astronautPoseForView(view);
 
   let screen: ReactNode = null;
   let screenKey: string = view;
@@ -415,9 +425,11 @@ export default function App() {
         flow={flowProgress} scrollKey={`${screenKey}-${view === "questions" ? questionIndex : ""}`}
         onHome={() => { if (view === "dashboard") setPage("dashboard"); else if (onboarded && view !== "urgent") send({ type: "EXIT" }); }}
       >
-        <AnimatePresence mode="wait" initial={false}>
-          <Screen key={screenKey}>{screen}</Screen>
-        </AnimatePresence>
+        <div className="screen-stage">
+          <AnimatePresence mode="sync" initial={false}>
+            <Screen key={screenKey}>{screen}</Screen>
+          </AnimatePresence>
+        </div>
         {/* Screens with their own error line show it next to the control; every other screen shows it here. */}
         {flowError && !["context", "safety", "questions", "measure"].includes(view) && <div role="alert" className="flow-error flow-error-global">{flowError}</div>}
       </AppShell>
