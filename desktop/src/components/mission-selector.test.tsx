@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { MissionSelector } from "@/components/mission-selector";
 
@@ -41,5 +41,16 @@ describe("MissionSelector", () => {
     expect(screen.getByText("Visualization")).toBeInTheDocument();
     expect(screen.getByText("Footage")).toBeInTheDocument();
     expect(screen.getByText(/NASA \/ JPL · PIA24264/)).toBeInTheDocument();
+  });
+
+  it("returns focus to the expand button when the media dialog closes", async () => {
+    render(<MissionSelector value="leo" onChange={() => undefined} />);
+    const expand = screen.getByRole("button", { name: /Expand Lunar Mission NASA media/i });
+    expand.focus();
+    fireEvent.click(expand);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(expand).toHaveFocus();
   });
 });

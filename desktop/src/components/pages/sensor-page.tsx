@@ -82,7 +82,7 @@ export function SensorPage({ state, mission, onReview, onCheckin, onConnectStart
 
       <Card className="sensor-command-dock">
         {state.usable && <BorderBeam duration={7} />}
-        <div className="command-dock-title"><Cable className="size-4" /><span><b>ESP32 UPLINK</b><small>MAX30102 · 115200 BAUD</small></span></div>
+        <div className="command-dock-title"><Cable className="size-4" /><span><h2>ESP32 UPLINK</h2><small>MAX30102 · 115200 BAUD</small></span></div>
         <div className="command-dock-control">
           <input ref={portInput} list="serial-ports" value={port} onChange={(event) => setPort(event.target.value)} disabled={state.connected || state.connecting} className="control" aria-label="ESP32 serial port" placeholder="Select or enter a serial port" />
           <datalist id="serial-ports">{ports.map((item) => <option key={item.device} value={item.device}>{item.description}</option>)}</datalist>
@@ -101,7 +101,7 @@ export function SensorPage({ state, mission, onReview, onCheckin, onConnectStart
 
       <section className="interpretation-grid">
         <Card className="interpretation-card">
-          <div className="flex items-center gap-2"><CircleGauge className="size-4 text-space-cyan" /><span className="telemetry-label">Live interpretation</span></div>
+          <div className="flex items-center gap-2"><CircleGauge className="size-4 text-space-cyan" /><h2 className="telemetry-label">Live interpretation</h2></div>
           {state.bundle ? (
             <div className="mt-5 flex flex-col gap-5 md:flex-row md:items-end">
               <div className="min-w-0 flex-1"><div className={cn("priority-badge", `priority-${state.bundle.assessment.level}`)}>{state.bundle.assessment.level}</div><h2 className="mt-3 text-2xl font-semibold text-white">{state.bundle.assessment.summary}</h2><p className="mt-2 text-sm text-space-muted">Fresh device-valid estimate; clinical accuracy remains unknown.</p></div>
@@ -112,7 +112,7 @@ export function SensorPage({ state, mission, onReview, onCheckin, onConnectStart
           )}
         </Card>
         <Card className="privacy-card">
-          <div className="telemetry-label">Local-first by design</div>
+          <h2 className="telemetry-label">Local-first by design</h2>
           <div className="privacy-orb"><span /></div>
           <p>Experimental estimates stay on this computer. Nothing here is a diagnosis or flight-certified medical device.</p>
         </Card>

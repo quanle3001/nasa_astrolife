@@ -13,7 +13,7 @@ const NAV = [
   { id: "sensor" as const, label: "Telemetry", icon: HeartPulse },
   { id: "checkin" as const, label: "Check-in", icon: UserRound },
   { id: "assessment" as const, label: "Assessment", icon: ClipboardCheck },
-  { id: "history" as const, label: "Archive", icon: Database },
+  { id: "history" as const, label: "History", icon: Database },
 ];
 
 export function AppShell({ page, setPage, mission, connected, backendReady, disclaimer, children }: {

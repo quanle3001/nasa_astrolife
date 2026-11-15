@@ -159,6 +159,7 @@ function MediaPreview({ media }: { media: MissionMedia }) {
 
 export function MissionSelector({ value, onChange, compact = false }: MissionSelectorProps) {
   const [preview, setPreview] = useState<MissionMedia | null>(null);
+  const opener = useRef<HTMLElement | null>(null);
   const buttons = useRef<Partial<Record<MissionId, HTMLButtonElement | null>>>({});
 
   // WAI-ARIA radio group: arrow keys move selection and focus together.
@@ -188,14 +189,14 @@ export function MissionSelector({ value, onChange, compact = false }: MissionSel
             media={MISSIONS[mission]}
             selected={value === mission}
             onSelect={() => onChange(mission)}
-            onPreview={() => setPreview(MISSIONS[mission])}
+            onPreview={() => { opener.current = document.activeElement as HTMLElement | null; setPreview(MISSIONS[mission]); }}
             onKeyDown={onKeyDown(mission)}
             buttonRef={(node) => { buttons.current[mission] = node; }}
           />
         ))}
       </div>
       <Dialog open={Boolean(preview)} onOpenChange={(open) => !open && setPreview(null)}>
-        {preview && <DialogContent><MediaPreview key={preview.mission} media={preview} /></DialogContent>}
+        {preview && <DialogContent onCloseAutoFocus={(event) => { event.preventDefault(); opener.current?.focus(); }}><MediaPreview key={preview.mission} media={preview} /></DialogContent>}
       </Dialog>
     </section>
   );

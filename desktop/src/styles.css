@@ -275,7 +275,7 @@ input, textarea { caret-color: var(--color-space-cyan); }
 .sensor-command-dock { display:grid; grid-template-columns:auto minmax(360px,1fr) minmax(180px,.5fr); align-items:center; gap:18px; overflow:hidden; border-radius:var(--radius-xl); padding:16px 18px; }
 .command-dock-title { display:flex; min-width:180px; align-items:center; gap:10px; color:var(--color-space-cyan); }
 .command-dock-title span { display:flex; flex-direction:column; }
-.command-dock-title b { color:var(--color-space-white); font-size:var(--text-xs); letter-spacing:.12em; }
+.command-dock-title h2 { color:var(--color-space-white); font-size:var(--text-xs); font-weight:700; letter-spacing:.12em; }
 .command-dock-title small { margin-top:2px; color:var(--color-space-subtle); font-size:var(--text-label); letter-spacing:.08em; }
 .command-dock-control { display:grid; grid-template-columns:1fr auto auto; gap:8px; }
 .command-dock-state { display:flex; min-width:0; align-items:center; gap:9px; overflow:hidden; color:var(--color-space-muted); font-size:var(--text-xs); white-space:nowrap; text-overflow:ellipsis; }
@@ -354,6 +354,12 @@ input, textarea { caret-color: var(--color-space-cyan); }
 @media (max-width: 900px) {
   /* Below the app's 980px minimum window width only: never clip the disclaimer. */
   .space-footer-disclaimer { white-space:normal; text-wrap:balance; }
+}
+@media (max-width: 600px) {
+  .brand-lockup { display:none; }
+  .space-navbar { grid-template-columns:minmax(0,1fr) auto; padding-right:12px; }
+  .nav-capsule { justify-self:start; }
+  .nav-status { gap:5px; }
 }
 @media (max-width: 760px) {
   .form-grid { grid-template-columns: 1fr; }
