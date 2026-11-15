@@ -25,7 +25,7 @@ export function StarField({ reducedMotion }: { reducedMotion: boolean }) {
 /** Adapted from Space Portfolio's MIT-licensed StarsCanvas for Vite. */
 export function StarBackground({ reducedMotion }: { reducedMotion: boolean }) {
   return (
-    <div className="pointer-events-none fixed inset-0 z-[1]" aria-hidden="true">
+    <div className="pointer-events-none fixed inset-0 z-[2]" aria-hidden="true">
       <Canvas camera={{ position: [0, 0, 1] }} dpr={[1, 1.35]} frameloop={reducedMotion ? "demand" : "always"}>
         <Suspense fallback={null}><StarField reducedMotion={reducedMotion} /></Suspense>
       </Canvas>

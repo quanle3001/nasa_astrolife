@@ -1,3 +1,4 @@
+import { renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 type FakeVideo = HTMLVideoElement & { play: ReturnType<typeof vi.fn>; pause: ReturnType<typeof vi.fn> };
@@ -31,6 +32,24 @@ describe("media playback coordinator", () => {
     releaseForeground(clip);
     expect(clip.pause).toHaveBeenCalled();
     expect(crown.play).toHaveBeenCalledTimes(2);
+  });
+
+  it("pauses and re-registers the ambient crown as the intro mounts and returns", async () => {
+    const { useAmbientVideo } = await import("@/lib/media-playback");
+    const crown = fakeVideo();
+    const ref = { current: crown };
+    const { rerender, unmount } = renderHook(
+      ({ mounted }) => useAmbientVideo(ref, mounted),
+      { initialProps: { mounted: true } },
+    );
+
+    expect(crown.play).toHaveBeenCalledTimes(1);
+    rerender({ mounted: false });
+    expect(crown.pause).toHaveBeenCalledTimes(1);
+    rerender({ mounted: true });
+    expect(crown.play).toHaveBeenCalledTimes(2);
+    unmount();
+    expect(crown.pause).toHaveBeenCalledTimes(2);
   });
 
   it("never autoplays under prefers-reduced-motion", async () => {

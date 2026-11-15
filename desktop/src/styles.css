@@ -94,8 +94,8 @@
 
   /* Background layers (z-index) */
   --layer-atmosphere: 0;
-  --layer-stars: 1;
-  --layer-crown: 2;
+  --layer-crown: 1;
+  --layer-stars: 2;
   --layer-content: 5;
   --layer-nav: 50;
 }
@@ -155,15 +155,13 @@ input, textarea { caret-color: var(--color-space-cyan); }
 .mission-atmosphere { pointer-events: none; position: fixed; inset: 0; z-index: var(--layer-atmosphere); overflow: hidden; background: radial-gradient(ellipse at 78% 10%, rgba(86,146,169,.09), transparent 44%), radial-gradient(ellipse at 12% 72%, rgba(157,205,220,.035), transparent 40%), radial-gradient(ellipse at 60% 110%, rgba(4,69,104,.06), transparent 46%), linear-gradient(180deg, var(--color-space-black) 0%, #040b11 55%, var(--color-space-black) 100%); transition: background var(--duration-atmosphere) ease; }
 .mission-atmosphere[data-mission="lunar"] { background: radial-gradient(ellipse at 78% 12%, rgba(205,215,223,.07), transparent 42%), radial-gradient(ellipse at 30% 90%, rgba(86,146,169,.045), transparent 40%), linear-gradient(180deg, var(--color-space-black) 0%, #091118 55%, var(--color-space-black) 100%); }
 .mission-atmosphere[data-mission="mars"] { background: radial-gradient(ellipse at 78% 14%, rgba(196,108,62,.14), transparent 42%), radial-gradient(ellipse at 30% 92%, rgba(120,60,50,.07), transparent 40%), linear-gradient(180deg, #050608 0%, #0a0a12 55%, var(--color-space-black) 100%); }
-.black-hole-crown { pointer-events: none; position: fixed; z-index: var(--layer-crown); top: -300px; left: 0; width: 100%; height: 820px; overflow: hidden; opacity: .055; transform:translateY(0); mix-blend-mode: screen; transition: transform var(--duration-atmosphere) var(--ease-out), opacity var(--duration-atmosphere) ease; -webkit-mask-image: linear-gradient(to bottom, #000 62%, transparent 100%); mask-image: linear-gradient(to bottom, #000 62%, transparent 100%); }
-/* Space Portfolio's black-hole clip, hue-shifted from violet toward blue and
-   deliberately desaturated so the near-black canvas remains dominant. */
-.black-hole-crown video { width: 100%; height: 100%; object-fit: cover; transform: rotate(180deg) scaleX(1.25); filter: hue-rotate(-38deg) brightness(.86) saturate(.62); }
-/* Home is the cinematic establishing shot. Guided pages keep the same spatial
-   landmark as a restrained glow so headings remain the visual priority. */
-.black-hole-crown[data-page="welcome"] { opacity: .7; transform:translateY(110px); }
-.black-hole-crown[data-page="welcome"] video { filter: hue-rotate(-38deg) brightness(.98) saturate(.68); }
-.black-hole-crown[data-page="sensor"] { opacity: .16; }
+.mission-atmosphere[data-page="welcome"] { background:var(--color-space-black); }
+/* Space Portfolio's original hero composition: the raw clip is rotated, moved
+   above the viewport and layered beneath the stars. AstroLife changes only the
+   purple energy to ocean blue and ice cyan while its black field stays deep. */
+.black-hole-crown { pointer-events:none; position:fixed; z-index:var(--layer-crown); top:-340px; left:0; width:100%; height:100vh; opacity:0; overflow:visible; mix-blend-mode:normal; transition:opacity var(--duration-atmosphere) ease; }
+.black-hole-crown video { width:100%; height:100%; object-fit:cover; transform:rotate(180deg); filter:hue-rotate(-38deg) brightness(.98) saturate(.9) contrast(1.1); }
+.black-hole-crown[data-page="welcome"] { opacity:1; }
 
 
 /* Border beam (adapted from Magic UI): a rotating conic masked to a 1.5px ring. */
@@ -384,6 +382,8 @@ input, textarea { caret-color: var(--color-space-cyan); }
 }
 /* In-app "Pause motion": freeze decorative loops in place (state spinners keep running). */
 :root[data-motion="paused"] *:not(.animate-spin), :root[data-motion="paused"] *::before, :root[data-motion="paused"] *::after { animation-play-state: paused !important; }
+:root[data-motion="paused"] .black-hole-crown { transition:none; }
+:root[data-motion="paused"] .black-hole-crown video { display:none; }
 :root[data-motion="paused"] .viewport-scan { display:none; }
 
 /* --------------------------------------------------------------------------

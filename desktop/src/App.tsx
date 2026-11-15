@@ -125,7 +125,9 @@ export default function App() {
   const [historyRefresh, setHistoryRefresh] = useState(0);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const crownVideo = useRef<HTMLVideoElement>(null);
-  useAmbientVideo(crownVideo, Boolean(config));
+  // The portfolio-style black-hole loop belongs to the establishing shot only.
+  // Unregistering it after Home stops playback while the hidden asset stays cached.
+  useAmbientVideo(crownVideo, Boolean(config) && view === "welcome");
 
   const applyState = useCallback((state: AppState, source: Knowledge) => {
     setAppState(state);
@@ -417,7 +419,7 @@ export default function App() {
       </div>
       {/* One WebGL scene at a time: the starfield yields to the 3D anatomy viewer. */}
       {!compassOpen && <Suspense fallback={null}><SpaceScene reducedMotion={reducedMotion} astronaut={astronaut} /></Suspense>}
-      <div className="mission-atmosphere" data-mission={mission} aria-hidden="true" />
+      <div className="mission-atmosphere" data-page={view} data-mission={mission} aria-hidden="true" />
       <CursorAura />
       <AppShell
         page={page} setPage={setPage} mission={mission} connected={sensor.connected} simulated={sensor.source === "simulated"} backendReady={backendReady} disclaimer={config.disclaimer}
