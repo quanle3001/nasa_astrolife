@@ -55,7 +55,7 @@ export function MissionViewport({ mission, telemetry }: { mission: MissionId; te
 
       <figure className="viewport-frame">
         <AnimatePresence initial={false}>
-          <motion.img
+          {media.image_url && <motion.img
             key={mission}
             src={media.image_url}
             alt={`${media.title}: ${media.description}`}
@@ -66,7 +66,7 @@ export function MissionViewport({ mission, telemetry }: { mission: MissionId; te
             exit={reduced ? undefined : { opacity: 0 }}
             transition={{ duration: reduced ? 0 : 0.7, ease: [0.22, 1, 0.36, 1] }}
             draggable={false}
-          />
+          />}
         </AnimatePresence>
         <FrostBlurred side="bottom" height="38%" tint={0.6} />
         <figcaption className="viewport-caption">

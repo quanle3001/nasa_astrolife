@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { AlertTriangle, LoaderCircle, RotateCcw } from "lucide-react";
 import { AppShell, type PageId } from "@/components/app-shell";
@@ -8,6 +8,7 @@ import { HistoryPage } from "@/components/pages/history-page";
 import { SensorPage, type SensorViewState } from "@/components/pages/sensor-page";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
+import { useAmbientVideo } from "@/lib/media-playback";
 import type { AppConfig, AssessmentBundle, BackendEvent, CheckIn, MissionId } from "@/types/backend";
 
 const INITIAL_SENSOR: SensorViewState = {
@@ -43,6 +44,8 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [saving, setSaving] = useState(false);
   const [historyRefresh, setHistoryRefresh] = useState(0);
+  const crownVideo = useRef<HTMLVideoElement>(null);
+  useAmbientVideo(crownVideo, Boolean(config));
 
   const start = async () => {
     try {
@@ -105,7 +108,7 @@ export default function App() {
   return (
     <div className="relative isolate min-h-screen overflow-hidden bg-space-black">
       <div className="black-hole-crown" aria-hidden="true">
-        <video autoPlay muted loop playsInline>
+        <video ref={crownVideo} muted loop playsInline preload="auto">
           <source src="./videos/blackhole.webm" type="video/webm" />
         </video>
       </div>
