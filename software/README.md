@@ -12,6 +12,13 @@ the migration.
 
 ## Open from the Windows desktop
 
+For the primary React/Electron app, build or download the Windows installer
+as described in [Desktop installers and releases](../docs/RELEASING.md). It
+creates an **AstroLife** desktop icon and bundles Python. macOS installers and
+GitHub Actions builds are described in the same guide.
+
+The source-checkout shortcut described below launches the **legacy Qt fallback**.
+
 Double-click **Astro Life** on your desktop. The shortcut starts the app using the
 project's virtual environment without opening a command window.
 
