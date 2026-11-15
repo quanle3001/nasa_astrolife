@@ -17,6 +17,7 @@ from uuid import uuid4
 
 from PySide6.QtCore import QCoreApplication, QObject, QTimer, Signal, Slot
 
+from astrotip.analysis.assessment_plan import build_plan, build_trace, load_indicators
 from astrotip.analysis.hrr_evidence import load_hrr_evidence
 from astrotip.analysis.mission_context import load_mission_context, validate_profile
 from astrotip.analysis.nasa_guidance import load_catalog
@@ -80,6 +81,7 @@ class BridgeService(QObject):
         self.mission_context = load_mission_context(self.catalog)
         self.registry = load_registry(self.catalog)
         self.hrr_evidence = load_hrr_evidence(self.catalog)
+        self.indicators = load_indicators(self.catalog, self.registry)
         self.state = AppStateStore(self.history.path)
         # A dataset retrieved on this computer is kept next to the health history.
         self.radlab = RadLabService(self.history.path.parent / "nasa_cache" / BUNDLED_CACHE.name, fetcher=radlab_fetcher)
@@ -103,6 +105,7 @@ class BridgeService(QObject):
             "knowledge.get": self.get_knowledge,
             "mission.get": self.get_mission,
             "mission.save": self.save_mission,
+            "mission.plan": self.plan_mission,
             "session.current": self.current_session,
             "session.start": self.start_session,
             "session.save": self.save_session,
@@ -326,13 +329,21 @@ class BridgeService(QObject):
     def get_knowledge(self, _params):
         """Everything the guided flow shows that comes from curated data files."""
         return {"catalog": self.catalog, "mission_context": self.mission_context, "registry": self.registry,
-                "hrr_evidence": self.hrr_evidence}
+                "hrr_evidence": self.hrr_evidence, "indicators": self.indicators}
 
     def get_mission(self, _params):
         return {"profile": self.state.get_mission()}
 
     def save_mission(self, params):
         return {"profile": self.state.save_mission(validate_profile(params.get("profile"), self.mission_context))}
+
+    def plan_mission(self, params):
+        """NASA-informed check-in plan for a mission profile (the saved one by default)."""
+        profile = params.get("profile") or self.state.get_mission()
+        if profile is None:
+            raise ValueError("Choose a mission to see its assessment plan.")
+        return build_plan(self.catalog, self.mission_context, self.registry, self.indicators, self.hrr_evidence,
+                          validate_profile(profile, self.mission_context))
 
     def current_session(self, _params):
         """State needed at launch: resume point, last result and open actions."""
@@ -427,8 +438,10 @@ class BridgeService(QObject):
             {"condition_id": finding.condition_id, "level": finding.level, "text": action, "observation": finding.reason}
             for finding in assessment.findings if finding.level != "info" for action in finding.actions
         ]
+        trace = build_trace(self.catalog, self.mission_context, self.registry, self.indicators, self.hrr_evidence,
+                            session["mission"], answers, checkin, assessment)
         result = {"checkin": json.loads(json.dumps(asdict(checkin), default=_json_default)),
-                  "assessment": asdict(assessment), "session_notes": notes}
+                  "assessment": asdict(assessment), "session_notes": notes, "evidence_trace": trace}
         saved_actions = self.state.complete_session(session["session_id"], answers, entry_id, result, actions)
         return {"session_id": session["session_id"], "entry_id": entry_id, **result, "actions": saved_actions}
 

@@ -123,6 +123,16 @@ class BridgeTests(unittest.TestCase):
         self.assertEqual(result["checkin"]["symptoms"], ["poor_sleep"])
         self.assertNotIn("mission", result["checkin"])
         self.assertTrue(any(action["condition_id"] == "sleep" for action in result["actions"]))
+        # The result explains each prompt through the mission's NASA hazard and risk.
+        sleep_trace = next(entry for entry in result["evidence_trace"] if entry["condition_id"] == "sleep")
+        self.assertEqual(sleep_trace["hazards"][0]["title"], "Isolation and confinement")
+        self.assertEqual(sleep_trace["nasa_risks"][0]["risk_id"], 100)
+        self.assertEqual(sleep_trace["observations"][0]["answer"], "Poorly")
+        plan = self.ok("mission.plan")
+        self.assertEqual(plan["mission_title"], "Mars / Deep Space")
+        self.assertEqual(plan["hazards"][0]["id"], "radiation")
+        other = self.ok("mission.plan", {"profile": {"environment": "leo", "phase": "orbit"}})
+        self.assertNotEqual([t["domain_id"] for t in plan["topics"]], [t["domain_id"] for t in other["topics"]])
         self.assertIn("not treated as normal", " ".join(result["session_notes"]))
         self.assertFalse(self.call("session.submit", {"session_id": session["session_id"], "answers": answers})["ok"])
         done = self.ok("actions.update", {"id": result["actions"][0]["id"], "status": "done"})["action"]

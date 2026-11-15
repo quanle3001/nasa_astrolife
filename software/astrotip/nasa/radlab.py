@@ -258,9 +258,11 @@ class RadLabService:
         self.instrument_notes = load_instruments()
 
     def _package(self, dataset: dict, origin: str, error: str | None = None) -> dict:
+        from astrotip.nasa.radlab_analysis import analyze  # Local import: the analysis builds on this module.
         return {
             "available": True, "origin": origin, "error": error,
             "dataset": dataset, "summary": summarize(dataset), "instrument_notes": self.instrument_notes,
+            "analysis": analyze(dataset, self.instrument_notes),
         }
 
     def cached(self, error: str | None = None) -> dict:
@@ -272,7 +274,7 @@ class RadLabService:
             except RadLabError:
                 continue
         if not candidates:
-            return {"available": False, "origin": "none", "dataset": None, "summary": {}, "instrument_notes": self.instrument_notes,
+            return {"available": False, "origin": "none", "dataset": None, "summary": {}, "analysis": None, "instrument_notes": self.instrument_notes,
                     "error": error or "No verified NASA radiation dataset is available offline."}
         origin, dataset = max(candidates, key=lambda item: item[1]["retrieved_at"])
         return self._package(dataset, origin, error)
