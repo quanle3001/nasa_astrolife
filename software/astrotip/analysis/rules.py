@@ -7,6 +7,8 @@ from astrotip.models.health_indicator import Assessment, CheckIn, Finding, SYMPT
 
 
 LEVEL_ORDER = {"urgent": 0, "review": 1, "watch": 2, "info": 3}
+#: Version of the review rules in this module. Recorded with every finding; bump it when a rule changes.
+RULES_VERSION = "2026.11.1"
 EMERGENCY_ACTION = (
     "Contact the crew medical officer or emergency medical service now and follow the "
     "approved mission emergency procedure. Do not wait for another sensor reading or this app."

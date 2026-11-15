@@ -156,6 +156,12 @@ class AppStateStore:
                     (session_id, entry_id, action["condition_id"], action["level"], action["text"], action["observation"], now))
         return self.list_actions(session_id)
 
+    def update_result(self, session_id: str, result: dict) -> None:
+        """Replace the stored result of a submitted session (used to add action ids to its trace)."""
+        with closing(self._connect()) as connection, connection:
+            connection.execute("UPDATE assessment_sessions SET result_json = ? WHERE id = ? AND status = 'submitted'",
+                               (json.dumps(result), session_id))
+
     # --- Follow-up actions -----------------------------------------------
     @staticmethod
     def _action(row) -> dict:

@@ -24,7 +24,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from astrotip.analysis.rules import OBSERVATION_RULES
+from pydantic import ValidationError
+
+from astrotip.analysis.rules import OBSERVATION_RULES, RULES_VERSION
+from astrotip.nasa.models import HealthIndicator, MeasurementProvenance
 from astrotip.models.health_indicator import SYMPTOMS
 from astrotip.questionnaire.registry import (
     SAFETY_DOMAIN, SKIPPED, UNSURE, applicable_answers, condition_met, domain_order, visible_questions,
@@ -43,14 +46,18 @@ def load_indicators(catalog: dict, registry: dict, path: str | Path | None = Non
     if data.get("schema_version") != 1:
         raise ValueError("Unsupported health indicator list.")
     seen = set()
-    for indicator in data["indicators"]:
-        if indicator["id"] in seen or indicator["source"] not in {"sensor", "question"}:
-            raise ValueError("Health indicators need unique ids and a known source.")
-        if not indicator["condition_ids"] or not set(indicator["condition_ids"]) <= conditions:
-            raise ValueError(f"Indicator {indicator['id']} must relate to NASA catalog risks.")
-        if not set(indicator.get("question_ids", [])) <= questions or not indicator.get("why", "").strip():
-            raise ValueError(f"Indicator {indicator['id']} has an unknown question or no rationale.")
-        seen.add(indicator["id"])
+    for raw in data["indicators"]:
+        try:
+            indicator = HealthIndicator.model_validate(raw)
+        except ValidationError as exc:
+            raise ValueError(f"Invalid health indicator: {exc.errors()[0]['msg']}") from exc
+        if indicator.id in seen:
+            raise ValueError("Health indicators need unique ids.")
+        if not set(indicator.condition_ids) <= conditions:
+            raise ValueError(f"Indicator {indicator.id} must relate to NASA catalog risks.")
+        if not set(indicator.question_ids) <= questions:
+            raise ValueError(f"Indicator {indicator.id} refers to an unknown question.")
+        seen.add(indicator.id)
     return data
 
 
@@ -170,9 +177,14 @@ def build_trace(catalog: dict, mission_context: dict, registry: dict, indicators
                 targets.add(OBSERVATION_RULES[symptom][0])
         if mapping.get("field") in FIELD_CONDITIONS and value not in {UNSURE, SKIPPED}:
             targets.update(FIELD_CONDITIONS[mapping["field"]])
+        rule_ids = [f"observation:{symptom}" for symptom in mapping.get("symptoms", {}).get(value, ())]
+        if mapping.get("field") in FIELD_CONDITIONS and value not in {UNSURE, SKIPPED}:
+            rule_ids.append(f"field:{mapping['field']}")
         for condition_id in targets:
             by_condition.setdefault(condition_id, []).append({
-                "kind": "answer", "question_id": question["id"], "question": question["text"], "answer": _answer_label(question, value),
+                "kind": "answer", "observation_id": f"answer:{question['id']}",
+                "question_id": question["id"], "question": question["text"],
+                "answer_id": value, "answer": _answer_label(question, value), "rule_ids": rule_ids,
             })
     for indicator in indicators["indicators"]:
         if indicator["source"] != "sensor":
@@ -180,11 +192,14 @@ def build_trace(catalog: dict, mission_context: dict, registry: dict, indicators
         value = getattr(checkin, indicator["checkin_field"])
         if value is None:
             continue
+        provenance = MeasurementProvenance(
+            observation_id=f"measurement:{indicator['id']}@{checkin.sensor_received_at or 'manual-entry'}",
+            indicator_id=indicator["id"], label=indicator["label"], value=value, unit=indicator["unit"],
+            source=checkin.input_source, sensor_port=checkin.sensor_port, measured_at=checkin.sensor_received_at,
+            signal_quality=checkin.signal_quality,
+        ).model_dump()
         for condition_id in indicator["condition_ids"]:
-            by_condition.setdefault(condition_id, []).append({
-                "kind": "measurement", "indicator_id": indicator["id"], "label": indicator["label"],
-                "value": value, "unit": indicator["unit"], "source": checkin.input_source,
-            })
+            by_condition.setdefault(condition_id, []).append({"kind": "measurement", **provenance, "rule_ids": [f"measurement:{indicator['id']}"]})
 
     trace = []
     for finding in assessment.findings:
@@ -192,6 +207,7 @@ def build_trace(catalog: dict, mission_context: dict, registry: dict, indicators
             continue
         condition = conditions[finding.condition_id]
         hazards = sorted(condition["hazard_ids"], key=hazard_order.index)
+        observations = by_condition.get(finding.condition_id, [])
         trace.append({
             "condition_id": finding.condition_id, "condition_title": condition["title"], "level": finding.level,
             "mission_title": mission["title"],
@@ -200,8 +216,23 @@ def build_trace(catalog: dict, mission_context: dict, registry: dict, indicators
             "nasa_risks": [{"risk_id": report["risk_id"], "risk_title": report["risk_title"], "risk_url": report["risk_url"],
                             "report_title": report["report_title"], "report_url": report["report_url"]}
                            for report in hrr["conditions"][finding.condition_id]],
-            "observations": by_condition.get(finding.condition_id, []),
+            "observations": observations,
             "rule_reason": finding.reason,
             "actions": list(finding.actions),
+            # Identifiers that make the finding auditable end to end.
+            "traceability": {
+                "nasa_source_ids": list(finding.source_ids),
+                "nasa_risk_ids": [report["risk_id"] for report in hrr["conditions"][finding.condition_id]],
+                "question_ids": [item["question_id"] for item in observations if item["kind"] == "answer"],
+                "observation_ids": [item["observation_id"] for item in observations],
+                "rule_ids": sorted({rule for item in observations for rule in item["rule_ids"]}),
+                "rules_engine": "astrotip.analysis.rules.assess",
+                "rules_version": RULES_VERSION,
+                "catalog_reviewed_on": catalog["reviewed_on"],
+                "question_registry_version": registry["version"],
+                "evidence_reviewed_on": hrr["reviewed_on"],
+                # Filled in once the follow-up actions have been stored.
+                "action_ids": [],
+            },
         })
     return trace

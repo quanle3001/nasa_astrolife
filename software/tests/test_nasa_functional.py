@@ -127,8 +127,10 @@ class EvidenceTraceTests(Base):
         self.assertEqual(entry["nasa_risks"][0]["risk_id"], 100)
         self.assertTrue(entry["nasa_risks"][0]["report_url"].endswith("Sleep.pdf"))
         self.assertEqual(entry["observations"], [
-            {"kind": "answer", "question_id": "sleep.quality", "question": "How well have you been sleeping?", "answer": "Poorly"},
-            {"kind": "answer", "question_id": "sleep.hours", "question": "About how many hours did you sleep in the last 24 hours?", "answer": "4.5 hours"},
+            {"kind": "answer", "observation_id": "answer:sleep.quality", "question_id": "sleep.quality", "question": "How well have you been sleeping?",
+             "answer_id": "poorly", "answer": "Poorly", "rule_ids": ["observation:poor_sleep"]},
+            {"kind": "answer", "observation_id": "answer:sleep.hours", "question_id": "sleep.hours", "question": "About how many hours did you sleep in the last 24 hours?",
+             "answer_id": 4.5, "answer": "4.5 hours", "rule_ids": ["field:sleep_hours"]},
         ])
         self.assertIn("4.5 hours", entry["rule_reason"])
         self.assertTrue(entry["actions"], "The prompt created at least one follow-up action")
@@ -149,13 +151,35 @@ class EvidenceTraceTests(Base):
         self.assertNotEqual(leo["mission_title"], mars["mission_title"])
 
     def test_sensor_measurements_are_traced_to_their_nasa_risk_with_their_source(self):
-        measurement = {"heart_rate": 72, "spo2": 91, "input_source": "sensor", "sensor_port": "COM7"}
+        measurement = {"heart_rate": 72, "spo2": 91, "input_source": "sensor", "sensor_port": "COM7", "sensor_received_at": "2026-11-15T08:00:00+00:00"}
         entries = {e["condition_id"]: e for e in self.trace(self.profile(), dict(self.safety_no), measurement)}
-        self.assertEqual(entries["hypoxia"]["observations"], [{"kind": "measurement", "indicator_id": "spo2", "label": "Estimated blood oxygen (SpO2)", "value": 91, "unit": "%", "source": "sensor"}])
+        self.assertEqual(entries["hypoxia"]["observations"], [{
+            "kind": "measurement", "observation_id": "measurement:spo2@2026-11-15T08:00:00+00:00", "indicator_id": "spo2",
+            "label": "Estimated blood oxygen (SpO2)", "value": 91.0, "unit": "%", "source": "sensor", "sensor_port": "COM7",
+            "measured_at": "2026-11-15T08:00:00+00:00", "signal_quality": "unknown", "rule_ids": ["measurement:spo2"]}])
         self.assertEqual(entries["hypoxia"]["nasa_risks"][0]["risk_id"], 173)
         self.assertEqual(entries["cardiovascular"]["observations"][0]["indicator_id"], "heart_rate")
         simulated = self.trace(self.profile(), dict(self.safety_no), {**measurement, "input_source": "simulated"})
         self.assertTrue(all(o["source"] == "simulated" for e in simulated for o in e["observations"]))
+
+    def test_every_finding_carries_the_identifiers_needed_to_audit_it(self):
+        from astrotip.analysis.rules import RULES_VERSION
+        profile = self.profile(environment="mars", phase="transit")
+        answers = {**self.safety_no, "sleep.quality": "poorly", "sleep.hours": 4.5}
+        entries = {e["condition_id"]: e for e in self.trace(profile, answers, {"heart_rate": 72, "spo2": 98, "input_source": "sensor", "sensor_port": "COM7", "sensor_received_at": "2026-11-15T08:00:00+00:00"})}
+        sleep = entries["sleep"]["traceability"]
+        self.assertEqual(sleep["nasa_risk_ids"], [100])
+        self.assertIn("sleep", sleep["nasa_source_ids"])
+        self.assertEqual(sleep["question_ids"], ["sleep.quality", "sleep.hours"])
+        self.assertEqual(sleep["observation_ids"], ["answer:sleep.quality", "answer:sleep.hours"])
+        self.assertEqual(sleep["rule_ids"], ["field:sleep_hours", "observation:poor_sleep"])
+        self.assertEqual((sleep["rules_engine"], sleep["rules_version"]), ("astrotip.analysis.rules.assess", RULES_VERSION))
+        self.assertEqual(sleep["question_registry_version"], self.registry["version"])
+        self.assertEqual(sleep["catalog_reviewed_on"], self.catalog["reviewed_on"])
+        heart = entries["cardiovascular"]["traceability"]
+        self.assertEqual(heart["observation_ids"], ["measurement:heart_rate@2026-11-15T08:00:00+00:00"])
+        self.assertEqual(heart["rule_ids"], ["measurement:heart_rate"])
+        self.assertEqual(heart["question_ids"], [])
 
     def test_unsure_and_skipped_answers_never_appear_as_observations(self):
         entries = self.trace(self.profile(), {**self.safety_no, "sleep.quality": "unsure", "heart.palpitations": "skipped", "strength.exercise": "not_scheduled"})
@@ -163,7 +187,7 @@ class EvidenceTraceTests(Base):
 
     def test_an_urgent_report_is_traced_without_any_measurement(self):
         entry, = [e for e in self.trace(self.profile(environment="lunar", phase="surface"), {**self.safety_no, "safety.chest_pain": "yes"}) if e["level"] == "urgent"]
-        self.assertEqual(entry["observations"], [{"kind": "answer", "question_id": "safety.chest_pain", "question": "Chest pain or tightness", "answer": "Yes"}])
+        self.assertEqual([(o["question_id"], o["answer"], o["rule_ids"]) for o in entry["observations"]], [("safety.chest_pain", "Yes", ["observation:chest_pain"])])
         self.assertIn("emergency", entry["actions"][0].lower())
 
 
@@ -244,6 +268,21 @@ class RadiationAnalysisTests(unittest.TestCase):
         self.assertEqual(missing["instruments"], [])
         self.assertIn("no mission-specific radiation data is shown", missing["explanation"])
 
+    def test_analysis_records_what_is_needed_to_reproduce_it(self):
+        import numpy, pandas
+        from astrotip.nasa.radlab_analysis import ALGORITHM_VERSION
+        dataset = radlab.load_cache(radlab.BUNDLED_CACHE)
+        provenance = analyze(dataset, radlab.load_instruments())["provenance"]
+        self.assertEqual(provenance["algorithm_version"], ALGORITHM_VERSION)
+        self.assertEqual(provenance["libraries"], {"pandas": pandas.__version__, "numpy": numpy.__version__})
+        self.assertEqual(provenance["dataset_request_url"], dataset["request_url"])
+        self.assertEqual(provenance["dataset_retrieved_at"], dataset["retrieved_at"])
+        self.assertEqual(provenance["dataset_sha256"], dataset["data_sha256"])
+        self.assertEqual(provenance["instruments"], list(dataset["instruments"]))
+        self.assertIsNone(provenance["unit"])
+        self.assertEqual(provenance["pipeline_version"], radlab.PIPELINE_VERSION)
+        self.assertTrue(provenance["transformation_steps"])
+
     def test_service_output_carries_the_analysis(self):
         from tempfile import TemporaryDirectory
         with TemporaryDirectory() as folder:
@@ -254,3 +293,32 @@ class RadiationAnalysisTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class HistoryTrendTests(unittest.TestCase):
+    @staticmethod
+    def entry(entry_id, heart_rate=None, spo2=None, source="sensor"):
+        return {"id": entry_id, "created_at": f"2026-11-{10 + entry_id:02d}T08:00:00+00:00",
+                "checkin": {"heart_rate": heart_rate, "spo2": spo2, "input_source": source}, "assessment": {}}
+
+    def test_saved_measurements_are_summarised_and_simulated_entries_excluded(self):
+        from astrotip.analysis.history_trends import ALGORITHM_VERSION, summarize_history
+        entries = [self.entry(4, 80, 97), self.entry(3, 999, 50, source="simulated"), self.entry(2, 70, None, source="manual"), self.entry(1, 60, 99)]
+        summary = summarize_history(entries)
+        self.assertEqual((summary["algorithm_version"], summary["entries_considered"], summary["simulated_excluded"]), (ALGORITHM_VERSION, 3, 1))
+        heart = summary["indicators"]["heart_rate"]
+        self.assertEqual((heart["count"], heart["mean"], heart["minimum"], heart["maximum"]), (3, 70.0, 60.0, 80.0))
+        self.assertEqual((heart["latest"], heart["previous"], heart["change_from_previous"]), (80.0, 70.0, 10.0))
+        self.assertEqual([point["entry_id"] for point in heart["points"]], [1, 2, 4])
+        self.assertEqual(heart["points"][1]["source"], "manual")
+        oxygen = summary["indicators"]["spo2"]
+        self.assertEqual((oxygen["count"], oxygen["latest"], oxygen["change_from_previous"]), (2, 97.0, -2.0))
+        self.assertIn("does not interpret a change", summary["limits"])
+
+    def test_no_saved_measurement_gives_counts_of_zero_and_no_statistics(self):
+        from astrotip.analysis.history_trends import summarize_history
+        for entries in ([], [self.entry(1)], [self.entry(1, 72, 98, source="simulated")]):
+            summary = summarize_history(entries)
+            self.assertEqual(summary["indicators"]["heart_rate"]["count"], 0)
+            self.assertNotIn("mean", summary["indicators"]["heart_rate"])
+            self.assertEqual(summary["indicators"]["spo2"]["points"], [])

@@ -1,4 +1,4 @@
-"""Descriptive analysis of a verified RadLab dataset.
+"""Descriptive analysis of a verified RadLab dataset, with pandas and NumPy.
 
 Everything here is computed from the retrieved readings: central values and
 spread, how regularly each instrument reported, where readings are missing,
@@ -11,10 +11,13 @@ shielding and method differ.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
-import math
-from statistics import fmean, median, pstdev
+from datetime import datetime
 
+import numpy as np
+import pandas as pd
+
+#: Version of the analysis below; recorded with every result so it can be reproduced.
+ALGORITHM_VERSION = "radlab-descriptive-1.1"
 #: A pause this many times longer than the instrument's usual interval counts as a gap.
 GAP_FACTOR = 3.0
 #: A reading this many times above the instrument's own median counts as an excursion.
@@ -22,88 +25,77 @@ EXCURSION_FACTOR = 3.0
 MAX_LISTED = 5
 
 
-def _percentile(ordered: list[float], fraction: float) -> float:
-    """Linear-interpolated percentile of an already sorted list."""
-    if len(ordered) == 1:
-        return ordered[0]
-    position = (len(ordered) - 1) * fraction
-    lower = math.floor(position)
-    upper = min(lower + 1, len(ordered) - 1)
-    return ordered[lower] + (ordered[upper] - ordered[lower]) * (position - lower)
-
-
 def _minutes(seconds: float) -> float:
-    return round(seconds / 60, 1)
+    return round(float(seconds) / 60, 1)
+
+
+def _iso(moment) -> str:
+    return pd.Timestamp(moment).isoformat()
 
 
 def analyze_series(timestamps: list[str], values: list[float], window_start: str, window_end: str) -> dict:
-    """Statistics, cadence, gaps, irregular readings and hourly change for one instrument."""
-    moments = [datetime.fromisoformat(timestamp).replace(tzinfo=None) for timestamp in timestamps]
-    start = datetime.strptime(window_start, "%Y-%m-%d")
-    end = datetime.strptime(window_end, "%Y-%m-%d")
-    ordered = sorted(values)
-    typical = median(ordered)
-    intervals = [(later - earlier).total_seconds() for earlier, later in zip(moments, moments[1:])]
-    cadence = median(intervals) if intervals else None
+    """Statistics, cadence, gaps, irregular readings and hourly change for one instrument.
+
+    Computed with pandas and NumPy on the published values. The standard
+    deviation is the population value (ddof=0) and the 95th percentile uses
+    linear interpolation, NumPy's default.
+    """
+    start = pd.Timestamp(datetime.strptime(window_start, "%Y-%m-%d"))
+    end = pd.Timestamp(datetime.strptime(window_end, "%Y-%m-%d"))
+    moments = pd.to_datetime(pd.Series(timestamps)).dt.tz_localize(None)
+    series = pd.Series(np.asarray(values, dtype=float), index=pd.DatetimeIndex(moments))
+    typical = float(series.median())
+    intervals = series.index.to_series().diff().dt.total_seconds().dropna()
+    cadence = float(intervals.median()) if len(intervals) else None
 
     gaps = []
     if cadence:
-        threshold = cadence * GAP_FACTOR
         # The stretch before the first and after the last reading is checked like any other pause.
-        edges = [start, *moments, end]
-        for earlier, later in zip(edges, edges[1:]):
-            seconds = (later - earlier).total_seconds()
-            if seconds > threshold:
-                gaps.append({"start": earlier.isoformat(), "end": later.isoformat(), "minutes": _minutes(seconds)})
+        edges = pd.DatetimeIndex([start, *series.index, end])
+        pauses = pd.Series(edges[1:] - edges[:-1]).dt.total_seconds()
+        for position in np.flatnonzero(pauses.to_numpy() > cadence * GAP_FACTOR):
+            gaps.append({"start": _iso(edges[position]), "end": _iso(edges[position + 1]), "minutes": _minutes(pauses.iloc[position])})
     expected = round((end - start).total_seconds() / cadence) if cadence else None
 
     excursion_limit = typical * EXCURSION_FACTOR
-    episodes, current = [], None
-    for moment, value in zip(moments, values):
-        if typical > 0 and value > excursion_limit:
-            if current is None:
-                current = {"start": moment.isoformat(), "end": moment.isoformat(), "readings": 0, "peak": value, "peak_at": moment.isoformat()}
-                episodes.append(current)
-            current["end"] = moment.isoformat()
-            current["readings"] += 1
-            if value > current["peak"]:
-                current["peak"], current["peak_at"] = value, moment.isoformat()
-        else:
-            current = None
+    above = (series > excursion_limit) & (typical > 0)
+    # Consecutive readings above the limit form one episode.
+    episode_id = (above != above.shift(fill_value=False)).cumsum()[above]
+    episodes = []
+    for _number_, block in series[above].groupby(episode_id):
+        episodes.append({"start": _iso(block.index[0]), "end": _iso(block.index[-1]), "readings": int(len(block)),
+                         "peak": float(block.max()), "peak_at": _iso(block.idxmax())})
 
-    buckets: list[list[float]] = [[] for _ in range(24)]
-    for moment, value in zip(moments, values):
-        buckets[min(23, int((moment - start).total_seconds() // 3600))].append(value)
-    hourly_mean = [fmean(bucket) if bucket else None for bucket in buckets]
-    filled = [(hour, value) for hour, value in enumerate(hourly_mean) if value is not None]
-    half = (end - start) / 2
-    first = [value for moment, value in zip(moments, values) if moment - start < half]
-    second = [value for moment, value in zip(moments, values) if moment - start >= half]
+    hour = np.minimum(23, ((series.index - start).total_seconds() // 3600).astype(int))
+    by_hour = series.groupby(hour).mean()
+    hourly_mean = [float(by_hour[index]) if index in by_hour.index else None for index in range(24)]
+    filled = by_hour.dropna()
+    middle = start + (end - start) / 2
+    first, second = series[series.index < middle], series[series.index >= middle]
 
-    peak_index = max(range(len(values)), key=values.__getitem__)
     return {
-        "count": len(values),
-        "mean": fmean(values), "median": typical, "minimum": ordered[0], "maximum": ordered[-1],
-        "standard_deviation": pstdev(values) if len(values) > 1 else 0.0,
-        "percentile_95": _percentile(ordered, 0.95),
-        "maximum_at": timestamps[peak_index],
+        "count": int(series.size),
+        "mean": float(series.mean()), "median": typical, "minimum": float(series.min()), "maximum": float(series.max()),
+        "standard_deviation": float(series.std(ddof=0)) if series.size > 1 else 0.0,
+        "percentile_95": float(np.percentile(series.to_numpy(), 95)),
+        "maximum_at": timestamps[int(np.argmax(series.to_numpy()))],
         "first_timestamp": timestamps[0], "last_timestamp": timestamps[-1],
         "cadence_minutes": _minutes(cadence) if cadence else None,
         "expected_count": expected,
-        "coverage_percent": round(min(100.0, 100 * len(values) / expected), 1) if expected else None,
+        "coverage_percent": round(min(100.0, 100 * series.size / expected), 1) if expected else None,
         "gap_count": len(gaps), "gaps": sorted(gaps, key=lambda gap: -gap["minutes"])[:MAX_LISTED],
         "longest_gap_minutes": max((gap["minutes"] for gap in gaps), default=0.0),
-        "zero_count": sum(1 for value in values if value == 0),
+        "zero_count": int((series == 0).sum()),
         "excursion_threshold": excursion_limit,
-        "excursion_count": sum(episode["readings"] for episode in episodes),
+        "excursion_count": int(above.sum()),
         "excursion_episodes": len(episodes),
         "excursions": sorted(episodes, key=lambda episode: -episode["peak"])[:MAX_LISTED],
         "hourly_mean": hourly_mean,
-        "hours_without_data": [hour for hour, value in enumerate(hourly_mean) if value is None],
-        "highest_hour": max(filled, key=lambda item: item[1])[0] if filled else None,
-        "lowest_hour": min(filled, key=lambda item: item[1])[0] if filled else None,
-        "first_half_mean": fmean(first) if first else None,
-        "second_half_mean": fmean(second) if second else None,
+        "hours_without_data": [index for index, value in enumerate(hourly_mean) if value is None],
+        "highest_hour": int(filled.idxmax()) if len(filled) else None,
+        "lowest_hour": int(filled.idxmin()) if len(filled) else None,
+        "first_half_mean": float(first.mean()) if len(first) else None,
+        "second_half_mean": float(second.mean()) if len(second) else None,
     }
 
 
@@ -152,6 +144,19 @@ def analyze(dataset: dict, instrument_notes: dict) -> dict:
     by_environment = {environment: [name for name, stats in instruments.items() if stats["environment"] == environment]
                       for environment in ("leo", "lunar", "mars")}
     return {
+        # What is needed to reproduce and audit this analysis.
+        "provenance": {
+            "algorithm_version": ALGORITHM_VERSION,
+            "libraries": {"pandas": pd.__version__, "numpy": np.__version__},
+            "dataset_request_url": dataset["request_url"],
+            "dataset_retrieved_at": dataset["retrieved_at"],
+            "dataset_sha256": dataset["data_sha256"],
+            "measurement": dataset["measurement"],
+            "unit": dataset.get("unit"),
+            "instruments": list(dataset["instruments"]),
+            "pipeline_version": dataset.get("pipeline_version"),
+            "transformation_steps": dataset.get("transformation_steps", []),
+        },
         "method": {
             "gap_rule": f"A pause longer than {GAP_FACTOR:g} times the instrument's median interval.",
             "excursion_rule": f"A reading more than {EXCURSION_FACTOR:g} times the instrument's own median.",

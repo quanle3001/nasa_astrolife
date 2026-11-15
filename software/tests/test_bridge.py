@@ -128,6 +128,15 @@ class BridgeTests(unittest.TestCase):
         self.assertEqual(sleep_trace["hazards"][0]["title"], "Isolation and confinement")
         self.assertEqual(sleep_trace["nasa_risks"][0]["risk_id"], 100)
         self.assertEqual(sleep_trace["observations"][0]["answer"], "Poorly")
+        # Stored action ids, the history entry and the session tie the trace to what was saved.
+        tracing = sleep_trace["traceability"]
+        self.assertEqual(tracing["action_ids"], sorted(a["id"] for a in result["actions"] if a["condition_id"] == "sleep"))
+        self.assertTrue(tracing["action_ids"])
+        self.assertEqual((tracing["history_entry_id"], tracing["session_id"]), (result["entry_id"], session["session_id"]))
+        self.assertEqual(self.ok("session.current")["latest"]["result"]["evidence_trace"][0]["traceability"]["session_id"], session["session_id"])
+        trends = self.ok("history.trends")
+        self.assertEqual(trends["indicators"]["spo2"]["latest"], 91.0)
+        self.assertEqual(trends["indicators"]["spo2"]["points"][0]["source"], "manual")
         plan = self.ok("mission.plan")
         self.assertEqual(plan["mission_title"], "Mars / Deep Space")
         self.assertEqual(plan["hazards"][0]["id"], "radiation")

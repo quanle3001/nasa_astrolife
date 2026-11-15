@@ -18,6 +18,7 @@ from uuid import uuid4
 from PySide6.QtCore import QCoreApplication, QObject, QTimer, Signal, Slot
 
 from astrotip.analysis.assessment_plan import build_plan, build_trace, load_indicators
+from astrotip.analysis.history_trends import summarize_history
 from astrotip.analysis.hrr_evidence import load_hrr_evidence
 from astrotip.analysis.mission_context import load_mission_context, validate_profile
 from astrotip.analysis.nasa_guidance import load_catalog
@@ -102,6 +103,7 @@ class BridgeService(QObject):
             "health.assess": self.create_assessment,
             "health.save": self.save_assessment,
             "history.list": self.list_history,
+            "history.trends": self.history_trends,
             "knowledge.get": self.get_knowledge,
             "mission.get": self.get_mission,
             "mission.save": self.save_mission,
@@ -325,6 +327,10 @@ class BridgeService(QObject):
     def list_history(self, _params):
         return {"entries": self.history.list_entries()}
 
+    def history_trends(self, _params):
+        """Descriptive summary of the saved measurements (pandas); simulated entries excluded."""
+        return summarize_history(self.history.list_entries())
+
     # --- Guided flow: knowledge, mission, sessions, actions ----------------
     def get_knowledge(self, _params):
         """Everything the guided flow shows that comes from curated data files."""
@@ -443,6 +449,12 @@ class BridgeService(QObject):
         result = {"checkin": json.loads(json.dumps(asdict(checkin), default=_json_default)),
                   "assessment": asdict(assessment), "session_notes": notes, "evidence_trace": trace}
         saved_actions = self.state.complete_session(session["session_id"], answers, entry_id, result, actions)
+        # Now that the actions exist, record their identifiers in the trace of the finding that created them.
+        for entry in trace:
+            entry["traceability"]["action_ids"] = sorted(action["id"] for action in saved_actions if action["condition_id"] == entry["condition_id"])
+            entry["traceability"]["history_entry_id"] = entry_id
+            entry["traceability"]["session_id"] = session["session_id"]
+        self.state.update_result(session["session_id"], result)
         return {"session_id": session["session_id"], "entry_id": entry_id, **result, "actions": saved_actions}
 
     def get_radlab(self, params):

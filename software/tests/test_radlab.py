@@ -78,12 +78,33 @@ class ParseTests(unittest.TestCase):
             with self.subTest(case=name), self.assertRaises(RadLabError):
                 radlab.parse(text)
 
+    def test_cleaning_removes_only_exact_duplicates_and_changes_no_value(self):
+        text = HEADER + '"2023-01-01T00:01:18","DosTel1",2.5\n' * 3 + '"2023-01-01T00:02:58","DosTel1",2.5\n"2023-01-01T00:04:00","DosTel1",0\n'
+        instruments, steps = radlab.clean(radlab.read_rows(text))
+        self.assertEqual(instruments["DosTel1"], {"timestamps": ["2023-01-01T00:01:18", "2023-01-01T00:02:58", "2023-01-01T00:04:00"], "values": [2.5, 2.5, 0.0]})
+        self.assertIn("Removed 2 exact duplicate row(s).", steps)
+        self.assertIn("Validated 5 rows", steps[0])
+
+    def test_rows_are_validated_by_the_reading_model(self):
+        from astrotip.nasa.models import RadLabReading
+        from pydantic import ValidationError
+        reading = RadLabReading(timestamp="2023-01-01T00:01:18", instrument_id="DosTel1", value="2.65")
+        self.assertEqual(reading.value, 2.65)
+        for bad in ({"timestamp": "soon", "instrument_id": "X", "value": 1}, {"timestamp": "2023-01-01T00:00:00", "instrument_id": "", "value": 1},
+                    {"timestamp": "2023-01-01T00:00:00", "instrument_id": "X", "value": float("inf")}, {"timestamp": "2023-01-01T00:00:00", "instrument_id": "X", "value": -0.1},
+                    {"timestamp": "2023-01-01T00:00:00", "instrument_id": "X", "value": 1, "unit": "guessed"}):
+            with self.subTest(bad=bad), self.assertRaises(ValidationError):
+                RadLabReading(**bad)
+
     def test_dataset_records_provenance_and_does_not_claim_a_unit(self):
         dataset = radlab.build_dataset(GOOD, retrieved_at="2026-11-15T08:00:00+00:00")
         self.assertEqual(dataset["request_url"], radlab.request_url())
         self.assertEqual((dataset["window_start"], dataset["window_end"], dataset["row_count"]), ("2023-01-01", "2023-01-02", 3))
         self.assertEqual(dataset["retrieved_at"], "2026-11-15T08:00:00+00:00")
         self.assertEqual(len(dataset["response_sha256"]), 64)
+        self.assertEqual(dataset["pipeline_version"], radlab.PIPELINE_VERSION)
+        self.assertEqual(dataset["transformation_steps"][0], "Validated 3 rows from the API response with the RadLabReading model.")
+        self.assertIn("nothing was filled in, rounded or dropped as an outlier", dataset["transformation_steps"][-1])
         self.assertIsNone(dataset["unit"])
         self.assertIn("unit is not stated", dataset["unit_note"])
         self.assertIn("Not your radiation exposure", " ".join(dataset["limitations"]))
@@ -118,7 +139,9 @@ class CacheTests(unittest.TestCase):
         damaged(lambda d: d["instruments"]["DosTel1"]["timestamps"].pop())
         damaged(lambda d: d.update(row_count=7))
         damaged(lambda d: d.pop("retrieved_at"))
-        damaged(lambda d: d.update(schema_version=2))
+        damaged(lambda d: d.update(schema_version=1))
+        damaged(lambda d: d.update(unexpected_field=True))
+        damaged(lambda d: d["instruments"]["DosTel1"]["values"].__setitem__(0, -1.0))
         self.path.write_text("{not json", encoding="utf-8")
         with self.assertRaises(RadLabError):
             radlab.load_cache(self.path)

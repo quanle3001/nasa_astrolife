@@ -3,9 +3,17 @@
 API: https://visualization.osdr.nasa.gov/radlab/api/
 Documentation (GUI): https://visualization.osdr.nasa.gov/radlab/gui/data-api/
 
-The service requests one bounded window of one measurement, validates every
-row, keeps the original timestamps and instrument ids, and stores the result
-with its provenance so the app can show it offline.
+Pipeline: Retrieve -> Validate -> Clean -> Analyze -> Store -> Explain.
+
+  Retrieve  one bounded window of one measurement (`fetch`)
+  Validate  every row with the Pydantic model `RadLabReading` (`parse`)
+  Clean     with pandas: drop exact duplicate rows, order by instrument and
+            time; values are never altered (`clean`)
+  Analyze   descriptive statistics with pandas and NumPy (`radlab_analysis`)
+  Store     verified cache with provenance and checksums (`write_cache`)
+  Explain   plain statements of what was found, plus limits (`radlab_analysis.describe`)
+
+Original timestamps and instrument ids are preserved throughout.
 
 What this data is: dose-rate readings from instruments on past and current
 missions (space station, lunar orbit, Mars orbit, Mars surface).
@@ -32,6 +40,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+import pandas as pd
+from pydantic import TypeAdapter, ValidationError
+
+from astrotip.nasa.models import RadLabDataset, RadLabReading
+
 API_URL = "https://visualization.osdr.nasa.gov/radlab/api/"
 DOCS_URL = "https://visualization.osdr.nasa.gov/radlab/gui/data-api/"
 MEASUREMENT = "absorbed_dose_rate"
@@ -45,7 +58,10 @@ EXPECTED_HEADER = ["timestamp", "instrument_id", MEASUREMENT]
 MAX_ROWS = 50_000
 MAX_BYTES = 8_000_000
 TIMEOUT_SECONDS = 15
-CACHE_SCHEMA = 1
+CACHE_SCHEMA = 2
+#: Version of the retrieve-validate-clean steps; bump when they change.
+PIPELINE_VERSION = "radlab-pipeline-1.1"
+_READINGS = TypeAdapter(list[RadLabReading])
 USER_AGENT = "AstroLife-educational-prototype/0.2 (NASA Space Apps 2026)"
 
 RESOURCES = Path(__file__).resolve().parents[2] / "resources"
@@ -91,12 +107,12 @@ def fetch(opener=urllib.request.urlopen) -> str:
         raise RadLabError("NASA RadLab returned text that is not UTF-8.") from exc
 
 
-def parse(text: str) -> dict[str, dict[str, list]]:
-    """Validate the CSV and group it by instrument.
+def read_rows(text: str) -> list[RadLabReading]:
+    """Validate the CSV response into typed readings.
 
-    Every row must have a timestamp inside the requested window, a non-empty
-    instrument id and a finite, non-negative value. One bad row rejects the
-    whole response: a partly trusted dataset is not shown as NASA data.
+    Every row must have a readable timestamp inside the requested window, a
+    non-empty instrument id and a finite, non-negative value. One bad row
+    rejects the whole response: a partly trusted dataset is not shown as NASA data.
     """
     reader = csv.reader(io.StringIO(text))
     try:
@@ -105,40 +121,62 @@ def parse(text: str) -> dict[str, dict[str, list]]:
         raise RadLabError("NASA RadLab returned an empty response.") from exc
     if [name.strip() for name in header] != EXPECTED_HEADER:
         raise RadLabError("NASA RadLab returned unexpected columns; the response was not used.")
-    start, end = (datetime.strptime(day, "%Y-%m-%d") for day in window())
-    instruments: dict[str, dict[str, list]] = {}
-    count = 0
+    raw = []
     for row in reader:
         if not row:
             continue
-        count += 1
-        if count > MAX_ROWS:
+        if len(raw) >= MAX_ROWS:
             raise RadLabError("NASA RadLab returned more rows than the bounded request allows.")
         if len(row) != 3:
-            raise RadLabError(f"Row {count} does not have three values.")
-        timestamp, instrument, raw = (value.strip() for value in row)
-        try:
-            moment = datetime.fromisoformat(timestamp)
-            value = float(raw)
-        except ValueError as exc:
-            raise RadLabError(f"Row {count} has an unreadable timestamp or value.") from exc
-        if moment.tzinfo is not None:
-            moment = moment.astimezone(timezone.utc).replace(tzinfo=None)
-        if not start <= moment < end:
-            raise RadLabError(f"Row {count} is outside the requested time window.")
-        if not instrument or len(instrument) > 80:
-            raise RadLabError(f"Row {count} has no valid instrument id.")
-        if not math.isfinite(value) or value < 0:
-            raise RadLabError(f"Row {count} has a value that is not a finite, non-negative number.")
-        series = instruments.setdefault(instrument, {"timestamps": [], "values": []})
-        series["timestamps"].append(timestamp)  # Original text, exactly as published.
-        series["values"].append(value)
-    if not instruments:
+            raise RadLabError(f"Row {len(raw) + 1} does not have three values.")
+        raw.append({"timestamp": row[0].strip(), "instrument_id": row[1].strip(), "value": row[2].strip()})
+    try:
+        readings = _READINGS.validate_python(raw)
+    except ValidationError as exc:
+        first = exc.errors()[0]
+        raise RadLabError(f"Row {first['loc'][0] + 1} failed validation ({first['loc'][-1]}): {first['msg']}.") from exc
+    if not readings:
         raise RadLabError("NASA RadLab returned no measurements for the requested window.")
-    for instrument, series in instruments.items():
-        if series["timestamps"] != sorted(series["timestamps"]):
+    start, end = (datetime.strptime(day, "%Y-%m-%d") for day in window())
+    for number, reading in enumerate(readings, start=1):
+        if not start <= reading.moment < end:
+            raise RadLabError(f"Row {number} is outside the requested time window.")
+    return readings
+
+
+def clean(readings: list[RadLabReading]) -> tuple[dict[str, dict[str, list]], list[str]]:
+    """Order the readings and remove exact duplicates with pandas.
+
+    Returns the per-instrument series and the list of steps taken. No value,
+    timestamp or instrument id is changed, rounded, filled in or removed for
+    being unusual; irregular readings are reported by the analysis instead.
+    """
+    frame = pd.DataFrame({
+        "timestamp": [reading.timestamp for reading in readings],
+        "instrument_id": [reading.instrument_id for reading in readings],
+        "value": [reading.value for reading in readings],
+        "moment": pd.to_datetime([reading.moment for reading in readings]),
+    })
+    steps = [f"Validated {len(frame)} rows from the API response with the RadLabReading model."]
+    deduplicated = frame.drop_duplicates(subset=["timestamp", "instrument_id", "value"])
+    removed = len(frame) - len(deduplicated)
+    steps.append(f"Removed {removed} exact duplicate row(s)." if removed else "No exact duplicate rows found.")
+    for instrument, group in deduplicated.groupby("instrument_id", sort=False):
+        if not group["moment"].is_monotonic_increasing:
             raise RadLabError(f"Measurements for {instrument} are not in time order.")
-    return dict(sorted(instruments.items()))
+    ordered = deduplicated.sort_values(["instrument_id", "moment"], kind="stable")
+    steps.append("Grouped by instrument id and kept the published time order.")
+    steps.append("Kept every value, timestamp and instrument id exactly as published; nothing was filled in, rounded or dropped as an outlier.")
+    instruments = {
+        str(instrument): {"timestamps": group["timestamp"].tolist(), "values": [float(value) for value in group["value"]]}
+        for instrument, group in ordered.groupby("instrument_id", sort=True)
+    }
+    return instruments, steps
+
+
+def parse(text: str) -> dict[str, dict[str, list]]:
+    """Validated and cleaned readings grouped by instrument."""
+    return clean(read_rows(text))[0]
 
 
 def _fingerprint(instruments: dict) -> str:
@@ -149,7 +187,7 @@ def _fingerprint(instruments: dict) -> str:
 
 def build_dataset(text: str, retrieved_at: str | None = None) -> dict:
     """Parse a response and attach the provenance stored with it."""
-    instruments = parse(text)
+    instruments, steps = clean(read_rows(text))
     start, end = window()
     return {
         "schema_version": CACHE_SCHEMA,
@@ -169,6 +207,8 @@ def build_dataset(text: str, retrieved_at: str | None = None) -> dict:
         "response_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
         "data_sha256": _fingerprint(instruments),
         "row_count": sum(len(series["values"]) for series in instruments.values()),
+        "pipeline_version": PIPELINE_VERSION,
+        "transformation_steps": steps,
         "limitations": [
             "Historical readings from instruments on past and current missions.",
             "Not your radiation exposure, not live telemetry and not a cumulative dose.",
@@ -179,24 +219,19 @@ def build_dataset(text: str, retrieved_at: str | None = None) -> dict:
 
 
 def verify_dataset(dataset: dict) -> dict:
-    """Return the dataset if it is intact; raise RadLabError otherwise."""
+    """Return the dataset if it is intact; raise RadLabError otherwise.
+
+    The structure is checked with the `RadLabDataset` model and the readings
+    against the stored checksum, so an edited or damaged cache is refused.
+    """
     try:
-        if dataset["schema_version"] != CACHE_SCHEMA or dataset["measurement"] != MEASUREMENT:
-            raise RadLabError("The cached NASA dataset has an unsupported format.")
-        instruments = dataset["instruments"]
-        if not instruments or _fingerprint(instruments) != dataset["data_sha256"]:
-            raise RadLabError("The cached NASA dataset failed its integrity check.")
-        if dataset["row_count"] != sum(len(series["values"]) for series in instruments.values()):
-            raise RadLabError("The cached NASA dataset has an inconsistent row count.")
-        for series in instruments.values():
-            if len(series["timestamps"]) != len(series["values"]) or not all(
-                    isinstance(value, (int, float)) and math.isfinite(value) and value >= 0 for value in series["values"]):
-                raise RadLabError("The cached NASA dataset contains invalid measurements.")
-        datetime.fromisoformat(dataset["retrieved_at"])
-    except (KeyError, TypeError, ValueError) as exc:
-        if isinstance(exc, RadLabError):
-            raise
-        raise RadLabError("The cached NASA dataset is incomplete.") from exc
+        model = RadLabDataset.model_validate(dataset)
+    except ValidationError as exc:
+        raise RadLabError("The cached NASA dataset is incomplete or has an unsupported format.") from exc
+    if model.schema_version != CACHE_SCHEMA or model.measurement != MEASUREMENT:
+        raise RadLabError("The cached NASA dataset has an unsupported format.")
+    if _fingerprint(dataset["instruments"]) != model.data_sha256:
+        raise RadLabError("The cached NASA dataset failed its integrity check.")
     return dataset
 
 
