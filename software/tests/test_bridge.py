@@ -93,6 +93,8 @@ class BridgeTests(unittest.TestCase):
         self.assertEqual(len(knowledge["catalog"]["hazards"]), 5)
         self.assertEqual(knowledge["hrr_evidence"]["conditions"]["sleep"][0]["risk_id"], 100)
         self.assertEqual(set(knowledge["mission_context"]["missions"]), {"leo", "lunar", "mars"})
+        study, = knowledge["osdr_studies"]["studies"]
+        self.assertEqual((study["accession"], study["condition_ids"]), ("OSD-104", ["fitness"]))
         safety = {q["id"]: "no" for q in knowledge["registry"]["questions"] if q["domain"] == "safety"}
         self.assertFalse(self.call("session.start")["ok"], "A mission must be chosen first")
         profile = {"environment": "mars", "phase": "transit", "mission_day": 120, "eva_recent": False, "gravity_transition_recent": False}

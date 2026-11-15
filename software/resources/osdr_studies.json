@@ -1,0 +1,12 @@
+{
+  "version": "2026.11.1",
+  "note": "Open space-biology studies from the NASA Open Science Data Repository (OSDR). Each entry links one study to the AstroLife health topic it relates to. The study record itself (title, organism, tissue, mission) is retrieved from the OSDR Biological Data API and cached; nothing about a study is typed in here except why it is shown.",
+  "limitations": "Study metadata only. These are animal or cell studies, not human medical data, not a measurement of the astronaut, and no AstroLife rule uses them.",
+  "studies": [
+    {
+      "accession": "OSD-104",
+      "condition_ids": ["fitness"],
+      "relevance": "Shown with muscle and fitness because this Rodent Research-1 study sampled mouse soleus, a calf muscle, with spaceflight as its study factor. It is an example of the open data available for research on muscle in spaceflight."
+    }
+  ]
+}

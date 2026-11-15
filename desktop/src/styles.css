@@ -793,6 +793,18 @@ input, textarea { caret-color: var(--color-space-cyan); }
 .mission-card:focus-visible { outline:2px solid #fff; outline-offset:3px; }
 .cosmic-scroll:focus { outline:none; box-shadow:none; }
 
+/* NASA OSDR space-biology study: research metadata, visibly not about the astronaut */
+.osdr-study { margin-top:12px; border:1px dashed rgba(139,124,246,.4); border-radius:var(--radius-md); background:rgba(139,124,246,.05); padding:14px 16px; }
+.osdr-kind { display:flex; align-items:center; gap:6px; color:#c9c1ff; font-size:var(--text-xs); font-weight:600; }
+.osdr-title { margin:8px 0 0 !important; color:var(--color-space-white) !important; font-size:var(--text-base) !important; font-weight:600 !important; letter-spacing:0 !important; line-height:1.4; text-transform:none !important; }
+.osdr-why { margin-top:6px; max-width:75ch; color:var(--color-space-silver); font-size:var(--text-sm); line-height:1.6; }
+.osdr-facts { margin-top:10px; display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:8px 18px; }
+.osdr-facts dt { color:var(--color-space-subtle); font-size:var(--text-label); font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+.osdr-facts dd { margin-top:2px; color:var(--color-space-silver); font-size:var(--text-sm); line-height:1.45; }
+.osdr-source { margin-top:12px; display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 14px; color:var(--color-space-subtle); font-size:var(--text-xs); }
+.osdr-source button { display:inline-flex; align-items:center; gap:6px; border:0; background:transparent; padding:0; color:#c9c1ff; font-size:var(--text-sm); font-weight:600; text-decoration:underline; text-underline-offset:3px; }
+.osdr-source button:hover { color:#fff; }
+
 /* --------------------------------------------------------------------------
    Motion: the interface answers the cursor
    Hover, press and scroll feedback only. Nothing here moves on its own, and

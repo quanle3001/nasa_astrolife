@@ -1,6 +1,7 @@
-import { BookOpen } from "lucide-react";
+import { BookOpen, Microscope } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { EvidenceReports, ProvenanceBadge, SourceList } from "@/components/flow/common";
+import { OsdrStudyCard } from "@/components/nasa/osdr-study";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { HazardId, Knowledge, MissionProfile } from "@/types/flow";
@@ -15,6 +16,7 @@ export function NasaPage({ knowledge, profile, radiation }: { knowledge: Knowled
   const order = profile ? context.missions[profile.environment].hazard_order : catalog.hazards.map((hazard) => hazard.id);
   const [hazardId, setHazardId] = useState<HazardId>(order[0]);
   const conditions = catalog.conditions.filter((condition) => condition.hazard_ids.includes(hazardId));
+  const studies = knowledge.osdr_studies;
   return (
     <div className="page-grid">
       <div className="page-heading"><div><h1>The science behind your check-in</h1><p>Real NASA instrument data and Human Research Program evidence. None of it is a measurement of you.</p></div></div>
@@ -45,6 +47,22 @@ export function NasaPage({ knowledge, profile, radiation }: { knowledge: Knowled
         <p className="flow-footnote">{catalog.scope} Reviewed {catalog.reviewed_on}.</p>
         <p className="flow-footnote">{knowledge.hrr_evidence.note} Reviewed {knowledge.hrr_evidence.reviewed_on}.</p>
       </Card>
+      {studies && (studies.studies.length > 0 || studies.unavailable.length > 0) && (
+        <Card className="p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="telemetry-label"><Microscope className="mr-1.5 inline size-3.5 text-space-cyan" aria-hidden="true" />Space-biology studies · NASA OSDR</h2>
+            <ProvenanceBadge kind="evidence" label="NASA open research data" />
+          </div>
+          <p className="mt-4 max-w-[75ch] text-sm leading-6 text-space-silver">{studies.note}</p>
+          {studies.studies.map((study) => (
+            <div key={study.accession} className="mt-4">
+              <p className="radlab-group">Related health topic · {study.condition_ids.map((id) => catalog.conditions.find((condition) => condition.id === id)?.title ?? id).join(", ")}</p>
+              <OsdrStudyCard study={study} limitations={studies.limitations} />
+            </div>
+          ))}
+          {studies.unavailable.map((item) => <p key={item.accession} className="flow-notice mt-4">{item.accession} is not shown: {item.reason}</p>)}
+        </Card>
+      )}
     </div>
   );
 }

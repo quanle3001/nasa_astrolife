@@ -29,6 +29,7 @@ from astrotip.bridge.ppg_batcher import PpgBatcher, contact_state
 from astrotip.inputs.sensor_serial import SerialReader, available_ports
 from astrotip.inputs.simulated_reader import SIMULATED_PORT, SimulatedReader
 from astrotip.models.health_indicator import CheckIn, SYMPTOMS
+from astrotip.nasa.osdr import load_studies as load_osdr_studies
 from astrotip.nasa.radlab import BUNDLED_CACHE, RadLabService, fetch as fetch_radlab
 from astrotip.questionnaire.registry import applicable_answers, load_registry, validate_answer
 from astrotip.questionnaire.session import checkin_from_answers
@@ -83,6 +84,7 @@ class BridgeService(QObject):
         self.registry = load_registry(self.catalog)
         self.hrr_evidence = load_hrr_evidence(self.catalog)
         self.indicators = load_indicators(self.catalog, self.registry)
+        self.osdr_studies = load_osdr_studies(self.catalog)
         self.state = AppStateStore(self.history.path)
         # A dataset retrieved on this computer is kept next to the health history.
         self.radlab = RadLabService(self.history.path.parent / "nasa_cache" / BUNDLED_CACHE.name, fetcher=radlab_fetcher)
@@ -335,7 +337,7 @@ class BridgeService(QObject):
     def get_knowledge(self, _params):
         """Everything the guided flow shows that comes from curated data files."""
         return {"catalog": self.catalog, "mission_context": self.mission_context, "registry": self.registry,
-                "hrr_evidence": self.hrr_evidence, "indicators": self.indicators}
+                "hrr_evidence": self.hrr_evidence, "indicators": self.indicators, "osdr_studies": self.osdr_studies}
 
     def get_mission(self, _params):
         return {"profile": self.state.get_mission()}

@@ -125,6 +125,42 @@ export interface Knowledge {
   mission_context: MissionContext;
   registry: QuestionRegistry;
   hrr_evidence: HrrEvidence;
+  /** Space-biology study records from the NASA OSDR Biological Data API. */
+  osdr_studies?: OsdrStudies;
+}
+
+/** One OSDR study: fields as NASA reports them, plus why AstroLife shows it. */
+export interface OsdrStudy {
+  accession: string;
+  title: string;
+  organism: string;
+  material: string;
+  factors: string[];
+  project_title: string;
+  project_identifier: string;
+  flight_program: string;
+  mission_name: string;
+  mission_start: string;
+  mission_end: string;
+  assay_types: string[];
+  measurement_types: string[];
+  managing_center: string;
+  released: string;
+  description: string;
+  study_url: string;
+  condition_ids: string[];
+  relevance: string;
+  provenance: { source: string; api_docs: string; request_url: string; retrieved_at: string; sha256: string; pipeline_version: string };
+}
+
+export interface OsdrStudies {
+  version: string;
+  note: string;
+  limitations: string;
+  api_docs: string;
+  studies: OsdrStudy[];
+  /** Studies in the curated list that have no verified cached record. */
+  unavailable: { accession: string; reason: string }[];
 }
 
 export interface FollowupAction {

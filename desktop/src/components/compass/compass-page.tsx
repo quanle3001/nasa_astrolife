@@ -4,6 +4,7 @@ import { Component, lazy, Suspense, useMemo, useState, type ReactNode } from "re
 import { BodyMap2D } from "@/components/compass/body-map-2d";
 import { COMPASS_REGIONS, regionForCondition, type RegionSummary } from "@/components/compass/regions";
 import { ActionItem } from "@/components/flow/actions-page";
+import { OsdrStudyCard, studiesFor } from "@/components/nasa/osdr-study";
 import { EvidenceReports, FlowPage, LEVEL_LABELS, measurementKind, ProvenanceBadge, SourceList } from "@/components/flow/common";
 import { Card } from "@/components/ui/card";
 import { useCalmMotion } from "@/lib/motion-preference";
@@ -142,6 +143,7 @@ export function CompassPage({ result, actions, knowledge, conditionTitles, onTog
                       <p className="limit-line"><strong>Limit:</strong> {condition.limitations}</p>
                       <SourceList ids={[...condition.source_ids, ...condition.research.flatMap((item) => item.source_ids)]} sources={catalog.sources} />
                       <EvidenceReports reports={knowledge.hrr_evidence.conditions[id]} />
+                      {studiesFor(knowledge.osdr_studies, [id]).map((study) => <OsdrStudyCard key={study.accession} study={study} limitations={knowledge.osdr_studies?.limitations ?? ""} />)}
                     </div>
                   )}
                   {related.length > 0 && <><h4>Your follow-up actions</h4><ul className="action-list">{related.map((action) => <ActionItem key={action.id} action={action} knowledge={knowledge} conditionTitles={conditionTitles} onToggle={onToggleAction} />)}</ul></>}
