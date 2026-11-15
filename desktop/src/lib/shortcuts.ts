@@ -2,7 +2,7 @@ import type { PageId } from "@/components/app-shell";
 
 /**
  * Keyboard shortcuts (Impeccable critique: no accelerators for power users).
- * ⌘/Ctrl + 1–4 switch pages, ⌘/Ctrl + Enter submits the check-in,
+ * ⌘/Ctrl + 1–5 switch dashboard tabs, ⌘/Ctrl + Enter submits a concern report,
  * ⌘/Ctrl + S saves the current assessment, "?" opens the reference.
  * None of these collide with Electron's default menu bindings.
  */
@@ -18,7 +18,7 @@ export const MOD = IS_MAC ? "⌘" : "Ctrl";
 /** Modifier name for aria-keyshortcuts. */
 export const ARIA_MOD = IS_MAC ? "Meta" : "Control";
 
-export const PAGE_ORDER: PageId[] = ["sensor", "checkin", "assessment", "history"];
+export const PAGE_ORDER: PageId[] = ["dashboard", "sensor", "compass", "nasa", "history"];
 
 type KeyInput = Pick<KeyboardEvent, "key" | "metaKey" | "ctrlKey" | "altKey" | "shiftKey">;
 
@@ -31,7 +31,7 @@ export function isTypingTarget(target: EventTarget | null) {
 export function matchShortcut(event: KeyInput, typing: boolean, mac = IS_MAC): ShortcutAction | null {
   const mod = mac ? event.metaKey && !event.ctrlKey : event.ctrlKey && !event.metaKey;
   if (mod && !event.altKey && !event.shiftKey) {
-    const index = ["1", "2", "3", "4"].indexOf(event.key);
+    const index = ["1", "2", "3", "4", "5"].indexOf(event.key);
     if (index >= 0) return { type: "page", page: PAGE_ORDER[index] };
     if (event.key === "Enter") return { type: "submit-checkin" };
     if (event.key.toLowerCase() === "s") return { type: "save-assessment" };
@@ -45,16 +45,18 @@ export const SHORTCUT_GROUPS: { title: string; items: { keys: string[]; label: s
   {
     title: "Navigate",
     items: [
-      { keys: [MOD, "1"], label: "Telemetry" },
-      { keys: [MOD, "2"], label: "Check-in" },
-      { keys: [MOD, "3"], label: "Assessment" },
-      { keys: [MOD, "4"], label: "History" },
+      { keys: [MOD, "1"], label: "Dashboard" },
+      { keys: [MOD, "2"], label: "Monitor" },
+      { keys: [MOD, "3"], label: "Health Compass" },
+      { keys: [MOD, "4"], label: "NASA data" },
+      { keys: [MOD, "5"], label: "History" },
     ],
   },
   {
     title: "Act",
     items: [
-      { keys: [MOD, "Enter"], label: "Review health priorities (on Check-in)" },
+      { keys: ["1", "–", "9"], label: "Pick an answer (during a check-in)" },
+      { keys: [MOD, "Enter"], label: "Review a health concern report" },
       { keys: [MOD, "S"], label: "Save assessment to history" },
       { keys: ["?"], label: "Show this list" },
       { keys: ["Esc"], label: "Close a dialog" },

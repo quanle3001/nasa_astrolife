@@ -1,10 +1,9 @@
 import { ClipboardCheck, NotebookPen } from "lucide-react";
 import { useState, type FormEvent } from "react";
-import { MissionSelector } from "@/components/mission-selector";
 import { ARIA_MOD, MOD } from "@/lib/shortcuts";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import type { AppConfig, CheckIn, MissionId } from "@/types/backend";
+import type { AppConfig, CheckIn } from "@/types/backend";
 
 const optionalNumber = (value: string) => value.trim() === "" ? null : Number(value);
 
@@ -44,9 +43,13 @@ function NumberField({ id, label, value, onChange, onBlur, placeholder, error }:
   );
 }
 
-export function CheckinPage({ config, mission, setMission, onAssess, busy }: {
-  config: AppConfig; mission: MissionId; setMission: (mission: MissionId) => void;
-  onAssess: (checkin: CheckIn) => Promise<void>; busy: boolean;
+/**
+ * Health-concern report: the free-form check-in used when the astronaut wants
+ * to report something outside the guided flow. It is reachable from every
+ * screen and goes to the same Python rules.
+ */
+export function CheckinPage({ config, onAssess, busy, onCancel }: {
+  config: AppConfig; onAssess: (checkin: CheckIn) => Promise<void>; busy: boolean; onCancel?: () => void;
 }) {
   const [heartRate, setHeartRate] = useState("");
   const [spo2, setSpo2] = useState("");
@@ -86,12 +89,10 @@ export function CheckinPage({ config, mission, setMission, onAssess, busy }: {
 
   return (
     <form id="checkin-form" onSubmit={submit} className="page-grid checkin-experience">
-      <div className="page-heading immersive-heading"><div><h1>Log the human side of <span className="whitespace-nowrap">the mission.</span></h1><p>Record what you know. Leave missing readings blank; unreported symptoms are not ruled out.</p></div></div>
-      <MissionSelector value={mission} onChange={setMission} />
+      <div className="page-heading immersive-heading"><div><p className="telemetry-label">Available from every screen</p><h1>Report a health concern</h1><p>Select what applies and add any reading you have. Leave missing readings blank; unreported symptoms are not ruled out. For an emergency, follow the mission emergency procedure first.</p></div>{onCancel && <Button onClick={onCancel}>Return without reporting</Button>}</div>
       <Card className="p-5">
-        <div className="mb-5 flex items-center gap-2"><NotebookPen className="size-4 text-cyan-300" /><h2 className="text-base font-semibold text-white">Mission and observations</h2></div>
+        <div className="mb-5 flex items-center gap-2"><NotebookPen className="size-4 text-cyan-300" /><h2 className="text-base font-semibold text-white">Readings and observations</h2></div>
         <div className="form-grid">
-          <label><span>Mission context</span><select className="control" value={mission} onChange={(event) => setMission(event.target.value as MissionId)}>{Object.entries(config.missions).map(([id, title]) => <option value={id} key={id}>{title}</option>)}</select></label>
           <NumberField id="heart_rate" label="Heart rate (bpm)" value={heartRate} onChange={edit("heart_rate", setHeartRate)} onBlur={() => checkField("heart_rate")} placeholder="Optional · beats per minute" error={fieldErrors.heart_rate} />
           <NumberField id="spo2" label="Estimated SpO₂ (%)" value={spo2} onChange={edit("spo2", setSpo2)} onBlur={() => checkField("spo2")} placeholder="Optional · percent" error={fieldErrors.spo2} />
           <label><span>Reading quality</span><select className="control" value={quality} onChange={(event) => setQuality(event.target.value as CheckIn["signal_quality"])}><option value="unknown">Unknown / not checked</option><option value="good">Good · stable repeated reading</option><option value="poor">Poor · motion or unstable contact</option></select></label>

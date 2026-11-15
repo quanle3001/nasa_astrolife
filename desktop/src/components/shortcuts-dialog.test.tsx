@@ -6,7 +6,7 @@ describe("ShortcutsDialog", () => {
   it("lists every shortcut by action", () => {
     render(<ShortcutsDialog open onOpenChange={() => undefined} />);
     expect(screen.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeInTheDocument();
-    for (const label of ["Telemetry", "Check-in", "Assessment", "History", "Save assessment to history", "Close a dialog"]) {
+    for (const label of ["Dashboard", "Monitor", "Health Compass", "NASA data", "History", "Save assessment to history", "Close a dialog"]) {
       expect(screen.getByText(label)).toBeInTheDocument();
     }
   });

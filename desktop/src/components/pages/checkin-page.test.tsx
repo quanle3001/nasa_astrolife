@@ -14,7 +14,7 @@ const config: AppConfig = {
 describe("CheckinPage", () => {
   it("sends one structured check-in to the Python assessment callback", async () => {
     const onAssess = vi.fn().mockResolvedValue(undefined);
-    render(<CheckinPage config={config} mission="leo" setMission={() => undefined} onAssess={onAssess} busy={false} />);
+    render(<CheckinPage config={config} onAssess={onAssess} busy={false} />);
 
     fireEvent.change(screen.getByLabelText("Heart rate (bpm)"), { target: { value: "72" } });
     fireEvent.click(screen.getByLabelText("New vision changes"));
@@ -31,7 +31,7 @@ describe("CheckinPage", () => {
 
   it("flags a non-numeric entry inline and does not submit", async () => {
     const onAssess = vi.fn().mockResolvedValue(undefined);
-    render(<CheckinPage config={config} mission="leo" setMission={() => undefined} onAssess={onAssess} busy={false} />);
+    render(<CheckinPage config={config} onAssess={onAssess} busy={false} />);
     const sleep = screen.getByLabelText("Sleep (hours)");
     fireEvent.change(sleep, { target: { value: "7,5" } });
     fireEvent.blur(sleep);

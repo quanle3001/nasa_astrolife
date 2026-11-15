@@ -5,12 +5,12 @@ const key = (k: string, mods: Partial<Record<"metaKey" | "ctrlKey" | "altKey" | 
   ({ key: k, metaKey: false, ctrlKey: false, altKey: false, shiftKey: false, ...mods });
 
 describe("matchShortcut", () => {
-  it("maps ⌘1–4 to pages on macOS and Ctrl+1–4 elsewhere", () => {
-    expect(matchShortcut(key("1", { metaKey: true }), false, true)).toEqual({ type: "page", page: "sensor" });
-    expect(matchShortcut(key("4", { metaKey: true }), false, true)).toEqual({ type: "page", page: "history" });
-    expect(matchShortcut(key("2", { ctrlKey: true }), false, false)).toEqual({ type: "page", page: "checkin" });
+  it("maps ⌘1–5 to dashboard tabs on macOS and Ctrl+1–5 elsewhere", () => {
+    expect(matchShortcut(key("1", { metaKey: true }), false, true)).toEqual({ type: "page", page: "dashboard" });
+    expect(matchShortcut(key("5", { metaKey: true }), false, true)).toEqual({ type: "page", page: "history" });
+    expect(matchShortcut(key("2", { ctrlKey: true }), false, false)).toEqual({ type: "page", page: "sensor" });
     expect(matchShortcut(key("2", { ctrlKey: true }), false, true)).toBeNull();
-    expect(matchShortcut(key("5", { metaKey: true }), false, true)).toBeNull();
+    expect(matchShortcut(key("6", { metaKey: true }), false, true)).toBeNull();
   });
 
   it("submits and saves with the modifier, even while typing", () => {

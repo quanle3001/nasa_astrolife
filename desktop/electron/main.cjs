@@ -193,7 +193,19 @@ async function createWindow() {
       if (process.env.ASTROTIP_SCREENSHOT_SIMULATE) await bridge.call("sensor.simulate").catch(() => undefined);
       const screenshotDelay = Number(process.env.ASTROTIP_SCREENSHOT_DELAY || 2800);
       await new Promise((resolve) => setTimeout(resolve, Number.isFinite(screenshotDelay) ? screenshotDelay : 2800));
-      // Development-only capture aid: bring one element into view before the capture.
+      // Development-only capture aid: run a local script in the page first (to walk
+      // to the screen being captured), then optionally bring one element into view.
+      if (process.env.ASTROTIP_SCREENSHOT_SCRIPT) {
+        // The script can request extra captures by setting document.title to "capture:<name>".
+        mainWindow.webContents.on("page-title-updated", async (_event, title) => {
+          if (!title.startsWith("capture:")) return;
+          const name = title.slice(8).replace(/[^a-z0-9-]/gi, "");
+          const shot = await mainWindow.webContents.capturePage();
+          await fs.promises.writeFile(path.join(path.dirname(process.env.ASTROTIP_SCREENSHOT), `${name}.png`), shot.toPNG());
+        });
+        const source = await fs.promises.readFile(process.env.ASTROTIP_SCREENSHOT_SCRIPT, "utf8");
+        await mainWindow.webContents.executeJavaScript(`(async () => { ${source} })()`).catch((error) => console.error(`[capture script] ${error.message}`));
+      }
       const target = process.env.ASTROTIP_SCREENSHOT_SCROLL;
       if (target) {
         await mainWindow.webContents.executeJavaScript(`document.querySelector(${JSON.stringify(target)})?.scrollIntoView({ block: "center" })`).catch(() => undefined);
