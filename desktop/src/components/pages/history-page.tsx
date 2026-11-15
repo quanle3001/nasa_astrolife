@@ -9,16 +9,22 @@ export function HistoryPage({ config, active, refreshKey }: { config: AppConfig;
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const [loaded, setLoaded] = useState(false);
   useEffect(() => {
     if (!active) return;
-    api.listHistory().then(({ entries: next }) => { setEntries(next); setSelected((current) => current && next.some((item) => item.id === current) ? current : next[0]?.id ?? null); setError(""); }).catch((reason) => setError(reason instanceof Error ? reason.message : String(reason)));
+    api.listHistory().then(({ entries: next }) => { setEntries(next); setSelected((current) => current && next.some((item) => item.id === current) ? current : next[0]?.id ?? null); setError(""); setLoaded(true); }).catch((reason) => { setError(reason instanceof Error ? reason.message : String(reason)); setLoaded(true); });
   }, [active, refreshKey]);
   const entry = entries.find((item) => item.id === selected) ?? null;
   return (
     <div className="page-grid">
       <div className="page-heading"><div><p className="telemetry-label text-teal-300">Local crew records</p><h1>Health history</h1><p>Saved on this computer. Past priorities reflect the observations recorded at that time.</p></div><div className="hidden items-center gap-2 text-xs text-space-subtle lg:flex"><Database className="size-4" />{config.history_path}</div></div>
       {error && <div className="rounded-xl border border-rose-400/30 bg-rose-500/10 p-4 text-sm text-rose-100">{error}</div>}
-      {!entries.length ? (
+      {!loaded ? (
+        <div className="grid min-h-[520px] gap-3 lg:grid-cols-[360px_1fr]" aria-busy="true" aria-label="Loading saved check-ins">
+          <Card className="space-y-2 p-2">{[0, 1, 2].map((row) => <div key={row} className="h-[68px] animate-pulse rounded-xl bg-white/[.04]" />)}</Card>
+          <Card className="space-y-4 p-6"><div className="h-7 w-2/3 animate-pulse rounded-lg bg-white/[.05]" /><div className="h-20 animate-pulse rounded-xl bg-white/[.04]" /><div className="h-24 animate-pulse rounded-xl bg-white/[.04]" /></Card>
+        </div>
+      ) : !entries.length ? (
         <Card className="grid min-h-80 place-items-center p-8 text-center"><div><HistoryIcon className="mx-auto size-10 text-space-subtle" /><h2 className="mt-4 text-xl font-semibold text-white">No saved check-ins</h2><p className="mt-2 max-w-md text-sm text-space-subtle">Review a Daily Check-in, then choose Save to history on the Assessment page to keep a local record.</p></div></Card>
       ) : (
         <div className="grid min-h-[520px] gap-3 lg:grid-cols-[360px_1fr]">
