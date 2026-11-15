@@ -43,9 +43,11 @@
   /* Surfaces */
   --panel-bg: linear-gradient(160deg, rgba(20, 31, 54, .62), rgba(7, 12, 25, .5));
   --panel-border: rgba(126, 160, 204, .2);
+  --panel-border-hover: rgba(132, 196, 232, .46);
   --panel-border-strong: rgba(70, 217, 232, .38);
   --panel-highlight: inset 0 1px 0 rgba(255, 255, 255, .05);
   --shadow-panel: 0 24px 70px rgba(0, 0, 0, .3);
+  --shadow-lift: 0 18px 44px rgba(0, 0, 0, .42), 0 0 0 1px rgba(110, 200, 235, .1), 0 12px 36px -18px rgba(70, 217, 232, .45);
   --shadow-float: 0 18px 48px rgba(0, 0, 0, .45);
   --glow-cyan: 0 0 28px rgba(70, 217, 232, .18);
 
@@ -120,6 +122,7 @@ input, textarea { caret-color: var(--color-space-cyan); }
     border-color: var(--panel-border);
     box-shadow: var(--panel-highlight), var(--shadow-panel);
     backdrop-filter: blur(4px);
+    transition: border-color var(--duration-base), box-shadow var(--duration-base);
   }
   .telemetry-label { font-size: var(--text-label); line-height: 1.2; font-weight: 700; letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--color-space-subtle); }
   .page-grid { margin: 0 auto; display: grid; width: min(var(--page-max), 100%); gap: 18px; padding: 22px var(--page-gutter) 52px; }
@@ -789,3 +792,57 @@ input, textarea { caret-color: var(--color-space-cyan); }
 .anatomy-pin:focus-visible, .anatomy-reset:focus-visible, .chart-pause:focus-visible, .action-toggle:focus-visible { box-shadow:none; outline:2px solid var(--color-space-cyan); outline-offset:2px; }
 .mission-card:focus-visible { outline:2px solid #fff; outline-offset:3px; }
 .cosmic-scroll:focus { outline:none; box-shadow:none; }
+
+/* --------------------------------------------------------------------------
+   Motion: the interface answers the cursor
+   Hover, press and scroll feedback only. Nothing here moves on its own, and
+   all of it switches off under "Pause motion" and the OS reduced-motion setting.
+   -------------------------------------------------------------------------- */
+/* A soft light that travels with the cursor behind the content. */
+.cursor-aura { pointer-events:none; position:fixed; z-index:3; left:-280px; top:-280px; width:560px; height:560px; border-radius:50%; opacity:0; background:radial-gradient(circle, rgba(70,217,232,.12), rgba(59,130,246,.07) 38%, transparent 68%); mix-blend-mode:screen; transition:opacity var(--duration-slow); will-change:transform; }
+.cursor-aura.is-active { opacity:1; }
+
+/* Spotlight on surfaces: the light sits above the surface's own background and below its content.
+   The same selector list is used by CursorAura in components/effects/interactive.tsx. */
+@layer components {
+  :where(.glass-panel:not(.pointer-glow), .hazard-card, .question-card, .action-item, .measure-option, .radlab-instrument, .plan-summary, .collect-note, .measure-choice) { position:relative; isolation:isolate; }
+}
+:is(.glass-panel:not(.pointer-glow), .hazard-card, .question-card, .action-item, .measure-option, .radlab-instrument, .plan-summary, .collect-note, .measure-choice)::before { content:""; pointer-events:none; position:absolute; inset:0; z-index:-1; border-radius:inherit; opacity:0; background:radial-gradient(360px circle at var(--pointer-x,50%) var(--pointer-y,50%), rgba(96,206,236,.11), transparent 64%); transition:opacity var(--duration-base); }
+:is(.glass-panel:not(.pointer-glow), .hazard-card, .question-card, .action-item, .measure-option, .radlab-instrument, .plan-summary, .collect-note, .measure-choice):hover::before { opacity:1; }
+.glass-panel:hover, .hazard-card:hover, .question-card:hover, .plan-summary:hover, .collect-note:hover, .measure-choice:hover { border-color:var(--panel-border-hover); }
+
+/* Things you can press rise to meet the cursor and settle when pressed. */
+.btn { position:relative; }
+.btn:hover:not(:disabled) { translate:0 -1px; }
+.btn:active:not(:disabled) { translate:0 0; }
+.btn-primary { overflow:hidden; }
+.btn-primary::after { content:""; pointer-events:none; position:absolute; inset:0; background:linear-gradient(105deg, transparent 30%, rgba(255,255,255,.28) 50%, transparent 70%); translate:-110% 0; transition:translate 520ms var(--ease-out); }
+.btn-primary:hover:not(:disabled)::after { translate:110% 0; }
+.btn-primary:hover:not(:disabled) { box-shadow:0 10px 30px rgba(37,99,235,.42), 0 0 0 1px rgba(125,211,252,.35); }
+.measure-option, .radlab-instrument, .tile-links button, .action-item, .check-tile, .choice-chip, .layer-chip, .nav-capsule-item, .concern-button { transition:translate var(--duration-fast) var(--ease-out), scale var(--duration-fast) var(--ease-out), border-color var(--duration-fast), background var(--duration-fast), color var(--duration-fast), box-shadow var(--duration-base), opacity var(--duration-base); }
+.measure-option:hover, .radlab-instrument:hover { translate:0 -2px; border-color:var(--panel-border-hover); box-shadow:var(--shadow-lift); }
+.check-tile:hover, .choice-chip:hover, .layer-chip:hover { translate:0 -1px; }
+.measure-option:active, .radlab-instrument:active, .check-tile:active, .choice-chip:active, .layer-chip:active, .tile-links button:active { translate:0 0; scale:.985; }
+.choice-chip:hover { transform:none; box-shadow:0 8px 22px -12px rgba(70,217,232,.6); }
+.hazard-icon { transition:scale var(--duration-base) var(--ease-out), background var(--duration-base); }
+.hazard-card:hover .hazard-icon { scale:1.08; background:rgba(70,217,232,.18); }
+.tile-links button svg:last-child { transition:translate var(--duration-fast) var(--ease-out); }
+.tile-links button:hover svg:last-child { translate:3px 0; }
+.nav-capsule-item:hover:not(.is-active) { background:rgba(255,255,255,.05); }
+.flow-stepper-dots i.is-current { box-shadow:0 0 12px rgba(70,217,232,.6); }
+
+/* Content settles into place as it scrolls into view. It never starts invisible. */
+@supports (animation-timeline: view()) {
+  .dashboard-grid > *, .hazard-list > *, .flow-page > section, .page-grid > section, .page-grid > .glass-panel { animation:scroll-settle linear both; animation-timeline:view(); animation-range:entry 0% entry 150px; }
+}
+@keyframes scroll-settle { from { opacity:.25; translate:0 22px; } to { opacity:1; translate:0 0; } }
+
+:root[data-motion="paused"] :is(.dashboard-grid > *, .hazard-list > *, .flow-page > section, .page-grid > section, .page-grid > .glass-panel) { animation:none !important; }
+:root[data-motion="paused"] :is(.glass-panel:not(.pointer-glow), .hazard-card, .question-card, .action-item, .measure-option, .radlab-instrument, .plan-summary, .collect-note, .measure-choice)::before { display:none; }
+:root[data-motion="paused"] :is(.btn, .measure-option, .radlab-instrument, .check-tile, .choice-chip, .layer-chip, .tile-links button):hover { translate:none; scale:none; }
+:root[data-motion="paused"] .btn-primary::after { display:none; }
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-grid > *, .hazard-list > *, .flow-page > section, .page-grid > section, .page-grid > .glass-panel { animation:none !important; }
+  .btn-primary::after, .cursor-aura { display:none; }
+  .btn:hover, .measure-option:hover, .radlab-instrument:hover, .check-tile:hover, .choice-chip:hover, .layer-chip:hover { translate:none; scale:none; }
+}

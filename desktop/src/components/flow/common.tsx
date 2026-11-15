@@ -1,5 +1,6 @@
 import { ArrowLeft, ArrowRight, BookOpen, ExternalLink, FlaskConical, HeartPulse, History, ListChecks, PenLine } from "lucide-react";
 import type { ReactNode } from "react";
+import { Magnetic } from "@/components/effects/interactive";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -157,7 +158,7 @@ export function FlowPage({ title, lead, children, onBack, onNext, nextLabel = "C
           {onBack ? <Button variant="ghost" onClick={onBack}><ArrowLeft className="size-4" /> Back</Button> : <span />}
           <div className="flex items-center gap-2">
             {aside}
-            {onNext && <Button variant="primary" size="lg" onClick={onNext} disabled={nextDisabled || busy} aria-busy={busy || undefined}>{busy ? "Working…" : nextLabel} <ArrowRight className="size-4" /></Button>}
+            {onNext && <Magnetic strength={0.14}><Button variant="primary" size="lg" onClick={onNext} disabled={nextDisabled || busy} aria-busy={busy || undefined}>{busy ? "Working…" : nextLabel} <ArrowRight className="size-4" /></Button></Magnetic>}
           </div>
         </div>
       )}

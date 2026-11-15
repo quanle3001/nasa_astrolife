@@ -23,6 +23,49 @@ export function PointerGlow({ className, children, ...props }: HTMLAttributes<HT
   return <div className={cn("pointer-glow", className)} onPointerMove={trackPointer} {...props}>{children}</div>;
 }
 
+/** Surfaces that light up under the cursor; the matching styles are in the "Motion" section of styles.css. */
+const SPOT_SELECTOR = ".glass-panel:not(.pointer-glow), .hazard-card, .question-card, .action-item, .measure-option, .radlab-instrument, .plan-summary, .collect-note, .measure-choice";
+
+/**
+ * One listener for the whole window: moves a soft light with the cursor and
+ * tells the surface under the cursor where the cursor is. It writes styles
+ * directly, at most once per frame, and never re-renders React.
+ */
+export function CursorAura() {
+  const calm = useCalmMotion();
+  const aura = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (calm) return undefined;
+    let frame = 0;
+    let latest: globalThis.PointerEvent | null = null;
+    const apply = () => {
+      frame = 0;
+      const event = latest;
+      if (!event) return;
+      if (aura.current) {
+        aura.current.style.transform = `translate3d(${event.clientX}px, ${event.clientY}px, 0)`;
+        aura.current.classList.add("is-active");
+      }
+      const surface = event.target instanceof Element ? event.target.closest<HTMLElement>(SPOT_SELECTOR) : null;
+      if (surface) {
+        const rect = surface.getBoundingClientRect();
+        surface.style.setProperty("--pointer-x", `${event.clientX - rect.left}px`);
+        surface.style.setProperty("--pointer-y", `${event.clientY - rect.top}px`);
+      }
+    };
+    const move = (event: globalThis.PointerEvent) => { latest = event; if (!frame) frame = requestAnimationFrame(apply); };
+    const leave = () => aura.current?.classList.remove("is-active");
+    window.addEventListener("pointermove", move, { passive: true });
+    document.documentElement.addEventListener("pointerleave", leave);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("pointermove", move);
+      document.documentElement.removeEventListener("pointerleave", leave);
+    };
+  }, [calm]);
+  return calm ? null : <div ref={aura} className="cursor-aura" aria-hidden="true" />;
+}
+
 /** A card that leans a few degrees toward the cursor and springs back. */
 export function TiltCard({ className, children, maxTilt = 5, style }: {
   className?: string; children: ReactNode; maxTilt?: number; style?: CSSProperties;

@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AppShell, NAV, type FlowProgress, type PageId } from "@/components/app-shell";
 import { CompassPage } from "@/components/compass/compass-page";
-import { ParticleField } from "@/components/effects/interactive";
+import { CursorAura, ParticleField } from "@/components/effects/interactive";
 import { ActionsPage } from "@/components/flow/actions-page";
 import { ContextPage } from "@/components/flow/context-page";
 import { FindingsPage } from "@/components/flow/findings-page";
@@ -59,7 +59,7 @@ const requestedPage = new URLSearchParams(window.location.search).get("page") as
 function Screen({ children }: { children: ReactNode }) {
   const reduced = useCalmMotion();
   return (
-    <motion.section initial={reduced ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={reduced ? undefined : { opacity: 0, y: -12 }} transition={{ duration: reduced ? 0 : 0.3, ease: [0.22, 1, 0.36, 1] }}>
+    <motion.section initial={reduced ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={reduced ? undefined : { opacity: 0, y: -8, transition: { duration: 0.12, ease: "easeIn" } }} transition={{ duration: reduced ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }}>
       {children}
     </motion.section>
   );
@@ -398,6 +398,7 @@ export default function App() {
       {/* One WebGL scene at a time: the starfield yields to the 3D anatomy viewer. */}
       {!compassOpen && <Suspense fallback={null}><SpaceScene reducedMotion={reducedMotion} astronaut={astronaut} mission={mission} /></Suspense>}
       <div className="mission-atmosphere" data-mission={mission} aria-hidden="true" />
+      <CursorAura />
       <AppShell
         page={page} setPage={setPage} mission={mission} connected={sensor.connected} simulated={sensor.source === "simulated"} backendReady={backendReady} disclaimer={config.disclaimer}
         onShowShortcuts={() => setShortcutsOpen(true)} onReportConcern={view === "urgent" ? undefined : reportConcern}
