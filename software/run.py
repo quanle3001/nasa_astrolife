@@ -5,16 +5,19 @@ import sys
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from astrotip.ui.main_window import AstroTipWindow
+from astrotip.ui.theme import apply_base_theme
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    apply_base_theme(app)
     app.setApplicationName("AstroTip")
     app.setOrganizationName("AstroTip")
     try:
         window = AstroTipWindow()
     except (OSError, ValueError, KeyError) as exc:
-        QMessageBox.critical(None, "AstroTip could not start", f"The local guidance catalog could not be loaded.\n\n{exc}")
+        QMessageBox.critical(None, "AstroTip could not start",
+                             f"The local guidance catalog could not be loaded.\n\n{exc}")
         sys.exit(1)
     window.show()
 

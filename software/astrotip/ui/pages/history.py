@@ -16,6 +16,8 @@ class HistoryPage(QWidget):
         self.catalog = catalog
         self.entries = []
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.addWidget(label("LOCAL CREW RECORDS", "eyebrow", False))
         layout.addWidget(label("Health history", "pageTitle"))
         layout.addWidget(label(
             "Saved on this computer. Past priorities reflect the observations recorded at that time.",
@@ -30,6 +32,8 @@ class HistoryPage(QWidget):
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.table.setAlternatingRowColors(True)
+        self.table.setShowGrid(False)
         self.table.verticalHeader().hide()
         self.table.setAccessibleName("Saved check-ins")
         self.content = browser()

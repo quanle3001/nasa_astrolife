@@ -3,12 +3,14 @@
 from time import monotonic
 
 from PySide6.QtCore import QTimer, Signal
-from PySide6.QtWidgets import QComboBox, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QComboBox, QFrame, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
 
 from astrotip.analysis.rules import assess
 from astrotip.inputs.sensor_serial import SerialReader, available_ports
 from astrotip.models.health_indicator import CheckIn
 from astrotip.ui.common import assessment_html, browser, label
+from astrotip.ui.icons import space_icon
+from astrotip.ui.widgets.telemetry_card import TelemetryCard
 
 
 class SensorPage(QWidget):
@@ -25,8 +27,16 @@ class SensorPage(QWidget):
         self.connection_started = None
         self.active_port = ""
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(10)
+        layout.addWidget(label("BIOMEDICAL TELEMETRY", "eyebrow", False))
         layout.addWidget(label("Live sensor monitor", "pageTitle"))
-        layout.addWidget(label("Connect your ESP32, then rest a finger on the MAX30102 sensor.", "subtitle"))
+        layout.addWidget(label("Connect your ESP32, then rest a finger on the MAX30102 optical sensor.", "subtitle"))
+        connection_panel = QFrame()
+        connection_panel.setObjectName("panel")
+        connection_layout = QVBoxLayout(connection_panel)
+        connection_layout.setContentsMargins(15, 13, 15, 13)
+        connection_layout.addWidget(label("SENSOR LINK  /  ESP32 + MAX30102", "microLabel", False))
         controls = QHBoxLayout()
         self.ports = QComboBox()
         self.ports.setEditable(True)
@@ -34,18 +44,21 @@ class SensorPage(QWidget):
         self.ports.lineEdit().setPlaceholderText("Select or enter a COM port")
         controls.addWidget(self.ports, 1)
         self.refresh_button = QPushButton("Refresh ports")
+        self.refresh_button.setIcon(space_icon("fa6s.rotate"))
         self.refresh_button.clicked.connect(self.refresh_ports)
         controls.addWidget(self.refresh_button)
         self.connect_button = QPushButton("Connect")
+        self.connect_button.setIcon(space_icon("fa6s.plug"))
         self.connect_button.setObjectName("primaryButton")
         self.connect_button.clicked.connect(self.toggle_connection)
         controls.addWidget(self.connect_button)
-        layout.addLayout(controls)
+        connection_layout.addLayout(controls)
         self.status = label("Disconnected", "summaryBanner")
-        layout.addWidget(self.status)
+        connection_layout.addWidget(self.status)
+        layout.addWidget(connection_panel)
         metrics = QHBoxLayout()
-        self.heart_rate = label("Heart rate\n— bpm", "metric")
-        self.spo2 = label("Estimated SpO₂\n— %", "metric")
+        self.heart_rate = TelemetryCard("Heart rate", "fa6s.heart-pulse", unit="bpm", fallback_icon="♥")
+        self.spo2 = TelemetryCard("Estimated SpO₂", "fa6s.droplet", unit="%", fallback_icon="O₂")
         metrics.addWidget(self.heart_rate, 1)
         metrics.addWidget(self.spo2, 1)
         layout.addLayout(metrics)
@@ -53,8 +66,10 @@ class SensorPage(QWidget):
         layout.addWidget(self.quality)
         self.result = browser()
         self.result.setAccessibleName("Live sensor analysis and next steps")
+        self.result.setMinimumHeight(130)
         layout.addWidget(self.result, 1)
         self.snapshot_button = QPushButton("Review / save this reading")
+        self.snapshot_button.setIcon(space_icon("fa6s.wave-square"))
         self.snapshot_button.setEnabled(False)
         self.snapshot_button.clicked.connect(self.snapshot)
         layout.addWidget(self.snapshot_button)

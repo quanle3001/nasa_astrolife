@@ -4,6 +4,7 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QHBoxLayout, QPushButton, QVBoxLayout, QWidget
 
 from astrotip.ui.common import browser, assessment_html, label
+from astrotip.ui.icons import space_icon
 
 
 class AssessmentPage(QWidget):
@@ -14,13 +15,17 @@ class AssessmentPage(QWidget):
         super().__init__(parent)
         self.catalog = catalog
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.addWidget(label("MISSION HEALTH REVIEW", "eyebrow", False))
         heading = QHBoxLayout()
         heading.addWidget(label("Health priorities & next steps", "pageTitle"), 1)
         self.save_button = QPushButton("Save to history")
+        self.save_button.setIcon(space_icon("fa6s.floppy-disk"))
         self.save_button.setEnabled(False)
         self.save_button.clicked.connect(self.save_requested.emit)
         heading.addWidget(self.save_button)
         edit = QPushButton("Edit check-in")
+        edit.setIcon(space_icon("fa6s.pen-to-square"))
         edit.clicked.connect(self.checkin_requested.emit)
         heading.addWidget(edit)
         layout.addLayout(heading)

@@ -1,6 +1,7 @@
 """Headless desktop checks for the check-in, priorities, and saved-history flow."""
 
 import importlib.util
+import json
 import os
 from pathlib import Path
 import sys
@@ -154,6 +155,25 @@ class DesktopFlowTests(unittest.TestCase):
         self.assertNotIn("B-Complex", content)
         self.assertNotIn("Radiation-induced", content)
         self.assertNotIn("Research in progress", content)
+
+    def test_mission_cards_and_combo_share_one_state_with_offline_assets(self):
+        form = self.window.checkin_page
+        gallery = form.mission_gallery
+        gallery.cards["mars"].selected.emit("mars")
+        self.app.processEvents()
+        self.assertEqual(form.mission.currentData(), "mars")
+        self.assertTrue(gallery.cards["mars"]._selected)
+        form.mission.setCurrentIndex(form.mission.findData("lunar"))
+        self.app.processEvents()
+        self.assertTrue(gallery.cards["lunar"]._selected)
+        self.assertFalse(gallery.cards["mars"]._selected)
+        manifest_path = Path(__file__).resolve().parents[1] / "assets" / "nasa" / "media_manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual({item["mission"] for item in manifest["assets"]}, {"leo", "lunar", "mars"})
+        for item in manifest["assets"]:
+            self.assertTrue((manifest_path.parent / item["local_path"]).is_file())
+            self.assertTrue(item["nasa_id"])
+            self.assertTrue(item["source_url"].startswith("https://images.nasa.gov/"))
 
 
 if __name__ == "__main__":

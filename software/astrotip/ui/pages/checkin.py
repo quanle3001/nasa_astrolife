@@ -8,6 +8,8 @@ from PySide6.QtWidgets import (
 
 from astrotip.models.health_indicator import CheckIn, MISSION_LABELS, SYMPTOMS
 from astrotip.ui.common import label
+from astrotip.ui.icons import space_icon
+from astrotip.ui.widgets.mission_gallery import MissionGallery
 
 
 class CheckinPage(QWidget):
@@ -16,6 +18,8 @@ class CheckinPage(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.addWidget(label("CREW DAILY LOG", "eyebrow", False))
         layout.addWidget(label("Daily health check-in", "pageTitle"))
         layout.addWidget(label(
             "Record what you know. Leave missing readings blank; unreported symptoms are not ruled out.",
@@ -25,12 +29,17 @@ class CheckinPage(QWidget):
         scroll.setWidgetResizable(True)
         content = QWidget()
         body = QVBoxLayout(content)
+        body.setContentsMargins(2, 5, 8, 8)
+        self.mission_gallery = MissionGallery()
+        body.addWidget(self.mission_gallery)
         context = QGroupBox("Mission and observations")
         form = QFormLayout(context)
         self.mission = QComboBox()
         for key, name in MISSION_LABELS.items():
             self.mission.addItem(name, key)
         form.addRow("Mission context", self.mission)
+        self.mission_gallery.mission_changed.connect(self._select_mission)
+        self.mission.currentIndexChanged.connect(self._sync_gallery)
         self.heart_rate = QLineEdit()
         self.heart_rate.setPlaceholderText("Optional · beats per minute")
         self.heart_rate.setAccessibleName("Heart rate in beats per minute")
@@ -80,10 +89,19 @@ class CheckinPage(QWidget):
         footer = QHBoxLayout()
         footer.addWidget(label("Assessment stays in memory until you choose Save to history.", "subtitle"), 1)
         self.submit_button = QPushButton("Review health priorities")
+        self.submit_button.setIcon(space_icon("fa6s.satellite-dish", color="#07131C", active="#07131C"))
         self.submit_button.setObjectName("primaryButton")
         self.submit_button.clicked.connect(self.submit)
         footer.addWidget(self.submit_button)
         layout.addLayout(footer)
+
+    def _select_mission(self, mission):
+        index = self.mission.findData(mission)
+        if index >= 0:
+            self.mission.setCurrentIndex(index)
+
+    def _sync_gallery(self, _index=None):
+        self.mission_gallery.set_mission(self.mission.currentData(), emit=False)
 
     @staticmethod
     def _optional_number(field, name):
