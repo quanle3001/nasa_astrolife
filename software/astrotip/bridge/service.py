@@ -17,6 +17,7 @@ from uuid import uuid4
 
 from PySide6.QtCore import QCoreApplication, QObject, QTimer, Signal, Slot
 
+from astrotip.analysis.mission_context import load_mission_context, validate_profile
 from astrotip.analysis.nasa_guidance import load_catalog
 from astrotip.analysis.optical_quality import OpticalSignalQuality
 from astrotip.analysis.reading_stability import ReadingStability
@@ -25,6 +26,9 @@ from astrotip.bridge.ppg_batcher import PpgBatcher, contact_state
 from astrotip.inputs.sensor_serial import SerialReader, available_ports
 from astrotip.inputs.simulated_reader import SIMULATED_PORT, SimulatedReader
 from astrotip.models.health_indicator import CheckIn, SYMPTOMS
+from astrotip.questionnaire.registry import applicable_answers, load_registry, validate_answer
+from astrotip.questionnaire.session import checkin_from_answers
+from astrotip.storage.app_state import AppStateStore
 from astrotip.storage.database import HistoryStore
 
 
@@ -65,6 +69,10 @@ class BridgeService(QObject):
         self.catalog = load_catalog()
         history_path = os.getenv("ASTROTIP_HISTORY_PATH")
         self.history = HistoryStore(Path(history_path)) if history_path else HistoryStore()
+        self.mission_context = load_mission_context(self.catalog)
+        self.registry = load_registry(self.catalog)
+        self.state = AppStateStore(self.history.path)
+        self.latest_sensor_checkin: CheckIn | None = None
         self.reader = None
         self.active_port = ""
         self.pending: dict[str, tuple[CheckIn, object]] = {}
@@ -80,6 +88,16 @@ class BridgeService(QObject):
             "health.assess": self.create_assessment,
             "health.save": self.save_assessment,
             "history.list": self.list_history,
+            "knowledge.get": self.get_knowledge,
+            "mission.get": self.get_mission,
+            "mission.save": self.save_mission,
+            "session.current": self.current_session,
+            "session.start": self.start_session,
+            "session.save": self.save_session,
+            "session.preview": self.preview_session,
+            "session.submit": self.submit_session,
+            "actions.list": self.list_actions,
+            "actions.update": self.update_action,
             "system.shutdown": self.shutdown,
         }
 
@@ -172,6 +190,7 @@ class BridgeService(QObject):
 
     def _drop_sensor_assessment(self):
         """A stale sensor estimate must not stay reviewable or saveable."""
+        self.latest_sensor_checkin = None
         if self.sensor_pending_id:
             self.pending.pop(self.sensor_pending_id, None)
             self.sensor_pending_id = None
@@ -236,6 +255,7 @@ class BridgeService(QObject):
         payload = self._assess(checkin)
         self._drop_sensor_assessment()
         self.sensor_pending_id = payload["assessment_id"]
+        self.latest_sensor_checkin = checkin
         self.emit_event("sensor.reading", {
             "usable": True,
             "heart_rate": reading.heart_rate,
@@ -288,6 +308,116 @@ class BridgeService(QObject):
 
     def list_history(self, _params):
         return {"entries": self.history.list_entries()}
+
+    # --- Guided flow: knowledge, mission, sessions, actions ----------------
+    def get_knowledge(self, _params):
+        """Everything the guided flow shows that comes from curated data files."""
+        return {"catalog": self.catalog, "mission_context": self.mission_context, "registry": self.registry}
+
+    def get_mission(self, _params):
+        return {"profile": self.state.get_mission()}
+
+    def save_mission(self, params):
+        return {"profile": self.state.save_mission(validate_profile(params.get("profile"), self.mission_context))}
+
+    def current_session(self, _params):
+        """State needed at launch: resume point, last result and open actions."""
+        return {
+            "mission": self.state.get_mission(),
+            "open": self.state.open_session(),
+            "latest": self.state.latest_submitted(),
+            "actions": self.state.list_actions(),
+        }
+
+    def start_session(self, _params):
+        mission = self.state.get_mission()
+        if mission is None:
+            raise ValueError("Choose and save a mission before starting a check-in.")
+        return self.state.start_session(mission, self.registry["version"])
+
+    def _open_session(self, params):
+        session = self.state.get_session(str(params.get("session_id", "")))
+        if session is None or session["status"] != "in_progress":
+            raise ValueError("This check-in session is no longer open.")
+        return session
+
+    def _clean_answers(self, session, answers):
+        """Validate answer values and drop answers to questions that no longer apply."""
+        if not isinstance(answers, dict):
+            raise ValueError("Answers must be an object.")
+        questions = {question["id"]: question for question in self.registry["questions"]}
+        if not set(answers) <= set(questions):
+            raise ValueError("The answers refer to an unknown question.")
+        for question_id, value in answers.items():
+            validate_answer(questions[question_id], value)
+        return applicable_answers(self.registry, session["mission"], answers)
+
+    def _hazard_order(self, session):
+        return self.mission_context["missions"][session["mission"]["environment"]]["hazard_order"]
+
+    def save_session(self, params):
+        session = self._open_session(params)
+        answers = self._clean_answers(session, params.get("answers", {}))
+        return self.state.save_progress(session["session_id"], answers, str(params.get("position", ""))[:120])
+
+    def preview_session(self, params):
+        """Assess the answers so far without saving a result.
+
+        Used by the safety screen: an urgent answer must show the existing
+        emergency guidance immediately, before the rest of the check-in.
+        """
+        session = self._open_session(params)
+        answers = self._clean_answers(session, params.get("answers", {}))
+        self.state.save_progress(session["session_id"], answers, str(params.get("position", ""))[:120])
+        checkin, notes = checkin_from_answers(self.registry, session["mission"], answers,
+                                              self._hazard_order(session), require_safety=False)
+        assessment = assess(checkin, self.catalog)
+        return {"checkin": asdict(checkin), "assessment": asdict(assessment), "session_notes": notes,
+                "urgent": assessment.level == "urgent"}
+
+    def _measurement(self, params):
+        """Resolve the measurement for a submission; sensor values never come from the renderer."""
+        measurement = params.get("measurement") or {"use": "none"}
+        use = measurement.get("use")
+        if use == "sensor":
+            latest = self.latest_sensor_checkin
+            if latest is None:
+                raise ValueError("No current sensor reading is available. Hold still for a fresh reading, enter values manually, or continue without a measurement.")
+            return {"heart_rate": latest.heart_rate, "spo2": latest.spo2, "signal_quality": latest.signal_quality,
+                    "input_source": latest.input_source, "sensor_port": latest.sensor_port,
+                    "sensor_received_at": latest.sensor_received_at}
+        if use == "manual":
+            return {"heart_rate": measurement.get("heart_rate"), "spo2": measurement.get("spo2"),
+                    "signal_quality": measurement.get("signal_quality", "unknown"), "input_source": "manual"}
+        if use == "none":
+            return {}
+        raise ValueError("Choose a sensor reading, a manual entry, or no measurement.")
+
+    def submit_session(self, params):
+        """Assess a finished check-in with the existing rules and store the result."""
+        session = self._open_session(params)
+        answers = self._clean_answers(session, params.get("answers", session["answers"]))
+        checkin, notes = checkin_from_answers(self.registry, session["mission"], answers,
+                                              self._hazard_order(session), self._measurement(params))
+        assessment = assess(checkin, self.catalog)
+        entry_id = self.history.save(checkin, assessment)
+        actions = [
+            {"condition_id": finding.condition_id, "level": finding.level, "text": action, "observation": finding.reason}
+            for finding in assessment.findings if finding.level != "info" for action in finding.actions
+        ]
+        result = {"checkin": json.loads(json.dumps(asdict(checkin), default=_json_default)),
+                  "assessment": asdict(assessment), "session_notes": notes}
+        saved_actions = self.state.complete_session(session["session_id"], answers, entry_id, result, actions)
+        return {"session_id": session["session_id"], "entry_id": entry_id, **result, "actions": saved_actions}
+
+    def list_actions(self, _params):
+        return {"actions": self.state.list_actions()}
+
+    def update_action(self, params):
+        action_id = params.get("id")
+        if isinstance(action_id, bool) or not isinstance(action_id, int):
+            raise ValueError("Choose a follow-up action.")
+        return {"action": self.state.set_action_status(action_id, str(params.get("status", "")))}
 
     def shutdown(self, _params):
         self.ppg_timer.stop()
