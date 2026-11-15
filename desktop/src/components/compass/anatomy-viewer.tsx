@@ -32,8 +32,8 @@ const DEFAULT_LAYERS: Record<AnatomySystem, boolean> = { skin: false, skeleton: 
 const isExcluded = (structure: AnatomyStructure) => structure.system === "skin" || structure.category === "Reproductive";
 /** Space kept around a selected region when the camera flies to it, in metres. */
 const FOCUS_PADDING = 0.17;
-const HOVER = new Color("#bfeaff");
-const SELECTED = new Color("#46d9e8");
+const HOVER = new Color("#cdd7df");
+const SELECTED = new Color("#9dcddc");
 const PROMPT = new Color("#f5c67b");
 const NONE = new Color("#000000");
 
@@ -136,7 +136,7 @@ function Model({ url, layers, selected, highlighted, hoveredKey, showPins, onPic
       />
       {showPins && pins.map((pin) => (
         <group key={pin.regionId}>
-          <Line points={[pin.anchor, pin.labelAt]} color={pin.regionId === selected ? "#46d9e8" : "#8fa6c4"} lineWidth={1} transparent opacity={0.75} />
+          <Line points={[pin.anchor, pin.labelAt]} color={pin.regionId === selected ? "#9dcddc" : "#789fb0"} lineWidth={1} transparent opacity={0.75} />
           <Html position={pin.labelAt} center zIndexRange={[15, 0]}>
             <button type="button" className={cn("anatomy-pin", pin.regionId === selected && "is-selected", highlighted.has(pin.regionId) && "has-prompt")} aria-pressed={pin.regionId === selected} onClick={() => onPickRegion(pin.regionId)} onPointerEnter={() => onHoverPin(pin.regionId)} onPointerLeave={() => onHoverPin(null)} onFocus={() => onHoverPin(pin.regionId)} onBlur={() => onHoverPin(null)}>
               {pin.label}{highlighted.has(pin.regionId) && <span className="sr-only"> · has a prompt to review</span>}
@@ -243,7 +243,7 @@ export default function AnatomyViewer({ selected, highlighted, onSelect, calm, r
         </div>
         <Canvas frameloop={spinning ? "always" : "demand"} dpr={[1, 1.75]} camera={{ fov: 32, position: [0, 1, 4.2] }} role="group" aria-label="3D anatomical model with selectable region labels. Drag to rotate, scroll to zoom. The same regions are listed as buttons below.">
           <ambientLight intensity={1.15} />
-          <hemisphereLight args={["#e6f4ff", "#1a2740", 1.2]} />
+          <hemisphereLight args={["#cdd7df", "#062b43", 1.2]} />
           <directionalLight position={[2.5, 4, 3.5]} intensity={2.2} />
           <directionalLight position={[-3, 2, -2.5]} intensity={0.9} />
           <Suspense fallback={null}>

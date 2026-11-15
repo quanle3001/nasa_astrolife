@@ -33,8 +33,8 @@ const POSES: Record<AstronautVariant, { position: [number, number, number]; scal
  * light from behind and a fill from below.
  */
 const MISSION_LIGHTS: Record<MissionId, { key: string; rim: string; fill: string }> = {
-  leo: { key: "#7fd4ff", rim: "#2f6bff", fill: "#46d9e8" },
-  lunar: { key: "#dfe9ff", rim: "#6f8cff", fill: "#8b7cf6" },
+  leo: { key: "#9dcddc", rim: "#5692a9", fill: "#044568" },
+  lunar: { key: "#cdd7df", rim: "#9dcddc", fill: "#5692a9" },
   mars: { key: "#ffb27a", rim: "#ff5a3c", fill: "#c46c3e" },
 };
 

@@ -121,7 +121,7 @@ interface Particle { homeX: number; homeY: number; x: number; y: number; vx: num
  * than WebGL so it never competes with the app's single 3D scene, and it stops
  * its animation loop entirely while motion is paused or the tab is hidden.
  */
-export function ParticleField({ className, density = 0.00011, color = "159, 220, 245" }: { className?: string; density?: number; color?: string }) {
+export function ParticleField({ className, density = 0.00011, color = "157, 205, 220" }: { className?: string; density?: number; color?: string }) {
   const calm = useCalmMotion();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 

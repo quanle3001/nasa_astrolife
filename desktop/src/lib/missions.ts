@@ -84,12 +84,12 @@ const PRESENTATION: Record<MissionId, Pick<MissionMedia, "title" | "description"
   leo: {
     title: "Low Earth Orbit",
     description: "The International Space Station's solar arrays frame Earth's illuminated limb and aurora from orbit.",
-    short: "Earth limb · ISS context", color: "#48d5e9", focus: "50% 62%", video_zoom: 1, video_segment: null,
+    short: "Earth limb · ISS context", color: "#9dcddc", focus: "50% 62%", video_zoom: 1, video_segment: null,
   },
   lunar: {
     title: "Lunar Mission",
     description: "Earth appears above the Apollo 17 lunar roving vehicle during surface operations at Taurus-Littrow.",
-    short: "Apollo surface reference", color: "#b9d8f2", focus: "38% 42%", video_zoom: 1, video_segment: null,
+    short: "Apollo surface reference", color: "#cdd7df", focus: "38% 42%", video_zoom: 1, video_segment: null,
   },
   mars: {
     title: "Mars / Deep Space",

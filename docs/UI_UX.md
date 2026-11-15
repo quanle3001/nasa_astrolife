@@ -62,10 +62,13 @@ Full license texts are reproduced in `desktop/THIRD_PARTY_NOTICES.md`.
 Tokens live in `desktop/src/styles.css`:
 
 - **Colors** (`@theme`, generates Tailwind utilities such as `bg-space-surface`):
-  `space-black #02040b`, `space-bg #060a16`, `space-surface #0c1424`,
-  `space-elevated #141e34`, `space-border #263a54`, `space-blue #3b82f6`,
-  `space-cyan #46d9e8`, `space-white #f1f6ff`, `space-silver`, `space-muted`,
-  `space-subtle`, and a reserved `space-violet` for small atmospheric touches.
+  `space-black #02121b`, `space-bg #041f2e`, `space-surface #062b43`,
+  `space-elevated #0a3852`, `space-border #356f86`, `space-blue #5692a9`,
+  `space-cyan #9dcddc`, `space-white #f2f7fa`, `space-silver #cdd7df`,
+  `space-muted #aac0ca`, `space-subtle #8eabb7`, and atmospheric
+  `space-violet #78a9ba`. The five reference swatches are `#062b43`,
+  `#044568`, `#5692a9`, `#9dcddc`, and `#cdd7df`; the darker and text tokens
+  extend that supplied palette for depth and accessible contrast.
 - **Status colors** (`--status-urgent/review/watch/info/live`): clinical
   meaning only, never decorative; unchanged from the original priority colors.
 - **Surfaces:** `--panel-bg` (50–62% tint with a 4px blur: dark enough to read
@@ -77,7 +80,7 @@ Tokens live in `desktop/src/styles.css`:
 - **Type scale** `--text-label` (11px floor), `--text-xs` (12px), `--text-sm/base`,
   `--text-hero`, `--text-page-title`; `--font-sans/display/mono`.
 - **Motion** `--ease-out`, `--ease-in-out`, `--duration-fast/base/slow/atmosphere`.
-- **Focus** `--focus-ring` (2px space-black gap + 2px cyan ring).
+- **Focus** `--focus-ring` (2px space-black gap + 2px ice-blue ring).
 - **Background layers** `--layer-atmosphere/stars/crown/content/nav`.
 
 Primitives (`.glass-panel`, `.control`, `.priority-*`, …) sit in
@@ -90,7 +93,7 @@ Shared UI language:
   the hero viewport and on mission cards (hover, focus, selected).
 - **Floating telemetry cards** (Motion, 4.8 s bob/tilt, staggered) from the
   original telemetry hero.
-- **Mission accent** (`--accent`) per mission: LEO cyan, lunar silver-blue,
+- **Mission accent** (`--accent`) per mission: LEO ice blue, lunar silver-blue,
   Mars amber; drives frame border/glow, eyebrow color and selected ring.
 
 ### Motion budget

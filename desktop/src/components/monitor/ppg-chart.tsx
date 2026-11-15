@@ -18,7 +18,7 @@ const STATE_TEXT: Record<PpgState, string> = {
 };
 
 function chartOptions(width: number, height: number, showRed: boolean): uPlot.Options {
-  const axis = { stroke: "#7c8ca3", grid: { stroke: "rgba(120,156,196,.12)", width: 1 }, ticks: { stroke: "rgba(120,156,196,.2)", width: 1 } };
+  const axis = { stroke: "#8eabb7", grid: { stroke: "rgba(86,146,169,.14)", width: 1 }, ticks: { stroke: "rgba(86,146,169,.24)", width: 1 } };
   return {
     width, height,
     legend: { show: false },
@@ -31,7 +31,7 @@ function chartOptions(width: number, height: number, showRed: boolean): uPlot.Op
     ],
     series: [
       {},
-      { label: "Infrared", stroke: "#46d9e8", width: 2, points: { show: false } },
+      { label: "Infrared", stroke: "#9dcddc", width: 2, points: { show: false } },
       // Dashed as well as coloured, so the two channels differ without relying on colour.
       { label: "Red", stroke: "#ff8394", width: 1.5, dash: [6, 4], points: { show: false }, show: showRed },
     ],
