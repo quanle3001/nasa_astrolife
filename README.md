@@ -121,8 +121,9 @@ AstroLife's hardware has three parts:
 | Mechanical housing | Designed by Ben Vo. The enclosure that holds the ESP32, the MAX30102 and their wiring in one unit, keeps the sensor open for a fingertip, and lets the USB cable run out to the computer |
 | Desktop app | Reads the sensor over USB, runs the check-in and shows the results |
 
-The housing design files are the "mechanical" folder. Wiring and
-flashing are in [docs/HARDWARE.md](docs/HARDWARE.md).
+The housing design files go in the [mechanical/](mechanical/) folder, which
+is a placeholder until they are added. Wiring and flashing are in
+[docs/HARDWARE.md](docs/HARDWARE.md).
 
 ## Repository layout
 
@@ -130,6 +131,7 @@ flashing are in [docs/HARDWARE.md](docs/HARDWARE.md).
 desktop/      React + Electron interface
 software/     Python backend, NASA resources and caches, tests, Qt fallback
 electrical/   ESP32 firmware
+mechanical/   Housing design files (placeholder)
 docs/         Documentation
 ```
 
