@@ -97,9 +97,9 @@ export function MissionViewport({ mission, telemetry }: { mission: MissionId; te
         </figcaption>
       </figure>
 
-      {/* Values being read stay still; only decoration moves. */}
-      <TelemetryCard className="viewport-card-heart" icon={<HeartPulse className="size-4" />} label={telemetry.source === "simulated" ? "Heart rate · simulated" : "Heart rate"} value={telemetry.heartRate} unit="bpm" stale={valuesStale} float={undefined} />
-      <TelemetryCard className="viewport-card-oxygen" icon={<Waves className="size-4" />} label={telemetry.source === "simulated" ? "SpO₂ · simulated" : "Estimated SpO₂"} value={telemetry.spo2} unit="%" stale={valuesStale} float={undefined} />
+      {/* The cards drift a few pixels, as in the original hero; "Pause motion" holds them still. */}
+      <TelemetryCard className="viewport-card-heart" icon={<HeartPulse className="size-4" />} label={telemetry.source === "simulated" ? "Heart rate · simulated" : "Heart rate"} value={telemetry.heartRate} unit="bpm" stale={valuesStale} float={floatAnimation(reduced, 0)} />
+      <TelemetryCard className="viewport-card-oxygen" icon={<Waves className="size-4" />} label={telemetry.source === "simulated" ? "SpO₂ · simulated" : "Estimated SpO₂"} value={telemetry.spo2} unit="%" stale={valuesStale} float={floatAnimation(reduced, .8, 7)} />
       <span className="viewport-satellite viewport-satellite-one" aria-hidden="true"><Activity className="size-4" /></span>
       <span className="viewport-satellite viewport-satellite-two" aria-hidden="true"><Sparkles className="size-3.5" /></span>
       <motion.div className="viewport-card viewport-card-link" animate={floatAnimation(reduced, 1.4, 6)}>

@@ -185,7 +185,7 @@ input, textarea { caret-color: var(--color-space-cyan); }
 .screen-stage { display:grid; min-width:0; isolation:isolate; }
 .screen-transition { grid-area:1 / 1; min-width:0; transform-origin:50% 12%; }
 
-.space-navbar { position: fixed; z-index: var(--layer-nav); top: var(--nav-offset); left: var(--page-gutter); right: var(--page-gutter); height: var(--nav-height); display: grid; grid-template-columns: minmax(210px,1fr) auto minmax(210px,1fr); align-items: center; border: 1px solid var(--panel-border); border-radius: 20px; background: rgba(3,7,17,.15); box-shadow: 0 10px 40px rgba(0,0,0,.2), inset 0 1px rgba(255,255,255,.04); backdrop-filter: blur(12px); padding: 0 16px 0 74px; }
+.space-navbar { position: fixed; z-index: var(--layer-nav); top: var(--nav-offset); left: var(--page-gutter); right: var(--page-gutter); height: var(--nav-height); display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 12px; align-items: center; border: 1px solid var(--panel-border); border-radius: 20px; background: rgba(3,7,17,.15); box-shadow: 0 10px 40px rgba(0,0,0,.2), inset 0 1px rgba(255,255,255,.04); backdrop-filter: blur(12px); padding: 0 16px 0 74px; }
 .brand-lockup { display: flex; align-items: center; justify-self: start; gap: 11px; border: 0; border-radius: var(--radius-md); background: transparent; color: white; text-align: left; }
 .brand-mark { width:38px; height:38px; flex:none; filter:drop-shadow(0 6px 14px rgba(47,111,228,.35)); }
 .brand-copy { display:flex; flex-direction:column; gap: 2px; }
@@ -899,3 +899,42 @@ input, textarea { caret-color: var(--color-space-cyan); }
 
 /* A priority reads as one label; it never wraps inside its pill. */
 .priority-badge { flex:none; white-space:nowrap; }
+
+/* --------------------------------------------------------------------------
+   Navbar: the three groups never overlap
+   Each side takes the width it needs and the tabs sit centred in what is left.
+   As the window narrows, the tagline goes first, then the sensor label
+   (its dot and spoken label stay).
+   -------------------------------------------------------------------------- */
+@media (max-width: 1360px) { .brand-copy small { display:none; } }
+@media (max-width: 1260px) {
+  .nav-badge > span:last-child { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  .nav-badge { width:32px; padding:0; justify-content:center; }
+}
+
+/* --------------------------------------------------------------------------
+   Colour on the small parts
+   The mission accent (cyan in low Earth orbit, silver-blue at the Moon, orange
+   at Mars) marks what belongs to the chosen mission. Each NASA hazard keeps one
+   colour of its own wherever it is named. These colours identify; they never
+   carry a health status, which always has its own badge and words.
+   -------------------------------------------------------------------------- */
+[data-hazard="radiation"] { --hazard:#ffa25c; }
+[data-hazard="isolation"] { --hazard:#b6a3ff; }
+[data-hazard="distance"] { --hazard:#7fb7ff; }
+[data-hazard="gravity"] { --hazard:#5ce1cb; }
+[data-hazard="environment"] { --hazard:#9be27a; }
+.hazard-card .hazard-icon { background:color-mix(in oklab, var(--hazard, var(--color-space-cyan)) 14%, transparent); color:var(--hazard, var(--color-space-cyan)); box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--hazard, var(--color-space-cyan)) 30%, transparent); }
+.hazard-card:hover .hazard-icon { background:color-mix(in oklab, var(--hazard, var(--color-space-cyan)) 24%, transparent); box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--hazard, var(--color-space-cyan)) 55%, transparent), 0 0 22px -6px var(--hazard, var(--color-space-cyan)); }
+.hazard-card.is-open { border-color:color-mix(in oklab, var(--hazard, var(--color-space-cyan)) 45%, transparent); }
+.hazard-rank { display:grid; width:26px; height:26px; flex:none; place-items:center; border:1px solid color-mix(in oklab, var(--accent, var(--color-space-cyan)) 55%, transparent); border-radius:50%; color:var(--accent, var(--color-space-cyan)); font:700 12px/1 var(--font-mono); font-variant-numeric:tabular-nums; }
+.hazard-card.is-emphasized { border-color:color-mix(in oklab, var(--accent, var(--color-space-cyan)) 42%, transparent); }
+.hazard-emphasis { border-color:color-mix(in oklab, var(--accent, var(--color-space-cyan)) 55%, transparent); background:color-mix(in oklab, var(--accent, var(--color-space-cyan)) 12%, transparent); color:var(--accent, var(--color-space-cyan)); }
+.hazard-tag::before, .risk-chips li[data-hazard]::before { content:""; display:inline-block; width:7px; height:7px; margin-right:6px; border-radius:50%; background:var(--hazard); vertical-align:middle; }
+.hazard-tag + .hazard-tag::before { margin-left:2px; }
+.risk-chips li[data-hazard] { border-color:color-mix(in oklab, var(--hazard) 38%, transparent); }
+.plan-summary { border-color:color-mix(in oklab, var(--accent, var(--color-space-cyan)) 45%, transparent); }
+.flow-stepper-dots i.is-current { background:var(--accent, var(--color-space-cyan)); box-shadow:0 0 12px color-mix(in oklab, var(--accent, var(--color-space-cyan)) 70%, transparent); }
+.question-progress span { background:linear-gradient(90deg, #5692a9, var(--accent, #9dcddc)); }
+.mission-chip { border-color:color-mix(in oklab, var(--accent, #fff) 35%, transparent); }
+.dashboard-hero-copy h1 { background:linear-gradient(100deg, var(--color-space-white) 55%, color-mix(in oklab, var(--accent, var(--color-space-white)) 70%, var(--color-space-white))); -webkit-background-clip:text; background-clip:text; color:transparent; }

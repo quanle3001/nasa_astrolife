@@ -38,7 +38,7 @@ export function HazardsPage({ profile, knowledge, plan, onBack, onNext, nextLabe
         </section>
       )}
       <ol className="hazard-list">
-        {mission.hazard_order.map((id) => {
+        {mission.hazard_order.map((id, index) => {
           const hazard = catalog.hazards.find((item) => item.id === id);
           const detail = context.hazards[id];
           const emphasis = mission.emphasis[id];
@@ -47,8 +47,9 @@ export function HazardsPage({ profile, knowledge, plan, onBack, onNext, nextLabe
           const expanded = open === id;
           const planned = plan?.hazards.find((item) => item.id === id);
           return (
-            <motion.li key={id} layout={!reduced} className={cn("hazard-card", emphasis && "is-emphasized", expanded && "is-open")} >
+            <motion.li key={id} layout={!reduced} className={cn("hazard-card", emphasis && "is-emphasized", expanded && "is-open")} data-hazard={id}>
               <button type="button" className="hazard-head" aria-expanded={expanded} aria-controls={`hazard-${id}`} onClick={() => setOpen(expanded ? null : id)}>
+                <span className="hazard-rank" aria-label={`Presented ${index + 1} of ${mission.hazard_order.length} for this mission`}>{index + 1}</span>
                 <span className="hazard-icon"><Icon className="size-5" aria-hidden="true" /></span>
                 <span className="hazard-title">
                   <strong>{hazard?.title ?? id}</strong>

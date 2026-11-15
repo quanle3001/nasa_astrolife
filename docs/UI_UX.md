@@ -449,3 +449,23 @@ scan; its page-level rules need a running page and did not run) reported one
 finding, a thick one-sided accent border on the new indicator cards, which was
 replaced with a tinted outline. UI UX Pro Max's "colour only" rule is met: each
 indicator status carries an icon and a text label as well as its colour.
+
+### Colour and motion on the small parts (15 November, later pass)
+
+- **Mission accent.** The chosen mission's colour (cyan in low Earth orbit,
+  silver-blue at the Moon, orange at Mars) is set once on the app shell as
+  `--accent` and marks what belongs to the mission: the hazard rank numbers,
+  the "Emphasized for …" pill, the current step in the header, the question
+  progress bar, the check-in plan outline and the mission chip.
+- **Hazard colours.** Each NASA hazard keeps one colour wherever it is named
+  (radiation orange, isolation violet, distance blue, gravity teal, environment
+  green): its icon on the hazards page, and a dot beside its name on question
+  topics and in the Health Compass. These colours identify a hazard. They never
+  carry a health status, which always has its own badge and words.
+- **Floating cards.** The heart-rate and SpO₂ cards on the mission viewport
+  drift a few pixels again, as in the original hero. "Pause motion" holds them
+  still.
+- **Navbar.** The brand, the tabs and the status group can no longer overlap:
+  each side takes the width it needs and the tabs centre in what remains. As
+  the window narrows the tagline goes first, then the sensor label (its dot and
+  spoken label stay). Checked at 1440, 1340, 1240 and 1130 px.

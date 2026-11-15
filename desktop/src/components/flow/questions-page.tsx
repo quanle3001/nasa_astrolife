@@ -54,7 +54,7 @@ export function QuestionsPage({ view, knowledge, plan, index, onIndex, onAnswer,
   const question = position < total ? view.questions[position] : null;
   const domain = question ? knowledge.registry.domains.find((item) => item.id === question.domain) : null;
   const parent = question?.parent ? knowledge.registry.questions.find((item) => item.id === question.parent) : null;
-  const hazards = (domain?.hazard_ids ?? []).map((id) => knowledge.catalog.hazards.find((hazard) => hazard.id === id)?.title ?? id);
+  const hazards = (domain?.hazard_ids ?? []).map((id) => ({ id, title: knowledge.catalog.hazards.find((hazard) => hazard.id === id)?.title ?? id }));
   const current = question ? view.answers[question.id] : undefined;
   // Why this question is on screen: a follow-up names the answer that opened it, otherwise the plan's reason for the topic.
   const parentAnswer = parent ? view.answers[parent.id] : undefined;
@@ -95,7 +95,7 @@ export function QuestionsPage({ view, knowledge, plan, index, onIndex, onAnswer,
           <motion.section key={domain.id} className="question-stage" {...stage}>
             <header className="question-topic">
               <h1>{domain.title}</h1>
-              {hazards.length > 0 && <p className="topic-hazards">Related NASA hazard{hazards.length > 1 ? "s" : ""}: {hazards.join(" · ")}</p>}
+              {hazards.length > 0 && <p className="topic-hazards">Related NASA hazard{hazards.length > 1 ? "s" : ""}: {hazards.map((hazard, index) => <span key={hazard.id} className="hazard-tag" data-hazard={hazard.id}>{index > 0 && " · "}{hazard.title}</span>)}</p>}
               <p className="question-count">Question {position + 1} of {total} · {view.answered} answered</p>
             </header>
             <AnimatePresence mode="wait" initial={false}>

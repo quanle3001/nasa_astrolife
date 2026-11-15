@@ -84,7 +84,7 @@ export function AppShell({ page, setPage, mission, connected, simulated, backend
     if (active === document.body || !document.body.contains(active) || active?.closest("[inert]")) scroller.current?.focus({ preventScroll: true });
   }, [page, scrollKey]);
   return (
-    <div className="cosmic-app relative min-h-screen text-space-white" data-mission={mission}>
+    <div className="cosmic-app relative min-h-screen text-space-white" data-mission={mission} style={{ "--accent": missionData.color } as React.CSSProperties}>
       <header className="space-navbar app-drag-region">
         <button type="button" className="app-no-drag brand-lockup" onClick={() => (onHome ? onHome() : setPage("dashboard"))} aria-label="AstroLife home">
           <img className="brand-mark" src="./logo.svg" alt="" width={38} height={38} draggable={false} />

@@ -118,13 +118,13 @@ export function CompassPage({ result, actions, knowledge, conditionTitles, onTog
             {region.conditionIds.map((id) => {
               const condition = catalog.conditions.find((item) => item.id === id);
               if (!condition) return null;
-              const hazards = condition.hazard_ids.map((hazardId) => catalog.hazards.find((hazard) => hazard.id === hazardId)?.title ?? hazardId);
+              const hazards = condition.hazard_ids.map((hazardId) => ({ id: hazardId, title: catalog.hazards.find((hazard) => hazard.id === hazardId)?.title ?? hazardId }));
               const related = actions.filter((action) => action.condition_id === id);
               return (
                 <section key={id} className="compass-block">
                   <div className="flex flex-wrap items-center justify-between gap-2"><h3>{condition.title}</h3><ProvenanceBadge kind="evidence" /></div>
                   <p>{condition.why_it_matters}</p>
-                  <ul className="risk-chips" aria-label="Related NASA hazards">{hazards.map((hazard) => <li key={hazard}>{hazard}</li>)}</ul>
+                  <ul className="risk-chips" aria-label="Related NASA hazards">{hazards.map((hazard) => <li key={hazard.id} data-hazard={hazard.id}>{hazard.title}</li>)}</ul>
                   <button type="button" className="research-toggle" aria-expanded={openResearch.has(id)} aria-controls={`research-${id}`} onClick={() => toggleResearch(id)}>
                     <ChevronDown className={cn("size-4 transition-transform", openResearch.has(id) && "rotate-180")} aria-hidden="true" /> {openResearch.has(id) ? "Hide" : "Show"} NASA research and sources
                   </button>

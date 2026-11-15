@@ -204,7 +204,10 @@ describe("QuestionsPage", () => {
     const { onAnswer, current } = setup(profile({ environment: "mars", phase: "transit" }), safetyNo, 0);
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Mood and teamwork");
     expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(1);
-    expect(screen.getByText(/Related NASA hazards: Isolation and confinement · Distance from Earth/)).toBeInTheDocument();
+    // Each hazard name is its own coloured tag, so the sentence is read from the whole line.
+    const hazardLine = screen.getByText((_content, element) => element?.classList.contains("topic-hazards") === true);
+    expect(hazardLine).toHaveTextContent("Related NASA hazards: Isolation and confinement · Distance from Earth");
+    expect(Array.from(hazardLine.querySelectorAll("[data-hazard]")).map((tag) => tag.getAttribute("data-hazard"))).toEqual(["isolation", "distance"]);
     expect(screen.queryByText(/Why this question:/)).not.toBeInTheDocument();
     expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuemax", String(current.questions.length));
     // One way forward: until there is an answer, the only ways on are to answer, skip or say "not sure".
