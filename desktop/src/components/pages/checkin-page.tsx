@@ -89,7 +89,7 @@ export function CheckinPage({ config, onAssess, busy, onCancel }: {
 
   return (
     <form id="checkin-form" onSubmit={submit} className="page-grid checkin-experience">
-      <div className="page-heading immersive-heading"><div><p className="telemetry-label">Available from every screen</p><h1>Report a health concern</h1><p>Select what applies and add any reading you have. Leave missing readings blank; unreported symptoms are not ruled out. For an emergency, follow the mission emergency procedure first.</p></div>{onCancel && <Button onClick={onCancel}>Return without reporting</Button>}</div>
+      <div className="page-heading immersive-heading"><div><h1>Report a health concern</h1><p>Select what applies and add any reading you have. Leave missing readings blank; unreported symptoms are not ruled out. For an emergency, follow the mission emergency procedure first.</p></div>{onCancel && <Button onClick={onCancel}>Return without reporting</Button>}</div>
       <Card className="p-5">
         <div className="mb-5 flex items-center gap-2"><NotebookPen className="size-4 text-cyan-300" /><h2 className="text-base font-semibold text-white">Readings and observations</h2></div>
         <div className="form-grid">

@@ -1,8 +1,6 @@
 import { CheckCircle2, Circle, RotateCcw } from "lucide-react";
-import { motion } from "motion/react";
 import { FlowPage, LEVEL_LABELS, ProvenanceBadge, SourceList } from "@/components/flow/common";
 import { Button } from "@/components/ui/button";
-import { useCalmMotion } from "@/lib/motion-preference";
 import { cn } from "@/lib/utils";
 import type { PriorityLevel } from "@/types/backend";
 import type { FollowupAction, Knowledge } from "@/types/flow";
@@ -45,21 +43,19 @@ export function ActionsPage({ actions, knowledge, conditionTitles, onToggle, onR
   onToggle: (action: FollowupAction) => void; onReassess: () => void; onBack?: () => void; onNext: () => void;
   busyId?: number | null; error?: string;
 }) {
-  const reduced = useCalmMotion();
   const sorted = [...actions].sort((a, b) => Number(a.status === "done") - Number(b.status === "done") || ORDER[a.level] - ORDER[b.level] || b.id - a.id);
   const open = actions.filter((action) => action.status === "open").length;
   return (
-    <FlowPage
-      eyebrow="Step 9 · Action Center" title="Your next steps"
+    <FlowPage title="Your next steps"
       lead={actions.length ? `${open} open · ${actions.length - open} done. Mark an action done when you have completed or discussed it.` : "No follow-up action was created from your check-ins."}
       onBack={onBack} onNext={onNext} nextLabel="Go to mission dashboard"
       aside={<Button onClick={onReassess}><RotateCcw className="size-4" /> Reassess now</Button>}
     >
       <div className="flex flex-wrap items-center gap-2"><ProvenanceBadge kind="rule" /><span className="text-xs text-space-subtle">Actions come from AstroLife's rule-based prompts. They are not prescriptions; follow your mission medical procedures.</span></div>
       {sorted.length > 0 ? (
-        <motion.ul className="action-list" initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }}>
+        <ul className="action-list">
           {sorted.map((action) => <ActionItem key={action.id} action={action} knowledge={knowledge} conditionTitles={conditionTitles} onToggle={onToggle} busy={busyId === action.id} />)}
-        </motion.ul>
+        </ul>
       ) : <p className="empty-line">Nothing to follow up. An empty list is not a health clearance: report any new concern at any time.</p>}
       {error && <div role="alert" className="flow-error">{error}</div>}
     </FlowPage>

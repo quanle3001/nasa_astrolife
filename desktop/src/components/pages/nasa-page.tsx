@@ -17,7 +17,7 @@ export function NasaPage({ knowledge, profile, radiation }: { knowledge: Knowled
   const conditions = catalog.conditions.filter((condition) => condition.hazard_ids.includes(hazardId));
   return (
     <div className="page-grid">
-      <div className="page-heading"><div><p className="telemetry-label">NASA data and research</p><h1>The science behind your check-in</h1><p>Real NASA instrument data and Human Research Program evidence. None of it is a measurement of you.</p></div></div>
+      <div className="page-heading"><div><h1>The science behind your check-in</h1><p>Real NASA instrument data and Human Research Program evidence. None of it is a measurement of you.</p></div></div>
       {radiation}
       <Card className="p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">

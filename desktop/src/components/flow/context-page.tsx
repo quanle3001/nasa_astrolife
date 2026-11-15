@@ -35,10 +35,9 @@ export function ContextPage({ profile, context, onChange, onBack, onNext, busy, 
     onChange({ ...profile, mission_day: text.trim() !== "" && Number.isInteger(value) && value >= 1 && value <= MAX_DAY ? value : null });
   };
   return (
-    <FlowPage
-      eyebrow="Step 2 · Mission context" title={`Tell us about your ${mission.title} mission`}
+    <FlowPage title={`Tell us about your ${mission.title} mission`}
       lead="Only what changes the check-in. These answers are saved on this computer and are not used to estimate any health risk."
-      onBack={onBack} onNext={onNext} nextDisabled={Boolean(dayError)} busy={busy}
+      onBack={onBack} onNext={onNext} nextLabel="Save mission context" nextDisabled={Boolean(dayError)} busy={busy}
     >
       <div className="context-grid">
         <fieldset className="context-field">

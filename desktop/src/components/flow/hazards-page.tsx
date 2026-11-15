@@ -20,12 +20,11 @@ export function HazardsPage({ profile, knowledge, onBack, onNext, nextLabel }: {
   const mission = context.missions[profile.environment];
   const [open, setOpen] = useState<HazardId | null>(mission.hazard_order[0]);
   return (
-    <FlowPage
-      wide eyebrow="Step 3 · Mission hazards" title={`NASA's five hazards on a ${mission.title} mission`}
+    <FlowPage wide title={`NASA's five hazards on a ${mission.title} mission`}
       lead={context.note} onBack={onBack} onNext={onNext} nextLabel={nextLabel ?? "Start health check-in"}
     >
       <ol className="hazard-list">
-        {mission.hazard_order.map((id, index) => {
+        {mission.hazard_order.map((id) => {
           const hazard = catalog.hazards.find((item) => item.id === id);
           const detail = context.hazards[id];
           const emphasis = mission.emphasis[id];
@@ -33,7 +32,7 @@ export function HazardsPage({ profile, knowledge, onBack, onNext, nextLabel }: {
           const Icon = ICONS[id];
           const expanded = open === id;
           return (
-            <motion.li key={id} layout={!reduced} className={cn("hazard-card", emphasis && "is-emphasized", expanded && "is-open")} initial={reduced ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: reduced ? 0 : index * 0.07, duration: 0.35 }}>
+            <motion.li key={id} layout={!reduced} className={cn("hazard-card", emphasis && "is-emphasized", expanded && "is-open")} >
               <button type="button" className="hazard-head" aria-expanded={expanded} aria-controls={`hazard-${id}`} onClick={() => setOpen(expanded ? null : id)}>
                 <span className="hazard-icon"><Icon className="size-5" aria-hidden="true" /></span>
                 <span className="hazard-title">

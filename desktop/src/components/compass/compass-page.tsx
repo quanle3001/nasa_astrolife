@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
-import { Compass, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { BodyMap2D } from "@/components/compass/body-map-2d";
 import { COMPASS_REGIONS, regionForCondition } from "@/components/compass/regions";
@@ -49,7 +49,6 @@ export function CompassPage({ result, actions, knowledge, conditionTitles, onTog
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key={region.id} className="compass-panel" initial={reduced ? false : { opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={reduced ? undefined : { opacity: 0, x: -16 }} transition={{ duration: 0.22 }}>
           <Card className="p-5" aria-live="polite">
-            <p className="telemetry-label"><Compass className="mr-1 inline size-3.5" aria-hidden="true" />Selected region</p>
             <h2 className="compass-title">{region.title}</h2>
             <p className="text-sm text-space-muted">{region.about}</p>
 
@@ -98,9 +97,9 @@ export function CompassPage({ result, actions, knowledge, conditionTitles, onTog
     </div>
   );
 
-  if (!framed) return <div className="page-grid"><div className="page-heading"><div><p className="telemetry-label">Health Compass</p><h1>Explore your health by body system</h1><p>Select a region to see what you recorded, AstroLife's prompts, and the NASA research behind them.</p></div></div>{body}</div>;
+  if (!framed) return <div className="page-grid"><div className="page-heading"><div><h1>Health Compass</h1><p>Select a region to see what you recorded, AstroLife's prompts, and the NASA research behind them.</p></div></div>{body}</div>;
   return (
-    <FlowPage wide eyebrow="Step 8 · Health Compass" title="Explore your health by body system" lead="Select a region to see what you recorded, AstroLife's prompts, and the NASA research behind them." onBack={onBack} onNext={onNext} nextLabel={nextLabel ?? "See my next steps"}>
+    <FlowPage wide title="Explore your health by body system" lead="Select a region to see what you recorded, AstroLife's prompts, and the NASA research behind them." onBack={onBack} onNext={onNext} nextLabel={nextLabel ?? "See my next steps"}>
       {body}
     </FlowPage>
   );

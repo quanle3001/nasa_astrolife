@@ -25,8 +25,7 @@ export function SafetyPage({ questions, answers, onChange, onBack, onNext, busy,
   const confirmNone = () => onChange({ ...answers, ...Object.fromEntries(questions.map((question) => [question.id, "no"])) });
   const clear = () => { const next = { ...answers }; for (const question of questions) delete next[question.id]; onChange(next); };
   return (
-    <FlowPage
-      eyebrow="Step 4 · Safety screen" title="First: is anything urgent right now?"
+    <FlowPage title="First: is anything urgent right now?"
       lead="These questions are the same on every mission and come before everything else. If one applies, you will see what to do immediately."
       onBack={onBack} onNext={onNext} nextDisabled={!complete} busy={busy} nextLabel={anyYes ? "Show what to do now" : "Continue to check-in"} aside={aside}
     >

@@ -1,27 +1,22 @@
 import { Activity, BookOpen, ClipboardList, ListChecks, TrendingUp } from "lucide-react";
-import { motion } from "motion/react";
 import { useEffect, useState, type ReactNode } from "react";
 import { FALLBACK_URGENT_ACTION, UrgentPanel } from "@/components/flow/urgent-panel";
 import { FlowPage, LEVEL_LABELS, measurementKind, ProvenanceBadge, SourceList } from "@/components/flow/common";
 import { PointerGlow } from "@/components/effects/interactive";
 import { Card } from "@/components/ui/card";
 import { api } from "@/lib/api";
-import { useCalmMotion } from "@/lib/motion-preference";
 import { cn } from "@/lib/utils";
 import type { AppConfig, HistoryEntry } from "@/types/backend";
 import type { Knowledge, SessionResult } from "@/types/flow";
 
-function Section({ icon: Icon, title, badge, children, index }: { icon: typeof Activity; title: string; badge?: ReactNode; children: ReactNode; index: number }) {
-  const reduced = useCalmMotion();
+function Section({ icon: Icon, title, badge, children }: { icon: typeof Activity; title: string; badge?: ReactNode; children: ReactNode }) {
   return (
-    <motion.section initial={reduced ? false : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: reduced ? 0 : index * 0.07, duration: 0.3 }}>
-      <Card className="findings-section">
-        <PointerGlow className="findings-section-inner">
-          <header><span className="findings-number">{index + 1}</span><Icon className="size-4 text-space-cyan" aria-hidden="true" /><h2>{title}</h2>{badge}</header>
-          {children}
-        </PointerGlow>
-      </Card>
-    </motion.section>
+    <Card className="findings-section">
+      <PointerGlow className="findings-section-inner">
+        <header><Icon className="size-4 text-space-cyan" aria-hidden="true" /><h2>{title}</h2>{badge}</header>
+        {children}
+      </PointerGlow>
+    </Card>
   );
 }
 
@@ -51,8 +46,7 @@ export function FindingsPage({ result, entryId, config, knowledge, onNext, onExi
   const qualityNotes = assessment.data_notes.filter((note) => /signal quality|pulse oximeters|spo2 was not provided|heart rate was not provided|spo2 prompts/i.test(note));
 
   return (
-    <FlowPage
-      wide eyebrow="Step 7 · Findings" title="What your check-in shows"
+    <FlowPage wide title="What your check-in shows"
       lead={assessment.summary} onNext={onNext} nextLabel={nextLabel ?? "Explore the Health Compass"}
       aside={onExit ? <button type="button" className="text-link" onClick={onExit}>Back to dashboard</button> : undefined}
     >
@@ -63,7 +57,7 @@ export function FindingsPage({ result, entryId, config, knowledge, onNext, onExi
       </div>
       {assessment.level === "urgent" && <UrgentPanel assessment={assessment} conditionTitles={config.condition_titles} sources={catalog.sources} />}
 
-      <Section index={0} icon={Activity} title="Measurement quality" badge={kind ? <ProvenanceBadge kind={kind} /> : undefined}>
+      <Section icon={Activity} title="Measurement quality" badge={kind ? <ProvenanceBadge kind={kind} /> : undefined}>
         {hasMeasurement ? (
           <dl className="fact-grid">
             <div><dt>Heart rate</dt><dd>{checkin.heart_rate != null ? `${checkin.heart_rate} bpm` : "Not available"}</dd></div>
@@ -75,7 +69,7 @@ export function FindingsPage({ result, entryId, config, knowledge, onNext, onExi
         <ul className="dot-list muted">{qualityNotes.map((note) => <li key={note}>{note}</li>)}</ul>
       </Section>
 
-      <Section index={1} icon={ClipboardList} title="What you reported">
+      <Section icon={ClipboardList} title="What you reported">
         {checkin.symptoms.length > 0
           ? <ul className="risk-chips">{checkin.symptoms.map((key) => <li key={key}>{config.symptoms[key] ?? key}</li>)}</ul>
           : <p className="empty-line">No symptom or alert was reported in this check-in.</p>}
@@ -90,7 +84,7 @@ export function FindingsPage({ result, entryId, config, knowledge, onNext, onExi
         {otherNotes.map((note) => <p key={note} className="empty-line">{note}</p>)}
       </Section>
 
-      <Section index={2} icon={TrendingUp} title="Compared with earlier saved measurements">
+      <Section icon={TrendingUp} title="Compared with earlier saved measurements">
         {history === null ? <p className="empty-line" aria-busy="true">Loading saved measurements…</p>
           : !hasMeasurement || earlier.length === 0 ? <p className="empty-line">A trend needs this check-in and at least one earlier saved measurement. None is available yet, so no trend is shown.</p>
             : (
@@ -107,7 +101,7 @@ export function FindingsPage({ result, entryId, config, knowledge, onNext, onExi
             )}
       </Section>
 
-      <Section index={3} icon={ListChecks} title="Follow-up prompts" badge={<ProvenanceBadge kind="rule" />}>
+      <Section icon={ListChecks} title="Follow-up prompts" badge={<ProvenanceBadge kind="rule" />}>
         {flagged.length === 0 && <p className="empty-line">No follow-up prompt was triggered by what was entered. This is not a health clearance.</p>}
         <div className="finding-list">
           {flagged.map((finding) => (
@@ -121,7 +115,7 @@ export function FindingsPage({ result, entryId, config, knowledge, onNext, onExi
         {later.length > 0 && <p className="empty-line">{later.length} lower-priority prompt{later.length > 1 ? "s are" : " is"} saved in your Action Center for after the urgent concern is handled.</p>}
       </Section>
 
-      <Section index={4} icon={BookOpen} title="NASA scientific context" badge={<ProvenanceBadge kind="evidence" />}>
+      <Section icon={BookOpen} title="NASA scientific context" badge={<ProvenanceBadge kind="evidence" />}>
         {flagged.length === 0 && <p className="empty-line">Open the Health Compass to read NASA research for any body system.</p>}
         <div className="finding-list">
           {flagged.map((finding) => {

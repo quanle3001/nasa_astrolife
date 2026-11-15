@@ -57,8 +57,8 @@ export function SourceList({ ids, sources, className }: { ids: string[]; sources
 }
 
 /** Common frame for one guided step: heading, content and Back / Continue controls. */
-export function FlowPage({ eyebrow, title, lead, children, onBack, onNext, nextLabel = "Continue", nextDisabled, busy, aside, wide }: {
-  eyebrow: string; title: ReactNode; lead?: ReactNode; children: ReactNode;
+export function FlowPage({ title, lead, children, onBack, onNext, nextLabel = "Continue", nextDisabled, busy, aside, wide }: {
+  title: ReactNode; lead?: ReactNode; children: ReactNode;
   onBack?: () => void; onNext?: () => void; nextLabel?: string; nextDisabled?: boolean; busy?: boolean;
   /** Extra controls shown next to Continue, for example "Save and exit". */
   aside?: ReactNode; wide?: boolean;
@@ -66,7 +66,6 @@ export function FlowPage({ eyebrow, title, lead, children, onBack, onNext, nextL
   return (
     <div className={cn("flow-page", wide && "is-wide")}>
       <header className="flow-heading">
-        <p className="telemetry-label">{eyebrow}</p>
         <h1>{title}</h1>
         {lead && <p className="flow-lead">{lead}</p>}
       </header>

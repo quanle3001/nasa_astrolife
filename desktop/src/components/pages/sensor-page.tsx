@@ -21,7 +21,7 @@ export function SensorPage({ state, onReview, onConnectStart }: {
   const simulate = () => { onConnectStart("simulated stream"); void api.simulateSensor().catch(() => undefined); };
   return (
     <div className="page-grid sensor-experience">
-      <div className="page-heading"><div><p className="telemetry-label">Biomedical telemetry</p><h1>Live health monitor</h1><p>Connect the ESP32, rest a fingertip on the MAX30102 window and keep your hand still. Estimates are experimental.</p></div></div>
+      <div className="page-heading"><div><h1>Live health monitor</h1><p>Connect the ESP32, rest a fingertip on the MAX30102 window and keep your hand still. Estimates are experimental.</p></div></div>
       <SensorDock state={state} onConnectStart={onConnectStart} />
       <LiveMonitor state={state} onSimulate={simulate} />
       <section className="interpretation-grid">

@@ -8,8 +8,7 @@ export function MissionPage({ mission, onChange, onBack, onNext }: {
   mission: MissionId; onChange: (mission: MissionId) => void; onBack: () => void; onNext: () => void;
 }) {
   return (
-    <FlowPage
-      wide eyebrow="Step 1 · Mission" title="Choose your mission"
+    <FlowPage wide title="Choose your mission"
       lead="Your mission decides which NASA hazards and health topics AstroLife explains and asks about first. It does not change how your answers or measurements are assessed."
       onBack={onBack} onNext={onNext} nextLabel={`Continue with ${MISSIONS[mission].title}`}
     >

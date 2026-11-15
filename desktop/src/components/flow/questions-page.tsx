@@ -81,7 +81,6 @@ export function QuestionsPage({ view, knowledge, index, onIndex, onAnswer, onBac
         {question && domain ? (
           <motion.section key={domain.id} className="question-stage" {...stage}>
             <header className="question-topic">
-              <p className="telemetry-label">Health topic</p>
               <h1>{domain.title}</h1>
               {hazards.length > 0 && <p className="topic-hazards">Related NASA hazard{hazards.length > 1 ? "s" : ""}: {hazards.join(" · ")}</p>}
             </header>
@@ -111,7 +110,7 @@ export function QuestionsPage({ view, knowledge, index, onIndex, onAnswer, onBac
           </motion.section>
         ) : (
           <motion.section key="review" className="question-stage" {...stage}>
-            <header className="question-topic"><p className="telemetry-label">Review</p><h1>Your answers</h1><p className="topic-hazards">Select an answer to change it. Unsure and skipped items stay "not assessed".</p></header>
+            <header className="question-topic"><h1>Review your answers</h1><p className="topic-hazards">Select an answer to change it. Unsure and skipped items stay "not assessed".</p></header>
             <ul className="answer-review">
               {view.questions.map((item, itemIndex) => (
                 <li key={item.id}>
