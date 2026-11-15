@@ -88,7 +88,6 @@ export function MissionViewport({ mission, telemetry }: { mission: MissionId; te
         </div>
         <span className="viewport-scrim" aria-hidden="true" />
         <figcaption className="viewport-caption">
-          <span className="viewport-eyebrow">{media.eyebrow}</span>
           <strong>{media.title}</strong>
           <small>{media.classification} · {media.credit}</small>
         </figcaption>

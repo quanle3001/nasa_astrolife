@@ -85,7 +85,7 @@ export function CheckinPage({ config, mission, setMission, onAssess, busy }: {
 
   return (
     <form onSubmit={submit} className="page-grid checkin-experience">
-      <div className="page-heading immersive-heading"><div><div className="welcome-pill"><ClipboardCheck className="size-3.5" /> Crew wellness link</div><h1>Log the human side of <span className="gradient-text whitespace-nowrap">the mission.</span></h1><p>Record what you know. Leave missing readings blank; unreported symptoms are not ruled out.</p></div></div>
+      <div className="page-heading immersive-heading"><div><h1>Log the human side of <span className="whitespace-nowrap">the mission.</span></h1><p>Record what you know. Leave missing readings blank; unreported symptoms are not ruled out.</p></div></div>
       <MissionSelector value={mission} onChange={setMission} />
       <Card className="p-5">
         <div className="mb-5 flex items-center gap-2"><NotebookPen className="size-4 text-cyan-300" /><h2 className="text-base font-semibold text-white">Mission and observations</h2></div>

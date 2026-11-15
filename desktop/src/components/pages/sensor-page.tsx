@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { useCalmMotion } from "@/lib/motion-preference";
-import { Cable, ChevronRight, CircleGauge, ClipboardCheck, LoaderCircle, PlugZap, RefreshCw, ShieldAlert, Sparkles } from "lucide-react";
+import { Cable, ChevronRight, CircleGauge, ClipboardCheck, ListChecks, LoaderCircle, LockKeyhole, PlugZap, RefreshCw, ShieldAlert, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { BorderBeam } from "@/components/effects/border-beam";
 import { MissionViewport } from "@/components/hero/mission-viewport";
@@ -55,7 +55,7 @@ export function SensorPage({ state, mission, onReview, onCheckin }: {
   return (
     <div className="page-grid sensor-experience">
       <section className="sensor-hero">
-        <motion.div className="sensor-hero-copy" initial={reduced ? false : { opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: .7, ease: [0.22, 1, 0.36, 1] }}>
+        <motion.div className="sensor-hero-copy" initial={reduced ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .4, ease: [0.22, 1, 0.36, 1] }}>
           <div className="welcome-pill"><Sparkles className="size-3.5" /> NASA-inspired crew health console</div>
           <h1><span className="nowrap">Mission health,</span><br /><span className="gradient-text">in orbit.</span></h1>
           <p>Connect local biomedical telemetry, record how the crew feels, and turn observations into clear next steps—without sending health data to the cloud.</p>
@@ -64,12 +64,12 @@ export function SensorPage({ state, mission, onReview, onCheckin }: {
             <Button size="lg" onClick={() => { portInput.current?.scrollIntoView({ block: "center", behavior: reduced ? "auto" : "smooth" }); portInput.current?.focus({ preventScroll: true }); }}><PlugZap className="size-4" /> Connect sensor</Button>
           </div>
           <div className="hero-facts">
-            <span><b>01</b> Private Python analysis</span>
-            <span><b>02</b> Local sensor link</span>
-            <span><b>03</b> Explainable priorities</span>
+            <span><LockKeyhole className="size-3.5" aria-hidden="true" /> Private Python analysis</span>
+            <span><Cable className="size-3.5" aria-hidden="true" /> Local sensor link</span>
+            <span><ListChecks className="size-3.5" aria-hidden="true" /> Explainable priorities</span>
           </div>
         </motion.div>
-        <motion.div className="sensor-hero-visual" initial={reduced ? false : { opacity: 0, x: 28 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: .8, delay: .1, ease: [0.22, 1, 0.36, 1] }}>
+        <motion.div className="sensor-hero-visual" initial={reduced ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .45, delay: .06, ease: [0.22, 1, 0.36, 1] }}>
           <MissionViewport mission={mission} telemetry={state} />
         </motion.div>
       </section>

@@ -85,7 +85,7 @@ function MissionCard({ media, selected, onSelect, onPreview, onKeyDown, buttonRe
         <FrostBlurred side="bottom" height="46%" tint={0.55} />
         <span className="mission-card-top">
           <span className={cn("mission-card-eyebrow", selected && "is-selected")}>
-            {selected ? <><CheckCircle2 className="size-3.5" /> Active mission</> : media.eyebrow}
+            {selected && <><CheckCircle2 className="size-3.5" /> Active mission</>}
           </span>
           {kind && <span className="mission-card-kind" title={media.video?.classification}><Film className="size-3" /> {kind}</span>}
         </span>
@@ -133,8 +133,7 @@ function MediaPreview({ media }: { media: MissionMedia }) {
         </div>
       </div>
       <div className="flex flex-col py-3">
-        <p className="telemetry-label">NASA mission media</p>
-        <DialogTitle className="mt-3 text-3xl font-semibold text-space-white">{media.title}</DialogTitle>
+        <DialogTitle className="text-3xl font-semibold text-space-white">{media.title}</DialogTitle>
         <DialogDescription className="mt-4 text-sm leading-7 text-space-silver">{media.description}</DialogDescription>
         <dl className="mt-6 space-y-3 border-y border-white/10 py-5 text-xs">
           <div className="flex justify-between gap-5"><dt className="text-space-subtle">NASA asset</dt><dd className="font-mono text-space-white">{media.nasa_id}</dd></div>
@@ -177,8 +176,7 @@ export function MissionSelector({ value, onChange, compact = false }: MissionSel
       {!compact && (
         <div className="mb-3 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
           <div>
-            <p className="telemetry-label">Mission environment</p>
-            <h2 id="mission-context-title" className="mt-1 text-lg font-semibold text-space-white">Choose operational context</h2>
+            <h2 id="mission-context-title" className="text-lg font-semibold text-space-white">Choose operational context</h2>
           </div>
           <p className="pb-0.5 text-[11px] text-space-subtle">Decorative theme only · Health rules remain unchanged</p>
         </div>

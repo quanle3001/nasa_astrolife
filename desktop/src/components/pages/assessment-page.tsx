@@ -14,7 +14,7 @@ export function AssessmentPage({ config, bundle, saved, saving, onSave, onEdit }
   if (!bundle) {
     return (
       <div className="page-grid">
-        <div className="page-heading"><div><p className="telemetry-label text-teal-300">Mission health review</p><h1>Health priorities & next steps</h1><p>Complete a check-in or review a fresh sensor reading to see current priorities.</p></div></div>
+        <div className="page-heading"><div><h1>Health priorities & next steps</h1><p>Complete a check-in or review a fresh sensor reading to see current priorities.</p></div></div>
         <Card className="grid min-h-80 place-items-center p-8 text-center"><div><ShieldCheck className="mx-auto size-10 text-space-subtle" /><h2 className="mt-4 text-xl font-semibold text-white">No assessment in memory</h2><p className="mt-2 text-sm text-space-subtle">No input has been analyzed yet. Connect your sensor or enter an optional check-in.</p><Button className="mt-5" onClick={onEdit}>Open daily check-in</Button></div></Card>
       </div>
     );
@@ -25,7 +25,7 @@ export function AssessmentPage({ config, bundle, saved, saving, onSave, onEdit }
   return (
     <div className="page-grid">
       <div className="page-heading">
-        <div><p className="telemetry-label text-teal-300">Mission health review</p><h1>Health priorities & next steps</h1><p>Explainable local assessment from the observations recorded in this session.</p></div>
+        <div><h1>Health priorities & next steps</h1><p>Explainable local assessment from the observations recorded in this session.</p></div>
         <div className="flex gap-2"><Button onClick={onEdit}><Edit3 className="size-4" /> Edit check-in</Button><Button variant="primary" disabled={saved || saving} onClick={() => void onSave()}>{saved ? <Check className="size-4" /> : <Save className="size-4" />}{saved ? "Saved" : saving ? "Saving…" : "Save to history"}</Button></div>
       </div>
       <Card className={cn("overflow-hidden p-5", assessment.level === "urgent" && "border-rose-400/40 bg-rose-950/25")}>

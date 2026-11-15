@@ -4,7 +4,7 @@ import manifest from "../../../software/assets/nasa/media_manifest.json";
 /**
  * Mission media is derived from the offline NASA manifest
  * (software/assets/nasa/media_manifest.json), which is written by
- * software/scripts/fetch_nasa_media.py. Only presentation fields (eyebrow,
+ * software/scripts/fetch_nasa_media.py. Only presentation fields (title,
  * short label, accent color, crop focus, card summary) live here, so NASA IDs,
  * credits and source links have a single source of truth.
  *
@@ -70,7 +70,6 @@ export interface MissionMedia {
   image_url: string | null;
   source_url: string;
   video: MissionVideo | null;
-  eyebrow: string;
   short: string;
   color: string;
   /** CSS object-position that keeps the subject in frame when cropped. */
@@ -81,21 +80,21 @@ export interface MissionMedia {
   video_segment: [number, number] | null;
 }
 
-const PRESENTATION: Record<MissionId, Pick<MissionMedia, "title" | "description" | "eyebrow" | "short" | "color" | "focus" | "video_zoom" | "video_segment">> = {
+const PRESENTATION: Record<MissionId, Pick<MissionMedia, "title" | "description" | "short" | "color" | "focus" | "video_zoom" | "video_segment">> = {
   leo: {
     title: "Low Earth Orbit",
     description: "The International Space Station's solar arrays frame Earth's illuminated limb and aurora from orbit.",
-    eyebrow: "ORBITAL OPERATIONS", short: "Earth limb · ISS context", color: "#48d5e9", focus: "50% 62%", video_zoom: 1, video_segment: null,
+    short: "Earth limb · ISS context", color: "#48d5e9", focus: "50% 62%", video_zoom: 1, video_segment: null,
   },
   lunar: {
     title: "Lunar Mission",
     description: "Earth appears above the Apollo 17 lunar roving vehicle during surface operations at Taurus-Littrow.",
-    eyebrow: "SURFACE OPERATIONS", short: "Apollo surface reference", color: "#b9d8f2", focus: "38% 42%", video_zoom: 1, video_segment: null,
+    short: "Apollo surface reference", color: "#b9d8f2", focus: "38% 42%", video_zoom: 1, video_segment: null,
   },
   mars: {
     title: "Mars / Deep Space",
     description: "Perseverance's first Mastcam-Z 360-degree panorama, assembled from 142 images captured in Jezero Crater.",
-    eyebrow: "EXPEDITION OPERATIONS", short: "Jezero Crater · Perseverance", color: "#e5a16c", focus: "62% 55%",
+    short: "Jezero Crater · Perseverance", color: "#e5a16c", focus: "62% 55%",
     // The Perseverance clip opens and closes on the full mosaic with large black edges.
     video_zoom: 1.1, video_segment: [6, 24],
   },
