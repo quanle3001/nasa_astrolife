@@ -109,7 +109,7 @@ button:disabled { cursor: default; }
 ::selection { background: rgba(70, 217, 232, .28); color: #fff; }
 input, textarea { caret-color: var(--color-space-cyan); }
 /* Vitals and timestamps line up digit-for-digit as values change. */
-.viewport-card strong, .metric-value, time { font-variant-numeric: tabular-nums; }
+.viewport-card strong, time { font-variant-numeric: tabular-nums; }
 
 /* ---------- Primitives ----------
    In the components layer so Tailwind utilities on the same element still win
@@ -122,7 +122,6 @@ input, textarea { caret-color: var(--color-space-cyan); }
     backdrop-filter: blur(6px);
   }
   .telemetry-label { font-size: var(--text-label); line-height: 1.2; font-weight: 700; letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--color-space-subtle); }
-  .status-chip { display: inline-flex; height: 32px; align-items: center; gap: 7px; border: 1px solid var(--panel-border); border-radius: var(--radius-md); background: rgba(255,255,255,.03); padding: 0 10px; font-size: var(--text-label); font-weight: 700; letter-spacing: .08em; color: var(--color-space-muted); }
   .page-grid { margin: 0 auto; display: grid; width: min(var(--page-max), 100%); gap: 18px; padding: 22px var(--page-gutter) 52px; }
   .page-heading { display: flex; min-height: 86px; align-items: flex-end; justify-content: space-between; gap: 18px; padding: 4px 0 8px; }
   .page-heading h1 { margin-top: 14px; font-family: var(--font-display); font-size: var(--text-page-title); line-height: 1; font-weight: 600; letter-spacing: -.045em; color: var(--color-space-white); text-wrap: balance; }
