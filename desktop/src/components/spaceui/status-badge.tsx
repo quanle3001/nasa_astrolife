@@ -44,7 +44,7 @@ export function StatusBadge({ status, primaryText, animated = false, compact = f
       role="status"
       className={cn(
         "status-badge inline-flex h-8 items-center gap-2 rounded-full border px-3 text-[11px] font-semibold tracking-wide",
-        status === "offline" ? "border-white/10 bg-white/[.03] text-space-subtle" : "border-space-border bg-space-elevated/50 text-space-silver",
+        status === "offline" ? "border-white/10 bg-space-black/55 text-space-muted backdrop-blur-md" : "border-space-border bg-space-black/55 text-space-silver backdrop-blur-md",
         className,
       )}
       {...props}

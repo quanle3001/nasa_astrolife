@@ -60,7 +60,7 @@ export function CheckinPage({ config, mission, setMission, onAssess, busy }: {
       </Card>
       <Card className="p-5"><label className="block"><span className="mb-2 block text-xs font-medium text-slate-400">Notes for your record · not automatically analyzed</span><textarea className="control min-h-28 resize-y" maxLength={5000} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Optional: timing, activity, changes from baseline, or information for the medical team." /></label></Card>
       {error && <div className="rounded-xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">{error}</div>}
-      <div className="sticky bottom-0 z-20 flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-space-bg/90 p-3 backdrop-blur-xl"><p className="hidden text-xs text-slate-500 md:block">Assessment stays in memory until you choose Save to history.</p><Button type="submit" variant="primary" size="lg" disabled={busy} className="ml-auto"><ClipboardCheck className="size-4" />{busy ? "Reviewing…" : "Review health priorities"}</Button></div>
+      <div className="sticky bottom-0 z-20 flex items-center justify-between gap-4 rounded-2xl border border-white/10 p-3"><p className="hidden text-xs text-slate-500 md:block">Assessment stays in memory until you choose Save to history.</p><Button type="submit" variant="primary" size="lg" disabled={busy} className="ml-auto"><ClipboardCheck className="size-4" />{busy ? "Reviewing…" : "Review health priorities"}</Button></div>
     </form>
   );
 }
