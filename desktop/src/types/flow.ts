@@ -141,11 +141,65 @@ export interface FollowupAction {
   completed_at: string | null;
 }
 
+/** One step of evidence behind a finding: an answer the astronaut gave or a value that was measured. */
+export type TraceObservation =
+  | { kind: "answer"; question_id: string; question: string; answer: string }
+  | { kind: "measurement"; indicator_id: string; label: string; value: number; unit: string; source: string };
+
+/**
+ * Why a finding relates to the mission: the NASA hazard and risk it belongs
+ * to, the astronaut's own observations that led the rules to it, and the
+ * actions it created. Built by the Python backend.
+ */
+export interface EvidenceTraceEntry {
+  condition_id: string;
+  condition_title: string;
+  level: PriorityLevel;
+  mission_title: string;
+  hazards: { id: HazardId; title: string; rank: number; emphasized: boolean }[];
+  nasa_risks: EvidenceReport[];
+  observations: TraceObservation[];
+  rule_reason: string;
+  actions: string[];
+}
+
 /** Output of the Python rules for one check-in, plus what was not assessed. */
 export interface SessionResult {
   checkin: CheckIn;
   assessment: Assessment;
   session_notes: string[];
+  /** Absent on check-ins saved before the trace existed. */
+  evidence_trace?: EvidenceTraceEntry[];
+}
+
+/** An indicator AstroLife can collect and the NASA risks it relates to. */
+export interface PlanIndicator {
+  id: string;
+  label: string;
+  unit: string;
+  source: "sensor" | "question";
+  condition_ids: string[];
+  hazard_ids: HazardId[];
+  hazard_rank: number | null;
+  why: string;
+}
+
+/**
+ * What a mission's check-in asks and collects, derived by the backend from the
+ * NASA hazard and risk catalog: hazards in mission order, the topics and
+ * questions that follow from them, and the indicators to collect.
+ */
+export interface AssessmentPlan {
+  environment: MissionId;
+  mission_title: string;
+  hazards: {
+    id: HazardId; title: string; rank: number; emphasized: boolean; rationale: string | null;
+    condition_ids: string[]; hrr_risk_ids: number[]; topic_ids: string[]; question_ids: string[]; indicator_ids: string[];
+  }[];
+  topics: { domain_id: string; title: string; position: number; reason: string; hazard_ids: HazardId[]; condition_ids: string[]; question_ids: string[]; follow_up_ids: string[] }[];
+  indicators: PlanIndicator[];
+  question_count: number;
+  safety_question_count: number;
 }
 
 export interface Session {

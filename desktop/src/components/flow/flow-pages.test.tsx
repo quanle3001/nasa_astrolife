@@ -5,7 +5,7 @@ import hrrEvidence from "../../../../software/resources/hrr_evidence.json";
 import missionContext from "../../../../software/resources/mission_context.json";
 import registry from "../../../../software/resources/question_registry.json";
 import type { AppConfig, Assessment, CheckIn } from "@/types/backend";
-import type { Answers, FollowupAction, Knowledge, MissionProfile, SessionResult } from "@/types/flow";
+import type { Answers, AssessmentPlan, EvidenceTraceEntry, FollowupAction, Knowledge, MissionProfile, SessionResult } from "@/types/flow";
 
 vi.mock("@/lib/api", () => ({ api: {
   listPorts: () => Promise.resolve([]), listHistory: () => Promise.resolve({ entries: [] }), openNasaSource: vi.fn(() => Promise.resolve(true)),
@@ -95,6 +95,43 @@ describe("HazardsPage", () => {
     expect(panel).toHaveTextContent("Behavioral health and teamwork");
     expect(within(panel).getByText("NASA scientific evidence")).toBeInTheDocument();
     expect(within(panel).getAllByRole("button", { name: /NASA/ }).length).toBeGreaterThan(0);
+  });
+});
+
+describe("HazardsPage with the computed assessment plan", () => {
+  const plan: AssessmentPlan = {
+    environment: "mars", mission_title: "Mars / Deep Space", question_count: 12, safety_question_count: 9,
+    hazards: [
+      { id: "radiation", title: "Space radiation", rank: 1, emphasized: true, rationale: "r", condition_ids: ["radiation"], hrr_risk_ids: [96], topic_ids: [], question_ids: [], indicator_ids: [] },
+      { id: "isolation", title: "Isolation and confinement", rank: 3, emphasized: true, rationale: "r", condition_ids: ["sleep", "behavioral"], hrr_risk_ids: [99, 100, 101], topic_ids: ["sleep", "wellbeing"], question_ids: ["sleep.quality", "sleep.fatigue", "wellbeing.mood"], indicator_ids: ["sleep_hours"] },
+    ],
+    topics: [
+      { domain_id: "safety", title: "Safety screen", position: 1, reason: "Universal safety screen: asked first on every mission.", hazard_ids: [], condition_ids: [], question_ids: [], follow_up_ids: [] },
+      { domain_id: "wellbeing", title: "Mood and teamwork", position: 2, reason: 'Linked to the NASA hazard "Distance from Earth", presented second for a Mars / Deep Space mission.', hazard_ids: ["isolation", "distance"], condition_ids: ["behavioral"], question_ids: ["wellbeing.mood"], follow_up_ids: [] },
+    ],
+    indicators: [
+      { id: "heart_rate", label: "Heart rate", unit: "bpm", source: "sensor", condition_ids: ["cardiovascular"], hazard_ids: ["gravity"], hazard_rank: 4, why: "w" },
+      { id: "sleep_hours", label: "Sleep duration", unit: "hours", source: "question", condition_ids: ["sleep"], hazard_ids: ["isolation", "environment"], hazard_rank: 3, why: "w" },
+    ],
+  };
+
+  it("explains what the check-in asks and collects, and why it starts where it does", () => {
+    render(<HazardsPage profile={profile({ environment: "mars", phase: "transit" })} knowledge={knowledge} plan={plan} onBack={() => undefined} onNext={() => undefined} />);
+    const summary = screen.getByLabelText("Your check-in plan");
+    expect(summary).toHaveTextContent("9 safety items, then 12 questions in 1 health topics");
+    expect(summary).toHaveTextContent("It starts with Mood and teamwork.");
+    expect(summary).toHaveTextContent('Linked to the NASA hazard "Distance from Earth"');
+    expect(within(summary).getByText("Heart rate · Cardiovascular changes")).toBeInTheDocument();
+  });
+
+  it("lists, per hazard, the real questions and indicators the plan derives from it", () => {
+    render(<HazardsPage profile={profile({ environment: "mars", phase: "transit" })} knowledge={knowledge} plan={plan} onBack={() => undefined} onNext={() => undefined} />);
+    expect(document.getElementById("hazard-radiation")).toHaveTextContent("AstroLife has no question or sensor for this hazard");
+    fireEvent.click(screen.getByRole("button", { name: /Isolation and confinement/ }));
+    const panel = document.getElementById("hazard-isolation")!;
+    expect(panel).toHaveTextContent("How well have you been sleeping?");
+    expect(panel).toHaveTextContent("Have you felt low, anxious or isolated?");
+    expect(panel).toHaveTextContent("Measured or recorded: Sleep duration");
   });
 });
 
@@ -277,6 +314,28 @@ describe("FindingsPage", () => {
     expect(screen.getAllByText("Rule-based prompt").length).toBeGreaterThan(0);
     expect(screen.getByText("NASA scientific evidence")).toBeInTheDocument();
     expect(screen.getByText(/does not set your diagnosis/)).toBeInTheDocument();
+  });
+
+  it("traces a prompt from the mission's NASA hazard and risk to the astronaut's own observation", () => {
+    const entry: EvidenceTraceEntry = {
+      condition_id: "sleep", condition_title: "Sleep loss and fatigue", level: "watch", mission_title: "Mars / Deep Space",
+      hazards: [{ id: "isolation", title: "Isolation and confinement", rank: 3, emphasized: true }, { id: "environment", title: "Hostile or closed environments", rank: 5, emphasized: false }],
+      nasa_risks: [{ risk_id: 100, risk_title: "Risk of Performance Decrements and Adverse Health Outcomes Resulting from Sleep Loss, Circadian Desynchronization, and Work Overload", risk_url: "https://humanresearchroadmap.nasa.gov/Risks/?i=100", report_title: "Evidence Report", report_url: "https://humanresearchroadmap.nasa.gov/evidence/reports/Sleep.pdf" }],
+      observations: [{ kind: "answer", question_id: "sleep.quality", question: "How well have you been sleeping?", answer: "Poorly" }],
+      rule_reason: "Reported: poor sleep or disrupted schedule.", actions: ["Review fatigue and workload with the crew."],
+    };
+    render(<FindingsPage result={result({ evidence_trace: [entry] })} entryId={5} config={config} knowledge={knowledge} onNext={() => undefined} />);
+    const steps = within(screen.getByRole("list", { name: "Why AstroLife shows this prompt for Sleep loss and fatigue" })).getAllByRole("listitem");
+    expect(steps.map((step) => step.querySelector(".trace-step")?.textContent)).toEqual(["Mission", "NASA hazard", "NASA health risk", "Your observation", "Rule-based prompt", "Follow-up"]);
+    expect(steps[0]).toHaveTextContent("Mars / Deep Space");
+    expect(steps[1]).toHaveTextContent("Isolation and confinement");
+    expect(steps[1]).toHaveTextContent("presented third for this mission");
+    expect(steps[2]).toHaveTextContent("Human Research Roadmap risk 100");
+    expect(steps[3]).toHaveTextContent("How well have you been sleeping? Poorly");
+    expect(steps[4]).toHaveTextContent("Follow up");
+    expect(steps[5]).toHaveTextContent("1 action in your Action Center");
+    // The hypoxia prompt has no trace entry in this result and shows none.
+    expect(screen.getAllByRole("list", { name: /Why AstroLife shows this prompt/ })).toHaveLength(1);
   });
 
   it("says a missing measurement is unassessed and shows urgent guidance first", () => {

@@ -33,7 +33,7 @@ import { ppgBuffer, startPpgStream } from "@/lib/ppg-store";
 import { isTypingTarget, matchShortcut } from "@/lib/shortcuts";
 import { questionnaireView } from "@/questions/engine";
 import type { AppConfig, Assessment, AssessmentBundle, BackendEvent, CheckIn } from "@/types/backend";
-import type { Answers, AnswerValue, AppState, FollowupAction, Knowledge, MeasurementChoice, MissionProfile, Question, Session, SessionResult } from "@/types/flow";
+import type { Answers, AnswerValue, AppState, AssessmentPlan, FollowupAction, Knowledge, MeasurementChoice, MissionProfile, Question, Session, SessionResult } from "@/types/flow";
 
 /** Cleared whenever the link drops so no stale estimate or diagnostic stays on screen. */
 const NO_READING = {
@@ -94,6 +94,7 @@ export default function App() {
   const [flowBusy, setFlowBusy] = useState(false);
   const [flowError, setFlowError] = useState("");
   const [actionBusy, setActionBusy] = useState<number | null>(null);
+  const [plan, setPlan] = useState<AssessmentPlan | null>(null);
 
   // Sensor and the free-form concern report.
   const [sensor, setSensor] = useState<SensorViewState>(INITIAL_SENSOR);
@@ -190,6 +191,8 @@ export default function App() {
     const { profile: stored } = await api.saveMission(profile);
     setProfile(stored);
     setAppState((current) => ({ ...current, mission: stored }));
+    // The check-in plan is derived by the backend from the NASA catalog for this mission.
+    setPlan(await api.planMission(stored).catch(() => null));
     // A check-in started under the old context no longer matches; it is closed when a new one starts.
     if (session && JSON.stringify(session.mission) !== JSON.stringify(stored)) { setSession(null); setAnswers({}); }
     send({ type: "NEXT" });
@@ -320,7 +323,7 @@ export default function App() {
   } else if (view === "context") {
     screen = <ContextPage profile={profile} context={knowledge.mission_context} onChange={setProfile} onBack={() => send({ type: "BACK" })} onNext={() => void saveContext()} busy={flowBusy} error={flowError} />;
   } else if (view === "hazards") {
-    screen = <HazardsPage profile={profile} knowledge={knowledge} onBack={() => send({ type: "BACK" })} onNext={() => void beginCheckin("NEXT")} />;
+    screen = <HazardsPage profile={profile} knowledge={knowledge} plan={plan && plan.environment === profile.environment ? plan : null} onBack={() => send({ type: "BACK" })} onNext={() => void beginCheckin("NEXT")} />;
   } else if (view === "safety" && questionView) {
     screen = <SafetyPage questions={questionView.safety} answers={answers} onChange={setAnswers} onBack={() => send({ type: "BACK" })} onNext={() => void submitSafety()} busy={flowBusy} error={flowError} aside={exitAside} />;
   } else if (view === "questions" && questionView) {

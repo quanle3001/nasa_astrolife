@@ -1,7 +1,7 @@
 import { Activity, BookOpen, ClipboardList, ListChecks, TrendingUp } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { FALLBACK_URGENT_ACTION, UrgentPanel } from "@/components/flow/urgent-panel";
-import { EvidenceReports, FlowPage, LEVEL_LABELS, measurementKind, ProvenanceBadge, SourceList } from "@/components/flow/common";
+import { EvidenceReports, EvidenceTrace, FlowPage, LEVEL_LABELS, measurementKind, ProvenanceBadge, SourceList } from "@/components/flow/common";
 import { PointerGlow } from "@/components/effects/interactive";
 import { Card } from "@/components/ui/card";
 import { api } from "@/lib/api";
@@ -32,6 +32,7 @@ export function FindingsPage({ result, entryId, config, knowledge, onNext, onExi
   onNext: () => void; onExit?: () => void; nextLabel?: string;
 }) {
   const { checkin, assessment, session_notes: notes } = result;
+  const trace = new Map((result.evidence_trace ?? []).map((entry) => [entry.condition_id, entry]));
   const { catalog } = knowledge;
   const [history, setHistory] = useState<HistoryEntry[] | null>(null);
   useEffect(() => { let alive = true; api.listHistory().then((data) => { if (alive) setHistory(data.entries); }).catch(() => { if (alive) setHistory([]); }); return () => { alive = false; }; }, [entryId]);
@@ -109,6 +110,7 @@ export function FindingsPage({ result, entryId, config, knowledge, onNext, onExi
               <header><h3>{config.condition_titles[finding.condition_id] ?? finding.condition_id}</h3><span className={cn("priority-badge", `priority-${finding.level}`)}>{LEVEL_LABELS[finding.level]}</span></header>
               <p>{finding.reason}</p>
               {finding.actions.length > 0 ? <ul className="dot-list">{[...new Set(finding.actions)].map((action) => <li key={action}>{action}</li>)}</ul> : assessment.level === "urgent" && <p>{FALLBACK_URGENT_ACTION}</p>}
+              {trace.get(finding.condition_id) && <EvidenceTrace entry={trace.get(finding.condition_id)!} />}
             </article>
           ))}
         </div>

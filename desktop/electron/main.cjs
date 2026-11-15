@@ -137,6 +137,7 @@ handle("backend:history", "history.list");
 handle("backend:knowledge", "knowledge.get");
 handle("backend:mission-get", "mission.get");
 handle("backend:mission-save", "mission.save");
+handle("backend:mission-plan", "mission.plan");
 handle("backend:session-current", "session.current");
 handle("backend:session-start", "session.start");
 handle("backend:session-save", "session.save");

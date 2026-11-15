@@ -15,12 +15,20 @@ vi.mock("@/lib/api", () => ({ api: {
   getRadLab: (refresh?: boolean) => getRadLab(refresh), openNasaSource: vi.fn(() => Promise.resolve(true)),
   onBackendEvent: (callback: (event: BackendEvent) => void) => { listener = callback; return () => { listener = null; }; },
 } }));
-vi.mock("uplot", () => ({ default: class { setSize = vi.fn(); destroy = vi.fn(); } }));
+vi.mock("uplot", () => ({ default: class { static paths = {}; setSize = vi.fn(); destroy = vi.fn(); } }));
 vi.mock("uplot/dist/uPlot.min.css", () => ({}));
 const { RadiationExplorer } = await import("@/components/nasa/radiation-explorer");
 
 const knowledge = { catalog, mission_context: missionContext, registry, hrr_evidence: hrrEvidence } as unknown as Knowledge;
 const series = (values: number[]) => ({ timestamps: values.map((_value, index) => `2023-01-01T0${index}:00:00`), values });
+const instrumentAnalysis = (environment: "leo" | "lunar" | "mars" | null, fields: object = {}) => ({
+  count: 2, mean: 4.1, median: 4.74, minimum: 2.5, maximum: 510.4, standard_deviation: 1.2, percentile_95: 203.45,
+  maximum_at: "2023-01-01T14:41:01", first_timestamp: "2023-01-01T00:00:00", last_timestamp: "2023-01-01T01:00:00",
+  cadence_minutes: 60, expected_count: 24, coverage_percent: 8.3, gap_count: 0, longest_gap_minutes: 0, gaps: [],
+  zero_count: 0, excursion_threshold: 14.22, excursion_count: 0, excursion_episodes: 0, excursions: [],
+  hourly_mean: [2.5, 4.7, ...Array(22).fill(null)], hours_without_data: Array.from({ length: 22 }, (_value, index) => index + 2),
+  highest_hour: 1, lowest_hour: 0, first_half_mean: 3.6, second_half_mean: null, environment, observations: ["2 readings."], ...fields,
+});
 const result = (fields: Partial<RadLabResult> = {}): RadLabResult => ({
   available: true, origin: "bundled_snapshot", error: null,
   dataset: {
@@ -32,6 +40,18 @@ const result = (fields: Partial<RadLabResult> = {}): RadLabResult => ({
     limitations: [], instruments: { BPD: series([9, 10]), "CRaTER-D1D2": series([8, 9]), DosTel1: series([2.5, 4.7]), "MSL-RAD-Surface": series([6.2, 6.6]) },
   },
   summary: Object.fromEntries(["BPD", "CRaTER-D1D2", "DosTel1", "MSL-RAD-Surface"].map((id) => [id, { count: 2, minimum: 2.5, maximum: 510.4, median: 4.74, first_timestamp: "2023-01-01T00:00:00", last_timestamp: "2023-01-01T01:00:00" }])),
+  analysis: {
+    method: { gap_rule: "g", excursion_rule: "e", statistics: "Mean, median and range of the published values.", limits: "Descriptive only." },
+    instruments: {
+      BPD: instrumentAnalysis(null, { zero_count: 6 }),
+      "CRaTER-D1D2": instrumentAnalysis("lunar"),
+      DosTel1: instrumentAnalysis("leo", { excursion_count: 106, excursion_episodes: 5, excursions: [{ start: "2023-01-01T14:30:00", end: "2023-01-01T14:50:00", readings: 12, peak: 510.4, peak_at: "2023-01-01T14:41:01" }],
+        gap_count: 1, longest_gap_minutes: 45, gaps: [{ start: "2023-01-01T03:10:00", end: "2023-01-01T03:55:00", minutes: 45 }] }),
+      "MSL-RAD-Surface": instrumentAnalysis("mars"),
+    },
+    by_environment: { leo: ["DosTel1"], lunar: ["CRaTER-D1D2"], mars: ["MSL-RAD-Surface"] },
+    undescribed: ["BPD"],
+  },
   instrument_notes: instrumentNotes as unknown as RadLabResult["instrument_notes"],
   ...fields,
 });
@@ -71,6 +91,41 @@ describe("RadiationExplorer", () => {
     unmount();
   });
 
+  it("shows the backend's computed analysis: statistics, pauses, irregular readings and change through the day", async () => {
+    getRadLab.mockResolvedValue(result());
+    render(<RadiationExplorer knowledge={knowledge} mission="leo" />);
+    const panel = await screen.findByLabelText("Analysis of the retrieved readings");
+    expect(panel).toHaveTextContent("Mean4.10");
+    expect(panel).toHaveTextContent("95th percentile203");
+    expect(panel).toHaveTextContent("Usual interval60 min");
+    expect(panel).toHaveTextContent("1 pause: 03:10 to 03:55 (45 min).");
+    expect(panel).toHaveTextContent("106 readings above three times the median (14.22), in 5 episodes: 14:30 to 14:50, peak 510.");
+    expect(panel).toHaveTextContent("The dataset does not state the cause.");
+    expect(panel).toHaveTextContent("No readings in 22 hours of the day.");
+    expect(panel).toHaveTextContent("Highest hourly mean in the hour starting 01:00");
+    expect(panel).toHaveTextContent("Descriptive only.");
+    fireEvent.click(screen.getByRole("radio", { name: /BPD/ }));
+    expect(screen.getByLabelText("Analysis of the retrieved readings")).toHaveTextContent("6 readings are exactly zero");
+    // The radiation hazard is connected to what crews do about it, from NASA sources.
+    expect(screen.getByLabelText("What this means for a crew")).toHaveTextContent("Risk of Radiation Carcinogenesis");
+  });
+
+  it("offers only the mission's own instruments as mission data and explains when there are none", async () => {
+    getRadLab.mockResolvedValue(result());
+    const { unmount } = render(<RadiationExplorer knowledge={knowledge} mission="lunar" />);
+    const own = await screen.findByRole("radiogroup", { name: "Instruments in your mission environment" });
+    expect(within(own).getAllByRole("radio")).toHaveLength(1);
+    expect(within(own).getByRole("radio", { name: /CRaTER/ })).toBeChecked();
+    expect(within(screen.getByRole("radiogroup", { name: "Instruments in other environments" })).getAllByRole("radio")).toHaveLength(3);
+    unmount();
+    const none = result();
+    none.analysis!.by_environment.mars = [];
+    getRadLab.mockResolvedValue(none);
+    render(<RadiationExplorer knowledge={knowledge} mission="mars" />);
+    expect(await screen.findByText(/no instrument in this dataset for your mission environment/)).toBeInTheDocument();
+    expect(screen.queryByLabelText("Analysis of the retrieved readings")).not.toBeInTheDocument();
+  });
+
   it("retrieves again from NASA on request and labels the result as live", async () => {
     getRadLab.mockImplementation((refresh?: boolean) => Promise.resolve(refresh ? { refreshing: true } : result()));
     render(<RadiationExplorer knowledge={knowledge} mission="lunar" />);
@@ -91,7 +146,7 @@ describe("RadiationExplorer", () => {
   });
 
   it("shows an honest unavailable state instead of substitute data", async () => {
-    getRadLab.mockResolvedValue(result({ available: false, origin: "none", dataset: null, summary: {}, error: "No verified NASA radiation dataset is available offline." }));
+    getRadLab.mockResolvedValue(result({ available: false, origin: "none", dataset: null, summary: {}, analysis: null, error: "No verified NASA radiation dataset is available offline." }));
     render(<RadiationExplorer knowledge={knowledge} mission="mars" />);
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent("NASA radiation data is unavailable.");

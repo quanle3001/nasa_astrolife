@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld("astrotip", {
   getKnowledge: () => ipcRenderer.invoke("backend:knowledge"),
   getMission: () => ipcRenderer.invoke("backend:mission-get"),
   saveMission: (profile) => ipcRenderer.invoke("backend:mission-save", { profile }),
+  planMission: (profile) => ipcRenderer.invoke("backend:mission-plan", profile ? { profile } : {}),
   currentSession: () => ipcRenderer.invoke("backend:session-current"),
   startSession: () => ipcRenderer.invoke("backend:session-start"),
   saveSession: (sessionId, answers, position) => ipcRenderer.invoke("backend:session-save", { session_id: sessionId, answers, position }),

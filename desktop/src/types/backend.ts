@@ -1,5 +1,5 @@
 import type { RadLabResult } from "@/types/nasa";
-import type { Answers, AppState, FollowupAction, Knowledge, MeasurementChoice, MissionProfile, Session, SessionPreview, SubmittedSession } from "@/types/flow";
+import type { Answers, AppState, AssessmentPlan, FollowupAction, Knowledge, MeasurementChoice, MissionProfile, Session, SessionPreview, SubmittedSession } from "@/types/flow";
 
 export type MissionId = "leo" | "lunar" | "mars";
 export type PriorityLevel = "urgent" | "review" | "watch" | "info";
@@ -100,6 +100,8 @@ export interface AstroLifeDesktopApi {
   getKnowledge: () => Promise<Knowledge>;
   getMission: () => Promise<{ profile: MissionProfile | null }>;
   saveMission: (profile: MissionProfile) => Promise<{ profile: MissionProfile }>;
+  /** NASA-informed check-in plan for a mission profile (the saved one when omitted). */
+  planMission: (profile?: MissionProfile) => Promise<AssessmentPlan>;
   /** Launch state: saved mission, resumable check-in, latest result and follow-up actions. */
   currentSession: () => Promise<AppState>;
   startSession: () => Promise<Session>;
