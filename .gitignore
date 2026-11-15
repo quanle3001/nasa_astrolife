@@ -4,3 +4,16 @@ __pycache__/
 *.pyc
 .pio/
 .DS_Store
+
+# React/Electron desktop build output
+desktop/node_modules/
+desktop/dist/
+desktop/release/
+desktop/sidecar-dist/
+desktop/sidecar-build/
+desktop/*.spec
+desktop/*.png
+desktop/*.tsbuildinfo
+
+# Local screenshots captured during UI work
+software/artifacts/
