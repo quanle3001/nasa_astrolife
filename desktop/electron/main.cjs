@@ -201,6 +201,12 @@ async function createWindow() {
       if (process.env.ASTROTIP_SCREENSHOT_SCRIPT) {
         // The script can request extra captures by setting document.title to "capture:<name>".
         mainWindow.webContents.on("page-title-updated", async (_event, title) => {
+          // "hover:<x>,<y>" moves the real mouse pointer there, so CSS :hover states can be captured.
+          if (title.startsWith("hover:")) {
+            const [x, y] = title.slice(6).split(",").map(Number);
+            if (Number.isFinite(x) && Number.isFinite(y)) mainWindow.webContents.sendInputEvent({ type: "mouseMove", x: Math.round(x), y: Math.round(y) });
+            return;
+          }
           if (!title.startsWith("capture:")) return;
           const name = title.slice(8).replace(/[^a-z0-9-]/gi, "");
           const shot = await mainWindow.webContents.capturePage();
