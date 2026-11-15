@@ -13,10 +13,14 @@
     "demo": "npm run build && node scripts/demo.mjs",
     "demo:resume": "node scripts/demo.mjs --resume",
     "test": "vitest run",
+    "test:packaging": "node --test scripts/packaging-checks.cjs",
     "typecheck": "tsc -b --pretty false",
     "bridge:proof": "node scripts/bridge-proof.mjs",
     "package:backend": "node scripts/build-backend.mjs",
-    "package:dir": "npm run build && npm run package:backend && electron-builder --dir"
+    "package:dir": "node scripts/package.mjs dir",
+    "package:mac": "node scripts/package.mjs mac",
+    "package:win": "node scripts/package.mjs win",
+    "package:verify": "node scripts/verify-package.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
@@ -69,28 +73,32 @@
     "files": [
       "dist/**/*",
       "electron/**/*",
+      "build/icon.png",
+      "THIRD_PARTY_NOTICES.md",
       "package.json"
     ],
-    "extraResources": [
-      {
-        "from": "../software",
-        "to": "software",
-        "filter": [
-          "astrotip/**/*",
-          "resources/**/*"
-        ]
-      },
-      {
-        "from": "sidecar-dist/astrotip-backend",
-        "to": "astrotip-backend"
-      }
-    ],
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "mac": {
       "category": "public.app-category.medical",
       "target": [
-        "dir"
+        "dmg"
       ],
-      "icon": "build/icon.png"
+      "icon": "build/icon.png",
+      "extraResources": [{ "from": "sidecar-dist/astrotip-backend", "to": "astrotip-backend" }]
+    },
+    "win": {
+      "target": ["nsis"],
+      "icon": "build/icon.png",
+      "extraResources": [{ "from": "sidecar-dist/astrotip-backend.exe", "to": "astrotip-backend.exe" }]
+    },
+    "nsis": {
+      "artifactName": "${productName}-${version}-windows-${arch}-Setup.${ext}",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "AstroLife",
+      "deleteAppDataOnUninstall": false
     }
   }
 }

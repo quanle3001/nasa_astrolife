@@ -3,6 +3,7 @@ const { spawn } = require("node:child_process");
 const { createInterface } = require("node:readline");
 const fs = require("node:fs");
 const path = require("node:path");
+const { backendLaunch } = require("./backend-runtime.cjs");
 
 const isDev = Boolean(process.env.VITE_DEV_SERVER_URL);
 let mainWindow = null;
@@ -17,34 +18,22 @@ class PythonBridge {
   }
 
   paths() {
-    const repoRoot = path.resolve(__dirname, "../..");
-    const softwareRoot = app.isPackaged
-      ? path.join(process.resourcesPath, "software")
-      : path.join(repoRoot, "software");
-    const candidates = [
-      process.env.ASTROTIP_PYTHON,
-      app.isPackaged ? path.join(process.resourcesPath, "astrotip-backend") : null,
-      path.join(repoRoot, ".venv", "bin", "python"),
-      "python3",
-    ].filter(Boolean);
-    return { softwareRoot, candidates };
+    return backendLaunch({ packaged: app.isPackaged,
+      repoRoot: path.resolve(__dirname, "../.."), resourcesPath: process.resourcesPath });
   }
 
   start() {
     if (this.child) return this.ready;
-    const { softwareRoot, candidates } = this.paths();
-    const python = candidates.find((candidate) => !candidate.includes(path.sep) || fs.existsSync(candidate));
-    if (!python) throw new Error("No AstroLife Python runtime is available.");
-    const packagedSidecar = app.isPackaged && path.basename(python) === "astrotip-backend";
-    const args = packagedSidecar ? [] : ["-m", "astrotip.bridge.service"];
-    this.child = spawn(python, args, {
-      cwd: softwareRoot,
+    const { command, args, cwd } = this.paths();
+    this.child = spawn(command, args, {
+      cwd,
+      windowsHide: true,
       stdio: ["pipe", "pipe", "pipe"],
       env: { ...process.env, PYTHONUNBUFFERED: "1" },
     });
     const lines = createInterface({ input: this.child.stdout });
     this.ready = new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error("AstroLife backend startup timed out.")), 15000);
+      const timeout = setTimeout(() => reject(new Error("AstroLife backend startup timed out.")), 60000);
       lines.on("line", (line) => {
         let message;
         try { message = JSON.parse(line); } catch { return; }
@@ -67,6 +56,7 @@ class PythonBridge {
       this.child.once("error", (error) => { clearTimeout(timeout); reject(error); });
       this.child.once("exit", (code) => {
         clearTimeout(timeout);
+        reject(new Error(`AstroLife backend exited during startup (${code ?? "unknown"}).`));
         this.child = null;
         for (const pending of this.pending.values()) {
           clearTimeout(pending.timeout);
@@ -160,6 +150,7 @@ ipcMain.handle("external:nasa", async (event, value) => {
 });
 
 const APP_ICON = path.join(__dirname, "../build/icon.png");
+if (process.platform === "win32") app.setAppUserModelId("org.astrotip.desktop");
 
 async function createWindow() {
   await bridge.start();
@@ -190,6 +181,24 @@ async function createWindow() {
   const page = process.env.ASTROTIP_SCREENSHOT_PAGE;
   if (isDev) await mainWindow.loadURL(`${process.env.VITE_DEV_SERVER_URL}${page ? `?page=${encodeURIComponent(page)}` : ""}`);
   else await mainWindow.loadFile(path.join(__dirname, "../dist/index.html"), page ? { query: { page } } : undefined);
+  if (process.argv.includes("--smoke-test") && process.env.ASTROTIP_SMOKE_TEST === "1") {
+    await mainWindow.webContents.executeJavaScript(`(async () => {
+      const ping = await window.astrotip.ping();
+      const config = await window.astrotip.getConfig();
+      await window.astrotip.getKnowledge();
+      await window.astrotip.getRadLab(false);
+      for (let attempt = 0; attempt < 50 && !document.querySelector("#root")?.textContent.trim(); attempt++) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      if (ping.protocol !== 2 || !config.missions.mars || !document.querySelector("#root")?.textContent.trim()) {
+        throw new Error("Packaged preload, renderer or backend check failed");
+      }
+    })()`);
+    console.log("ASTROLIFE_PACKAGE_OK");
+    await bridge.stop();
+    app.quit();
+    return;
+  }
   mainWindow.once("ready-to-show", async () => {
     mainWindow.show();
     if (process.env.ASTROTIP_SCREENSHOT) {
@@ -229,7 +238,11 @@ async function createWindow() {
   });
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(createWindow).catch(async (error) => {
+  console.error(error);
+  await bridge.stop();
+  app.exit(1);
+});
 app.on("window-all-closed", () => { if (process.platform !== "darwin") app.quit(); });
 app.on("activate", () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 app.on("before-quit", (event) => {
