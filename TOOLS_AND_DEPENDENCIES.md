@@ -12,7 +12,8 @@
 | Desktop | Python 3.12+, `venv`, `pip` | Local application environment |
 | Desktop GUI / webcam | PySide6 / Qt Multimedia | Native UI, photo import (`QFileDialog`), direct webcam capture (`QCamera`, `QImageCapture`) |
 | Telemetry | pyserial | Receive ESP32 serial CSV |
-| Live charts | pyqtgraph + numpy | Plot red/IR waveforms and health trends |
+| Live charts | pyqtgraph + numpy (Qt fallback); uPlot (React app) | Plot the optical pulse and NASA series |
+| NASA data and analysis | pandas, numpy, pydantic | Validate, clean and analyse NASA datasets; summarise history |
 | Image utility | Pillow | Import validation and thumbnails |
 | Storage | `sqlite3` | Python built-in; no pip install |
 | Source control | Git and GitHub | Separate scaffold and firmware commits |
@@ -40,4 +41,4 @@ Open `electrical/firmware/max30102_serial_test/` in VS Code with the PlatformIO 
 - **Custom image algorithms:** `opencv-python` is optional and is **not required** to capture photos using Qt Multimedia.
 - **USB serial driver:** may be required depending on the USB-to-UART chip on your exact ESP32 board. Confirm the board chip before choosing CH340 or CP210x drivers.
 
-Do not install a web stack (React, FastAPI, Node.js or Electron) for the planned native Python/Qt design.
+The primary interface is now the React + Electron app in `desktop/`, which needs Node.js and `npm install` there. Setup, the test cycle and the full dependency list are in [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md). No web server is involved: Electron talks to the Python backend through a private child process.

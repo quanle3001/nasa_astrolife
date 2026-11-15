@@ -33,11 +33,14 @@ package keep their current paths, and existing history remains in the legacy
 | `../desktop/` | Primary React/TypeScript/Electron interface and native packaging |
 | `run.py` | Legacy PySide6 fallback entry point |
 | `astrotip/ui/` | Desktop windows, dashboard, navigation, and interactive pages |
-| `astrotip/inputs/` | ESP32 serial data, questionnaires, manual inputs, images, and camera capture |
-| `astrotip/analysis/` | Measurement validation, local ML, and NASA-informed guidance |
+| `astrotip/inputs/` | ESP32 serial reader and report parser; labelled simulated stream |
+| `astrotip/bridge/` | JSON-lines service for the desktop app; PPG batching |
+| `astrotip/analysis/` | Assessment rules, optical quality checks, mission context, assessment plan and evidence trace, history summary |
+| `astrotip/questionnaire/` | Question registry validation; answers → check-in |
+| `astrotip/nasa/` | RadLab and OSDR retrieval, Pydantic models, pandas/NumPy analysis |
 | `astrotip/models/` | Shared health data structures, units, and metadata |
-| `astrotip/storage/` | SQLite database and local health records |
-| `resources/` | NASA references and dataset documentation |
+| `astrotip/storage/` | SQLite history, mission profile, sessions and follow-up actions |
+| `resources/` | NASA catalog, mission context, question registry, evidence list, verified NASA caches |
 | `tests/` | Software testing and validation |
 
 ## Requirements
@@ -49,11 +52,11 @@ package keep their current paths, and existing history remains in the legacy
 
 Core libraries:
 
-- `PySide6` — Native desktop UI and future webcam capture
+- `PySide6` — Qt event loop for the backend; the Qt fallback interface
 - `pyserial` — ESP32 communication
-- `pyqtgraph` — Real-time health visualizations
-- `numpy` — Numerical processing
-- `Pillow` — Image processing and validation
+- `pandas`, `numpy` — NASA dataset processing, statistics, history summary
+- `pydantic` — Validation of NASA API responses, units, timestamps and provenance
+- `pyqtgraph`, `Pillow` — Charts and images in the Qt fallback
 - `sqlite3` — Built-in Python database library
 
 Optional dependencies for local ML, dataset analysis, testing, and packaging are defined in `requirements-ml.txt` and `requirements-dev.txt`.
@@ -146,6 +149,11 @@ Uploading and reading real sensor data require physical hardware. Compiling does
 The firmware outputs descriptive serial reports containing red/infrared optical measurements, heart-rate and SpO₂ estimates, and measurement validity. It also streams each paired optical sample for the live waveform.
 
 ## Live optical waveform
+
+> This section describes the Qt fallback (`python software/run.py`) and the
+> firmware behaviour shared by both interfaces. In the React app the check-in
+> is the guided flow described in the [project README](../README.md), and the
+> mission only changes the order of hazards and questions.
 
 The optional check-in contains health observations, with no mission selector or
 assumed destination. Assessment guidance uses readings and reported observations.
@@ -260,32 +268,31 @@ health history.
 
 ## Application Features
 
-- **Live Dashboard:** Display real-time ESP32/MAX30102 estimates, freshness, and connection state.
-- **Daily Check-in:** Collect sleep, mood, fatigue, symptoms, and activity information.
-- **Manual Health Input:** Record measurements from external instruments.
-- **Photos & Camera:** Import image files or capture images directly with a webcam.
-- **Health History:** Store and review explicitly saved local check-ins and assessments.
-- **Local Assessment:** Interpret reported observations using validated local rules.
-- **NASA Sources:** Provide traceable evidence for spaceflight-related health guidance.
-- **Mission Context:** Select LEO, lunar, or Mars/deep-space context with cached NASA imagery.
-- **Reduced Motion:** Set `ASTROTIP_REDUCED_MOTION=1` to disable decorative motion.
+- **Guided check-in:** mission profile, NASA hazard order, safety screen, adaptive questions, required sensor reading, findings, follow-up actions.
+- **Live monitor:** real-time ESP32/MAX30102 optical pulse and firmware estimates, with freshness and connection state.
+- **Local assessment:** deterministic rules (`analysis/rules.py`); every finding carries an evidence trace.
+- **NASA data:** RadLab radiation readings with pandas/NumPy analysis and provenance; one OSDR space-biology study; Human Research Roadmap evidence per topic. See [`docs/NASA_DATA.md`](../docs/NASA_DATA.md).
+- **Health history:** saved check-ins, sessions and follow-up actions in one local SQLite file.
+- **Concern report:** symptoms and optional values from another instrument, from any screen.
+- **Reduced motion:** "Pause motion" in the React app; `ASTROTIP_REDUCED_MOTION=1` for the Qt fallback.
 
 ## Current Limitations
 
 - This is an educational prototype, not a diagnosis or flight-certified medical device.
 - Sensor estimates depend on the experimental ESP32/MAX30102 firmware and are not clinically validated.
 - Local history is intentionally explicit and unencrypted.
-- Mission media is decorative and does not affect health analysis.
-- Photos/camera and trained machine-learning analysis are not part of the current health workflow.
+- The mission changes the order of hazards and questions, never a finding. Mission media is decorative.
+- No machine learning or language model is used. Photos and camera input are not part of the health workflow.
+- The RadLab unit is not verified and is shown as "not stated by the API".
 
 See [the React desktop guide](../desktop/README.md) for the bridge architecture,
 native packaging, visual stack, test commands, and third-party notices. See
-[UI_REDESIGN.md](UI_REDESIGN.md) for migration notes and the retained fallback.
+[`docs/UI_UX.md`](../docs/UI_UX.md#11-qt-fallback) for the retained Qt fallback.
 
-The application supports live serial readings, an optical waveform, optional
-check-ins, rule-based guidance with NASA references used internally, and explicit
-saving to local health history. It does not capture or analyze medical images
-or run a trained machine-learning model. Sensor estimates and the graph have
+The sections above under "Live optical waveform" describe the Qt fallback's
+monitor and the firmware behaviour both interfaces share. The React app's
+measurement step, hardware verification status and troubleshooting are in
+[`docs/HARDWARE.md`](../docs/HARDWARE.md). Sensor estimates and the graph have
 not been clinically validated.
 
 Close the PlatformIO Serial Monitor before connecting Astro Life, since both
