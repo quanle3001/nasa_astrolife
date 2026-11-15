@@ -77,7 +77,7 @@ def assess(checkin: CheckIn, catalog: dict | None = None) -> Assessment:
         flag(condition_id, level, f"Reported: {SYMPTOMS[key].lower()}. This does not establish a diagnosis.", action, source_ids)
 
     notes = [
-        "Priorities are app review prompts based on reported concerns and mission context, not NASA rankings or disease probabilities.",
+        "Priorities are app review prompts based on readings and reported observations, not NASA rankings or disease probabilities.",
         "Unselected symptoms are unreported. Risks without a trigger remain unassessed, not ruled out.",
         "Fingertip readings cannot assess radiation dose, bone density, SANS, infection, mental health or cabin CO2.",
     ]
@@ -125,12 +125,6 @@ def assess(checkin: CheckIn, catalog: dict | None = None) -> Assessment:
         for condition_id in ("fitness", "bone"):
             flag(condition_id, "watch", "The prescribed exercise session was reported as missed; this does not measure fitness or bone loss.",
                  "Discuss barriers with the crew exercise specialist and resume the prescribed plan when medically appropriate.")
-
-    if checkin.mission in {"lunar", "mars"}:
-        flag("radiation", "watch", "Beyond low Earth orbit, radiation protection needs explicit mission planning; exposure was not measured here.",
-             "Review dosimetry, space-weather alerts and the approved shelter plan with mission control.")
-        flag("medical_support", "watch", "Greater distance from Earth changes access to medical support and resupply; this is a planning reminder.",
-             "Review onboard medical resources, crew training and delayed-communication care procedures.")
 
     if checkin.notes.strip():
         notes.append("Free-text notes are saved only when requested and are not automatically analyzed. Select the relevant symptoms above for review prompts.")

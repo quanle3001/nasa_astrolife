@@ -25,7 +25,7 @@ class HistoryTests(unittest.TestCase):
     def test_save_and_reopen_preserves_observations_and_assessment(self):
         with TemporaryDirectory() as directory:
             path = Path(directory) / "history.sqlite3"
-            checkin = CheckIn(mission="mars", spo2=87.5, signal_quality="poor",
+            checkin = CheckIn(spo2=87.5, signal_quality="poor",
                               symptoms={"chest_pain", "poor_sleep"},
                               exercise_completed=False, notes="Crew's note <b>unchanged</b>")
             assessment = assess(checkin)
@@ -36,6 +36,7 @@ class HistoryTests(unittest.TestCase):
             entry = entries[0]
             self.assertEqual(entry["id"], identifier)
             self.assertEqual(entry["checkin"]["spo2"], 87.5)
+            self.assertNotIn("mission", entry["checkin"])
             self.assertIsNone(entry["checkin"]["heart_rate"])
             self.assertEqual(set(entry["checkin"]["symptoms"]), set(checkin.symptoms))
             self.assertEqual(entry["checkin"]["notes"], checkin.notes)

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "reviewed_on": "2026-11-14",
-  "scope": "Curated educational guidance from public NASA Human Research Program pages. These are research summaries, not patient datasets, diagnoses, or mission medical procedures. AstroTip is not a validated medical device.",
-  "priority_note": "NASA describes mission-dependent risks, not a universal ranked list. AstroTip brings reported symptoms and concerns to the top; prevention topics remain visible even when fingertip readings look normal. A priority is an app follow-up prompt, not an estimated probability of disease.",
+  "scope": "Curated educational guidance from public NASA Human Research Program pages. These are research summaries, not patient datasets, diagnoses, or mission medical procedures. Astro Life is not a validated medical device.",
+  "priority_note": "NASA describes mission-dependent risks, not a universal ranked list. Astro Life brings reported symptoms and concerns to the top; prevention topics remain visible even when fingertip readings look normal. A priority is an app follow-up prompt, not an estimated probability of disease.",
   "sources": [
     {"id": "hazards", "title": "NASA: Five hazards of human spaceflight", "url": "https://www.nasa.gov/hrp/hazards/"},
     {"id": "risks", "title": "NASA: Human spaceflight risks", "url": "https://www.nasa.gov/hrp/risks/"},
@@ -78,7 +78,7 @@
       "why_it_matters": "Weightlessness can reduce strength and aerobic capacity, making mission tasks harder and increasing injury risk.",
       "priority_rationale": "Prevention matters throughout a mission even without symptoms; task readiness cannot be inferred from normal pulse or oxygen readings.",
       "monitoring": "Record missed exercise sessions, weakness, fatigue, and difficulty completing usual tasks; use crew fitness evaluations for actual performance measures.",
-      "limitations": "AstroTip does not measure muscle mass, strength, aerobic capacity, or readiness for a spacewalk.",
+      "limitations": "Astro Life does not measure muscle mass, strength, aerobic capacity, or readiness for a spacewalk.",
       "countermeasures": [
         {"text": "Follow the individually prescribed resistance and aerobic exercise schedule and periodic fitness assessments.", "evidence": "Operational countermeasure", "source_ids": ["fitness"]}
       ],
@@ -148,7 +148,7 @@
         {"text": "Discuss persistent fatigue and workload adjustments with the crew lead or medical team.", "evidence": "Mission protocol", "source_ids": ["sleep"]}
       ],
       "research": [
-        {"text": "ARCHeR monitored sleep, activity, and well-being on Artemis II; it is a research study, not a validated AstroTip fatigue model.", "source_ids": ["research"]}
+        {"text": "ARCHeR monitored sleep, activity, and well-being on Artemis II; it is a research study, not a validated Astro Life fatigue model.", "source_ids": ["research"]}
       ],
       "source_ids": ["sleep", "research"]
     },
@@ -242,7 +242,7 @@
       "why_it_matters": "Delayed Earth support increases the need for onboard capability. Landing forces and weakened bones or muscles also create injury risk.",
       "priority_rationale": "Medical readiness supports every condition; landing and injury concerns need clinical review rather than clearance from a simple sensor.",
       "monitoring": "Record injuries and new functional difficulties; maintain accessible medical procedures, equipment status, and a health log for the crew medical officer.",
-      "limitations": "AstroTip cannot examine injuries, verify medical supplies, replace trained care, or certify vehicle and restraint safety.",
+      "limitations": "Astro Life cannot examine injuries, verify medical supplies, replace trained care, or certify vehicle and restraint safety.",
       "countermeasures": [
         {"text": "Keep approved offline procedures available and practice the mission's medical and equipment-response training before it is needed.", "evidence": "Mission protocol", "source_ids": ["systems", "distance_hazard"]},
         {"text": "Use approved seating, restraints, and landing or egress assistance procedures; report pain or injury to the medical team.", "evidence": "Mission protocol", "source_ids": ["dynamic_loads"]}

@@ -17,7 +17,7 @@ if HAS_QT:
     from astrotip.analysis.nasa_guidance import load_catalog
     from astrotip.models.health_indicator import CheckIn, SYMPTOMS
     from astrotip.storage.database import HistoryStore
-    from astrotip.ui.main_window import AstroTipWindow
+    from astrotip.ui.main_window import AstroLifeWindow
 
 
 @unittest.skipUnless(HAS_QT, "Install software/requirements.txt for desktop integration checks")
@@ -30,7 +30,7 @@ class DesktopFlowTests(unittest.TestCase):
     def setUp(self):
         self.temp = TemporaryDirectory()
         self.path = Path(self.temp.name) / "history.sqlite3"
-        self.window = AstroTipWindow(catalog=self.catalog, history_store=HistoryStore(self.path))
+        self.window = AstroLifeWindow(catalog=self.catalog, history_store=HistoryStore(self.path))
 
     def tearDown(self):
         self.window.close()
@@ -46,6 +46,7 @@ class DesktopFlowTests(unittest.TestCase):
         self.assertIsNone(checkin.exercise_completed)
         self.assertEqual(checkin.symptoms, frozenset())
         self.assertEqual(set(self.window.checkin_page.symptom_checks), set(SYMPTOMS))
+        self.assertFalse(hasattr(self.window.checkin_page, "mission"))
         self.assertFalse(self.window.assessment_page.save_button.isEnabled())
         self.assertFalse(self.path.exists())
 
@@ -54,14 +55,12 @@ class DesktopFlowTests(unittest.TestCase):
         form.spo2.setText("87.5")
         form.heart_rate.setText("72")
         form.signal_quality.setCurrentIndex(form.signal_quality.findData("poor"))
-        form.mission.setCurrentIndex(form.mission.findData("mars"))
         form.exercise_completed.setCurrentIndex(form.exercise_completed.findData(False))
         form.symptom_checks["vision_changes"].setChecked(True)
         form.notes.setPlainText("<b>Recorded literally</b>")
         form.submit_button.click()
         self.app.processEvents()
         self.assertEqual(self.window.latest_assessment.level, "urgent")
-        self.assertEqual(self.window.latest_checkin.mission, "mars")
         self.assertIs(self.window.latest_checkin.exercise_completed, False)
         self.assertIs(self.window.tabs.currentWidget(), self.window.assessment_page)
         self.assertFalse(self.window.assessment_page.urgent_action.isHidden())
@@ -77,7 +76,7 @@ class DesktopFlowTests(unittest.TestCase):
         self.assertIn("<b>Recorded literally</b>", self.window.history_page.content.toPlainText())
         self.window.assessment_page.save_button.click()
         self.assertEqual(len(HistoryStore(self.path).list_entries()), 1)
-        reopened = AstroTipWindow(catalog=self.catalog, history_store=HistoryStore(self.path))
+        reopened = AstroLifeWindow(catalog=self.catalog, history_store=HistoryStore(self.path))
         try:
             reopened.refresh_history()
             self.assertEqual(reopened.history_page.table.rowCount(), 1)
@@ -95,6 +94,35 @@ class DesktopFlowTests(unittest.TestCase):
                     self.assertEqual(warning.call_count, 1)
                 self.assertIsNone(self.window.latest_assessment)
                 self.assertFalse(self.path.exists())
+
+    def test_history_reads_old_and_new_records_without_mission_column(self):
+        from contextlib import closing
+        import json
+        import sqlite3
+        self.window.run_assessment(CheckIn(heart_rate=72, spo2=98))
+        self.window.save_assessment()
+        store = self.window.history_store
+        old_entry = store.list_entries()[0]
+        self.assertNotIn("mission", old_entry["checkin"])
+        # Simulate a record written by the previous version. Never rewrite it.
+        old_entry["checkin"]["mission"] = "mars"
+        with closing(sqlite3.connect(self.path)) as connection, connection:
+            connection.execute("UPDATE checkins SET checkin_json = ? WHERE id = ?",
+                               (json.dumps(old_entry["checkin"]), old_entry["id"]))
+        self.window.run_assessment(CheckIn(heart_rate=75))
+        self.window.save_assessment()
+        self.window.refresh_history()
+        history = self.window.history_page
+        self.assertEqual(history.table.rowCount(), 2)
+        self.assertEqual([history.table.horizontalHeaderItem(i).text()
+                          for i in range(history.table.columnCount())], ["Recorded", "Priority"])
+        history.show_entry(1)
+        self.assertIn("72", history.content.toPlainText())
+        self.assertNotIn("Mars", history.content.toPlainText())
+        entries = store.list_entries()
+        self.assertNotIn("mission", entries[0]["checkin"])
+        self.assertEqual(entries[1]["checkin"]["mission"], "mars")
+        self.assertEqual(entries[1]["assessment"], old_entry["assessment"])
 
     def test_sensor_is_home_and_reference_library_is_not_in_ui(self):
         tabs = self.window.tabs

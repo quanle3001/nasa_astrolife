@@ -1,4 +1,4 @@
-"""Read the existing ESP32 text protocol without modifying or flashing firmware."""
+"""Read ESP32 health reports and optional paired red/infrared sample packets."""
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -10,6 +10,14 @@ from PySide6.QtCore import QThread, Signal
 
 
 @dataclass(frozen=True)
+class OpticalSample:
+    sequence: int
+    elapsed_seconds: float
+    red: int
+    infrared: int
+
+
+@dataclass(frozen=True)
 class SensorReading:
     heart_rate: float | None
     spo2: float | None
@@ -18,6 +26,9 @@ class SensorReading:
     infrared: int
     elapsed_seconds: float
     received_at: str
+    signal_status: str | None = None
+    sample_rate_hz: float | None = None
+    firmware_version: str = ""
 
     @property
     def usable(self):
@@ -36,7 +47,7 @@ class ReportParser:
         self.channel = None
         self.discard_line = False
 
-    def feed(self, data: bytes) -> list[SensorReading | str]:
+    def feed(self, data: bytes) -> list[SensorReading | OpticalSample | str]:
         events = []
         self.buffer += data
         while b"\n" in self.buffer:
@@ -55,14 +66,29 @@ class ReportParser:
         return events
 
     def _line(self, line):
+        if line.startswith("PPG,"):
+            # PPG,<sequence>,<device milliseconds>,<red counts>,<IR counts>.
+            # Optical samples are never interpreted as valid vital signs.
+            try:
+                parts = line.split(",")
+                if len(parts) != 5 or not all(part.isascii() and part.isdecimal() for part in parts[1:]):
+                    raise ValueError("Invalid sample packet")
+                sequence, elapsed_ms, red, infrared = map(int, parts[1:])
+                if not (0 <= sequence <= 0xFFFFFFFF and 0 <= elapsed_ms <= 0xFFFFFFFF
+                        and 0 <= red <= 262143 and 0 <= infrared <= 262143):
+                    raise ValueError("Sample out of range")
+                return OpticalSample(sequence, elapsed_ms / 1000, red, infrared)
+            except ValueError:
+                self.fields = None
+                return "Malformed optical sample; waiting for fresh sensor data."
         if line.startswith("ERROR:"):
             self.fields = None
             return line
-        if line == "ASTROTIP HEALTH MONITOR":
+        if line in {"ASTROTIP HEALTH MONITOR", "ASTRO LIFE HEALTH MONITOR"}:
             self.fields = {}
             self.channel = None
             return None
-        if line.startswith("Initializing AstroTip"):
+        if line.startswith(("Initializing AstroTip", "Initializing Astro Life")):
             self.fields = None
             return "Device restarting; waiting for a complete sensor report."
         if self.fields is None:
@@ -73,17 +99,34 @@ class ReportParser:
             required = {"finger", "hr", "spo2", "hr_valid", "spo2_valid", "red", "ir", "elapsed"}
             if not required.issubset(fields):
                 return "Incomplete sensor report; waiting for the next reading."
+            if fields.get("signal_status") == "ready" and fields.get("sample_rate_hz") is not None:
+                if not 20 <= fields["sample_rate_hz"] <= 30:
+                    fields["signal_status"] = "timing"
             def valid_value(key, low, high):
                 value = fields[key]
-                return value if fields["finger"] and fields[key + "_valid"] and value is not None and low <= value <= high else None
+                window_ok = fields.get("signal_status") in {None, "ready"}
+                return value if window_ok and fields["finger"] and fields[key + "_valid"] and value is not None and low <= value <= high else None
             return SensorReading(
                 valid_value("hr", 35, 220), valid_value("spo2", 70, 100),
                 fields["finger"], fields["red"], fields["ir"], fields["elapsed"],
                 datetime.now(timezone.utc).isoformat(),
+                fields.get("signal_status"), fields.get("sample_rate_hz"), fields.get("firmware_version", ""),
             )
         try:
             if line.startswith("Finger Detection:"):
                 fields["finger"] = line == "Finger Detection: Likely detected"
+            elif line.startswith("Signal Status:"):
+                value = line.split(":", 1)[1].strip()
+                if value not in {"ready", "collecting", "no_contact", "clipped", "timing"}:
+                    raise ValueError("Unknown signal status")
+                fields["signal_status"] = value
+            elif line.startswith("Sample Rate:"):
+                value = float(line.split(":", 1)[1].replace(" Hz", ""))
+                if not math.isfinite(value) or not 0 <= value <= 3200:
+                    raise ValueError("Invalid sample rate")
+                fields["sample_rate_hz"] = value
+            elif line.startswith("Firmware:"):
+                fields["firmware_version"] = line.split(":", 1)[1].strip()[:64]
             elif line.startswith("Heart Rate:") or line.startswith("Blood Oxygen (SpO2):"):
                 self.channel = "hr" if line.startswith("Heart Rate:") else "spo2"
                 value = line.split(":", 1)[1].strip().replace(" BPM", "").replace("%", "")
@@ -116,6 +159,7 @@ def available_ports():
 
 class SerialReader(QThread):
     reading_received = Signal(object)
+    optical_sample_received = Signal(object)
     status_changed = Signal(str)
     connected = Signal()
 
@@ -137,12 +181,16 @@ class SerialReader(QThread):
             if not self.isInterruptionRequested():
                 self.connected.emit()
             while not self.isInterruptionRequested():
-                data = connection.read(1024)
+                # Deliver available samples promptly instead of waiting for a
+                # full 1 KiB read or its timeout before updating the waveform.
+                data = connection.read(min(connection.in_waiting or 1, 1024))
                 for event in parser.feed(data):
                     if self.isInterruptionRequested():
                         break
                     if isinstance(event, SensorReading):
                         self.reading_received.emit(event)
+                    elif isinstance(event, OpticalSample):
+                        self.optical_sample_received.emit(event)
                     else:
                         self.status_changed.emit(event)
         except (serial.SerialException, OSError, ValueError) as exc:

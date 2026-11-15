@@ -1,6 +1,7 @@
 """Input validation protects the assessment boundary, including non-finite values."""
 
 import math
+from dataclasses import asdict
 from pathlib import Path
 import sys
 import unittest
@@ -18,6 +19,7 @@ class CheckInTests(unittest.TestCase):
         self.assertIsNone(value.sleep_hours)
         self.assertIsNone(value.exercise_completed)
         self.assertEqual(value.signal_quality, "unknown")
+        self.assertNotIn("mission", asdict(value))
 
     def test_rejects_nonfinite_out_of_range_and_boolean_measurements(self):
         for field, values in {
@@ -41,7 +43,7 @@ class CheckInTests(unittest.TestCase):
 
     def test_unknown_categories_are_rejected(self):
         for kwargs in (
-            {"mission": "venus"}, {"signal_quality": "excellent"},
+            {"signal_quality": "excellent"},
             {"symptoms": {"invented_diagnosis"}}, {"symptoms": "chest_pain"},
             {"exercise_completed": 1}, {"notes": "x" * 5001},
         ):

@@ -1,12 +1,12 @@
-# AstroTip — Astronaut Health Monitoring System
+# Astro Life — Astronaut Health Monitoring System
 
-AstroTip is an offline-first, multimodal astronaut health-monitoring prototype developed for the **2026 NASA Space Apps Challenge**.
+Astro Life is an offline-first, multimodal astronaut health-monitoring prototype developed for the **2026 NASA Space Apps Challenge**.
 
 The project combines an ESP32-based fingertip sensor with a native Python desktop application to help astronauts monitor health indicators, review trends, and eventually receive NASA-informed health guidance.
 
 ## Project Overview
 
-AstroTip is designed to support multiple health data sources:
+Astro Life is designed to support multiple health data sources:
 
 - **Wearable sensor:** MAX30102 for optical PPG readings, heart-rate estimation, and estimated blood oxygen saturation (SpO₂).
 - **Manual health measurements:** Blood pressure, body temperature, blood glucose, and other indicators.
@@ -71,7 +71,11 @@ python -m pip install -r software/requirements.txt
 python software/run.py
 ```
 
-The current desktop application provides placeholder navigation pages. Live sensor integration and health assessment features are under development.
+The desktop app includes a live sensor monitor with red/infrared optical
+waveforms, optional check-ins, rule-based guidance, and local health history.
+On this Windows setup, double-click the **Astro Life** desktop shortcut to open
+it. See [the software guide](software/README.md#live-optical-waveform) for waveform
+behavior and the required ESP32 firmware update.
 
 ### 2. Build the ESP32 firmware
 
@@ -103,23 +107,23 @@ Open the Serial Monitor:
 pio device monitor -b 115200
 ```
 
-The terminal displays descriptive MAX30102 reports, including raw optical readings, estimated heart rate, estimated SpO₂, and measurement validity.
+The terminal displays descriptive MAX30102 reports, including raw optical readings, estimated heart rate, estimated SpO₂, and measurement validity, plus `PPG` lines containing paired red/infrared samples for the desktop waveform. Close the serial monitor before connecting the desktop app.
 
 On macOS, if `pio` is not recognized, use the PlatformIO Core CLI terminal in VS Code or run `~/.platformio/penv/bin/pio`.
 
 ## Development Status
 
 - [x] Initial repository and software structure
-- [x] PySide6 desktop application placeholder
+- [x] PySide6 desktop application
 - [x] ESP32 MAX30102 firmware implementation
-- [ ] Physical sensor testing and verification
-- [ ] Real-time sensor-to-desktop integration
-- [ ] Manual health inputs and questionnaires
+- [ ] Sensor accuracy verified against reference medical equipment
+- [x] Serial reader and live optical waveform (hardware stream verified)
+- [x] Manual health inputs and questionnaires
 - [ ] Image import and webcam capture
-- [ ] Local health history and visualization
-- [ ] NASA-informed health assessment
+- [x] Local health history
+- [x] NASA-informed, rule-based health guidance
 - [ ] Optional local machine-learning integration
 
 ## Important Notice
 
-AstroTip is an educational engineering prototype and is **not a certified medical device**. Heart-rate and SpO₂ estimates have not yet been validated against reference medical equipment. Its future assessment features are intended for decision support, not autonomous medical diagnosis or treatment.
+Astro Life is an educational engineering prototype and is **not a certified medical device**. Heart-rate and SpO₂ estimates have not yet been validated against reference medical equipment. Its future assessment features are intended for decision support, not autonomous medical diagnosis or treatment.

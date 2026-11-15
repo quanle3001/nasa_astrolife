@@ -1,4 +1,4 @@
-"""AstroTip's offline, evidence-linked health guidance workspace."""
+"""Astro Life's offline, evidence-linked health guidance workspace."""
 
 from PySide6.QtWidgets import (
     QHBoxLayout, QMainWindow, QMessageBox, QTabWidget, QVBoxLayout, QWidget,
@@ -18,8 +18,17 @@ STYLE = """
 QWidget { background: #0c1626; color: #e5edf8; font-family: 'Segoe UI'; font-size: 10pt; }
 QMainWindow { background: #0c1626; }
 QLabel#metric { background: #152b41; font-size: 24pt; padding: 20px; border-radius: 9px; }
+QFrame#monitorCard { background: #040c10; border: 1px solid #23444a; border-radius: 9px; }
+QFrame#monitorCard QWidget { background: #040c10; }
+QLabel#pulseValue { font-size: 44pt; font-weight: 600; color: #82ee9c; }
+QLabel#oxygenValue { font-size: 44pt; font-weight: 600; color: #4ae8df; }
+QLabel#pulseCaption { font-size: 11pt; font-weight: 600; color: #82ee9c; }
+QLabel#oxygenCaption { font-size: 11pt; font-weight: 600; color: #4ae8df; }
+QLabel#metricUnit { color: #819b9e; }
+QLabel#connectionStatus { color: #9ee5d3; padding: 3px 0; }
 QLabel#brand { font-size: 23pt; font-weight: 700; color: #9ee5d3; }
 QLabel#pageTitle { font-size: 20pt; font-weight: 600; margin: 9px 0; }
+QLabel#waveformTitle { font-size: 13pt; font-weight: 600; color: #9ee5d3; }
 QLabel#subtitle { color: #adbed4; margin: 3px 0 8px 0; }
 QLabel#summaryBanner { background: #18334a; border: 1px solid #30546d; border-radius: 9px; padding: 13px; font-size: 11pt; }
 QLabel#urgentBanner { background: #47202c; border: 1px solid #b95768; border-radius: 8px; padding: 12px; color: #ffe2e6; }
@@ -56,14 +65,14 @@ QHeaderView::section { background: #192d46; color: #c6d9ec; padding: 10px; borde
 """
 
 
-class AstroTipWindow(QMainWindow):
+class AstroLifeWindow(QMainWindow):
     def __init__(self, catalog=None, history_store=None):
         super().__init__()
         self.catalog = catalog if catalog is not None else load_catalog()
         self.history_store = history_store if history_store is not None else HistoryStore()
         self.latest_checkin = None
         self.latest_assessment = None
-        self.setWindowTitle("AstroTip · Astronaut health priorities")
+        self.setWindowTitle("Astro Life · Astronaut health priorities")
         self.resize(1200, 850)
         self.setMinimumSize(850, 620)
         self.setStyleSheet(STYLE)
@@ -71,7 +80,7 @@ class AstroTipWindow(QMainWindow):
         layout = QVBoxLayout(central)
         layout.setContentsMargins(22, 12, 22, 12)
         header = QHBoxLayout()
-        header.addWidget(label("ASTROTIP", "brand"))
+        header.addWidget(label("ASTRO LIFE", "brand"))
         header.addWidget(label("CREW HEALTH COMPANION", "subtitle"), 1)
         header.addWidget(label("ESP32 + MAX30102", "subtitle"))
         layout.addLayout(header)
@@ -93,8 +102,7 @@ class AstroTipWindow(QMainWindow):
             self.tabs.addTab(page, title)
         layout.addWidget(self.tabs, 1)
         layout.addWidget(label(
-            "Educational prototype · Not a diagnosis or flight-certified medical device. "
-            "Follow your mission medical procedures and contact the medical team for concerning symptoms.",
+            "Prototype estimates · Follow your care plan. If you feel unwell, contact the medical team.",
             "notice",
         ))
         self.setCentralWidget(central)
