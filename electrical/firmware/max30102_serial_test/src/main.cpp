@@ -79,14 +79,11 @@ bool readSample(int index)
   // These are raw optical counts, regardless of finger/algorithm validity.
   const uint32_t sampledAt = millis();
   sampleTimes[index] = sampledAt;
-  Serial.print("PPG,");
-  Serial.print(sampleSequence++);
-  Serial.print(',');
-  Serial.print(sampledAt);
-  Serial.print(',');
-  Serial.print(lastRed);
-  Serial.print(',');
-  Serial.println(lastIR);
+  Serial.printf("PPG,%lu,%lu,%lu,%lu\n",
+                static_cast<unsigned long>(sampleSequence++),
+                static_cast<unsigned long>(sampledAt),
+                static_cast<unsigned long>(lastRed),
+                static_cast<unsigned long>(lastIR));
   return true;
 }
 
