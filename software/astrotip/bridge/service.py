@@ -229,13 +229,15 @@ class BridgeService(QObject):
         self.optical_quality.add_sample(sample)
         self.ppg.add(sample)
         contact = contact_state(sample)
-        if contact != "ok" and self.sensor_pending_id:
+        if contact != "ok" and self.stability.sample_count:
             # Contact was lost between reports: withdraw the current estimate now
             # instead of waiting up to a second for the next report.
             self.stability.reset()
             self._drop_sensor_assessment()
             self.emit_event("sensor.reading", {
                 "usable": False, "finger_detected": contact == "clipped", "reason": contact,
+                "measurement_ready": False, "samples_collected": 0,
+                "samples_required": self.stability.REPORT_COUNT,
                 "source": self.source, "received_at": "",
             })
 
@@ -260,14 +262,39 @@ class BridgeService(QObject):
         if not reading.usable:
             self.stability.reset()
             self._drop_sensor_assessment()
-            self.emit_event("sensor.reading", {"usable": False, "reading_state": "waiting", **details})
+            self.emit_event("sensor.reading", {
+                "usable": False, "measurement_ready": False,
+                "samples_collected": 0, "samples_required": self.stability.REPORT_COUNT,
+                "reading_state": "waiting", **details,
+            })
             return
         reading_state = self.stability.update(reading, signal_ready=optical_state in {"ready", "unavailable"})
+        measurement_ready = reading_state == "steady"
+        progress = {
+            "measurement_ready": measurement_ready,
+            "samples_collected": self.stability.sample_count,
+            "samples_required": self.stability.REPORT_COUNT,
+        }
+        if not measurement_ready:
+            # Raw device-valid values remain visible, but cannot be submitted
+            # until three fresh reports agree.
+            self._drop_sensor_assessment()
+            self.emit_event("sensor.reading", {
+                "usable": True,
+                "heart_rate": reading.heart_rate,
+                "spo2": reading.spo2,
+                "reading_state": reading_state,
+                **progress,
+                **details,
+            })
+            return
+        heart_rate = self.stability.display_value("heart_rate")
+        spo2 = self.stability.display_value("spo2")
         checkin = CheckIn(
-            heart_rate=reading.heart_rate,
-            spo2=reading.spo2,
-            # Firmware validity is not a clinically validated signal-quality score.
-            signal_quality="poor" if reading_state in {"changing", "settling"} else "unknown",
+            heart_rate=heart_rate,
+            spo2=spo2,
+            # Agreement is an engineering consistency check, not clinical validation.
+            signal_quality="unknown",
             input_source=self.source,
             sensor_port=self.active_port,
             sensor_received_at=reading.received_at,
@@ -278,9 +305,10 @@ class BridgeService(QObject):
         self.latest_sensor_checkin = checkin
         self.emit_event("sensor.reading", {
             "usable": True,
-            "heart_rate": reading.heart_rate,
-            "spo2": reading.spo2,
+            "heart_rate": heart_rate,
+            "spo2": spo2,
             "reading_state": reading_state,
+            **progress,
             **details,
             **payload,
         })

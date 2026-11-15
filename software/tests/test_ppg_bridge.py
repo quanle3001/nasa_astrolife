@@ -154,31 +154,54 @@ class BridgeSensorTests(unittest.TestCase):
         self.assertEqual(batch["source"], "sensor")
         self.assertEqual(self.events("sensor.reading"), [], "Optical samples are never vital signs")
 
-    def test_usable_report_is_assessed_by_the_python_rules_with_provenance(self):
+    def test_three_usable_reports_are_required_before_assessment(self):
         reader = self.connect()
-        reader.reading_received.emit(reading(spo2=87))
-        event, = self.events("sensor.reading")
-        self.assertTrue(event["usable"])
+        reader.reading_received.emit(reading(spo2=87, elapsed=30))
+        with self.assertRaisesRegex(ValueError, "No current sensor reading"):
+            self.service._measurement({"measurement": {"use": "sensor"}})
+        reader.reading_received.emit(reading(spo2=87, elapsed=31))
+        self.assertIsNone(self.service.latest_sensor_checkin)
+        reader.reading_received.emit(reading(spo2=87, elapsed=32))
+        collecting, collecting_again, event = self.events("sensor.reading")
+        self.assertTrue(collecting["usable"])
+        self.assertFalse(collecting["measurement_ready"])
+        self.assertNotIn("assessment_id", collecting)
+        self.assertEqual(collecting_again["samples_collected"], 2)
+        self.assertTrue(event["measurement_ready"])
+        self.assertEqual((event["samples_collected"], event["samples_required"]), (3, 3))
         self.assertEqual((event["heart_rate"], event["spo2"]), (72, 87))
         self.assertEqual(event["assessment"]["level"], "urgent")
         self.assertEqual(event["checkin"]["input_source"], "sensor")
         self.assertEqual(event["checkin"]["sensor_port"], "COM7")
         self.assertEqual(event["firmware_version"], "astro-life-ppg-2")
         self.assertEqual(event["sample_rate_hz"], 25.0)
-        self.assertIn(event["reading_state"], {"collecting", "steady", "changing", "settling"})
+        self.assertEqual(event["reading_state"], "steady")
+
+    def test_ready_measurement_uses_the_median_of_agreeing_reports(self):
+        reader = self.connect()
+        for elapsed, heart_rate, spo2 in ((30, 72, 98), (31, 75, 97), (32, 73, 99)):
+            reader.reading_received.emit(reading(heart_rate, spo2, elapsed))
+        event = self.events("sensor.reading")[-1]
+        self.assertTrue(event["measurement_ready"])
+        self.assertEqual((event["heart_rate"], event["spo2"]), (73, 98))
+        self.assertEqual((self.service.latest_sensor_checkin.heart_rate,
+                          self.service.latest_sensor_checkin.spo2), (73, 98))
 
     def test_invalid_report_stays_unavailable(self):
         reader = self.connect()
         reader.reading_received.emit(reading(heart_rate=None, spo2=None))
         event, = self.events("sensor.reading")
         self.assertFalse(event["usable"])
+        self.assertFalse(event["measurement_ready"])
+        self.assertEqual(event["samples_collected"], 0)
         self.assertNotIn("heart_rate", event)
         self.assertNotIn("assessment_id", event)
 
     def test_contact_loss_withdraws_the_current_estimate_immediately(self):
         reader = self.connect()
-        reader.reading_received.emit(reading())
-        assessment_id = self.events("sensor.reading")[0]["assessment_id"]
+        for elapsed in (30, 31, 32):
+            reader.reading_received.emit(reading(elapsed=elapsed))
+        assessment_id = self.events("sensor.reading")[-1]["assessment_id"]
         reader.optical_sample_received.emit(sample(1, infrared=1200))
         lost = self.events("sensor.reading")[-1]
         self.assertFalse(lost["usable"])
@@ -188,8 +211,9 @@ class BridgeSensorTests(unittest.TestCase):
 
     def test_device_interruption_drops_the_pending_estimate(self):
         reader = self.connect()
-        reader.reading_received.emit(reading())
-        assessment_id = self.events("sensor.reading")[0]["assessment_id"]
+        for elapsed in (30, 31, 32):
+            reader.reading_received.emit(reading(elapsed=elapsed))
+        assessment_id = self.events("sensor.reading")[-1]["assessment_id"]
         reader.status_changed.emit("ERROR: Sensor reading timeout!")
         self.assertEqual(self.events("sensor.status")[-1]["message"], "ERROR: Sensor reading timeout!")
         with self.assertRaises(ValueError):
@@ -220,9 +244,16 @@ class BridgeSensorTests(unittest.TestCase):
         self.assertEqual(self.events("sensor.connection")[-1]["source"], "simulated")
         reader.optical_sample_received.emit(sample(0))
         self.service.ppg.flush()
-        reader.reading_received.emit(reading())
+        for sequence in range(1, 100):
+            reader.optical_sample_received.emit(sample(sequence))
+        reader.reading_received.emit(reading(elapsed=4))
+        for report_time, start in ((5, 100), (6, 125)):
+            for sequence in range(start, start + 25):
+                reader.optical_sample_received.emit(sample(sequence))
+            reader.reading_received.emit(reading(elapsed=report_time))
         self.assertEqual(self.events("sensor.ppg.batch")[0]["source"], "simulated")
         event = self.events("sensor.reading")[-1]
+        self.assertTrue(event["measurement_ready"])
         self.assertEqual(event["source"], "simulated")
         self.assertEqual(event["checkin"]["input_source"], "simulated")
         self.assertEqual(event["checkin"]["sensor_port"], "simulated")

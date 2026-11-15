@@ -38,8 +38,9 @@ import type { Answers, AnswerValue, AppState, AssessmentPlan, FollowupAction, Kn
 
 /** Cleared whenever the link drops so no stale estimate or diagnostic stays on screen. */
 const NO_READING = {
-  usable: false, heartRate: null, spo2: null, bundle: null, lastUpdate: null, lastUsableAt: null,
+  measurementReady: false, usable: false, heartRate: null, spo2: null, bundle: null, lastUpdate: null, lastUsableAt: null,
   signalStatus: null, sampleRateHz: null, firmware: null, readingState: null, opticalState: null, measuredAt: null,
+  samplesCollected: 0,
 } as const;
 const DEFAULT_PROFILE: MissionProfile = { environment: "leo", phase: "orbit", mission_day: null, eva_recent: false, gravity_transition_recent: false };
 const STEP_LABELS: Record<FlowStep, string> = {
@@ -162,22 +163,31 @@ export default function App() {
     } else if (event.event === "sensor.status") {
       const status = String(event.payload.message ?? "Sensor status changed");
       // Before a link is established, a status message can only be the reason it failed.
-      setSensor((current) => ({ ...current, status, fault: current.connected ? null : status, usable: false, heartRate: null, spo2: null, bundle: null }));
+      setSensor((current) => ({
+        ...current, status, fault: current.connected ? null : status,
+        measurementReady: false, usable: false, heartRate: null, spo2: null, bundle: null,
+        samplesCollected: 0,
+      }));
     } else if (event.event === "sensor.reading") {
       const usable = Boolean(event.payload.usable);
+      const measurementReady = Boolean(event.payload.measurement_ready);
       const receivedAt = Date.now();
       setSensor((current) => ({
-        ...current, usable, lastUpdate: receivedAt, lastUsableAt: usable ? receivedAt : current.lastUsableAt,
+        ...current, usable, measurementReady, lastUpdate: receivedAt, lastUsableAt: usable ? receivedAt : current.lastUsableAt,
         heartRate: usable && typeof event.payload.heart_rate === "number" ? event.payload.heart_rate : null,
         spo2: usable && typeof event.payload.spo2 === "number" ? event.payload.spo2 : null,
-        bundle: usable && event.payload.assessment_id ? event.payload as unknown as AssessmentBundle : null,
+        bundle: measurementReady && event.payload.assessment_id ? event.payload as unknown as AssessmentBundle : null,
         signalStatus: text(event.payload.signal_status) ?? current.signalStatus,
         sampleRateHz: typeof event.payload.sample_rate_hz === "number" ? event.payload.sample_rate_hz : current.sampleRateHz,
         firmware: text(event.payload.firmware_version) ?? current.firmware,
         readingState: text(event.payload.reading_state) ?? (usable ? current.readingState : "waiting"),
         opticalState: text(event.payload.optical_state) ?? current.opticalState,
         measuredAt: text(event.payload.received_at) ?? current.measuredAt,
-        status: usable ? (event.payload.source === "simulated" ? "Simulated stream · demo values, not a measurement" : "Receiving fresh device-valid estimates") : event.payload.finger_detected ? "Finger detected · hold still while estimates stabilize" : "Place your finger on the sensor and hold still",
+        samplesCollected: typeof event.payload.samples_collected === "number" ? event.payload.samples_collected : current.samplesCollected,
+        samplesRequired: typeof event.payload.samples_required === "number" ? event.payload.samples_required : current.samplesRequired,
+        status: measurementReady
+          ? (event.payload.source === "simulated" ? "Simulated stable window · demo values, not a measurement" : "Stable measurement window ready")
+          : usable ? "Reading detected · collecting agreeing reports" : event.payload.finger_detected ? "Finger detected · hold still while estimates stabilize" : "Place your finger on the sensor and hold still",
       }));
     }
   }), []);

@@ -99,8 +99,9 @@ only for `https://*.nasa.gov`.
 ### Where a measurement comes from
 
 `session.submit` does **not** accept heart rate or SpO₂ from the renderer. With
-`{"use": "sensor"}` the backend uses its own latest usable firmware report
-(`latest_sensor_checkin`). A check-in without a reading needs
+`{"use": "sensor"}` the backend uses the median of its own three latest
+agreeing firmware reports (`latest_sensor_checkin`). Contact loss or disagreement
+clears that window. A check-in without a reading needs
 `{"use": "none", "reason": "sensor_unavailable" | "no_stable_reading"}` and is
 stored as unassessed, never as normal. Values typed from another instrument are
 stored as `manual`.

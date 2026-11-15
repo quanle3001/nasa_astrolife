@@ -111,7 +111,7 @@ another module or mounting.
 | Forward samples | `bridge/ppg_batcher.py` | Batches raw samples for the chart with device sequence and time unchanged |
 | Forward estimates | `bridge/service.py` → `sensor.reading` | Firmware values with `usable`, signal status, sample rate, firmware version |
 | Withdraw | `bridge/service.py` | Contact loss, a device error, a stale report or a disconnect clears the current estimate at once |
-| Use in a check-in | `session.submit` | The backend uses its own latest usable report; the interface cannot supply the numbers |
+| Use in a check-in | `session.submit` | The backend saves the median of three agreeing reports; contact loss or disagreement resets the window, and the interface cannot supply the numbers |
 
 A missing or invalid estimate is shown as "No reading". It is never shown as a
 normal value, and it is stored as unassessed.

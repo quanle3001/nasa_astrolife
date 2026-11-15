@@ -1,7 +1,7 @@
-"""Qualify and stabilize display estimates without changing assessment inputs.
+"""Qualify repeated sensor reports and expose a stable aggregate.
 
 These are UI consistency heuristics, not clinical limits or accuracy validation.
-Every original reading still goes to the assessment rules unchanged.
+Raw reports remain visible live; only an agreeing window is eligible to be saved.
 """
 
 from collections import deque
@@ -18,6 +18,10 @@ class ReadingStability:
 
     def reset(self):
         self.readings.clear()
+
+    @property
+    def sample_count(self):
+        return len(self.readings)
 
     def channel_state(self, field):
         if not self.readings or getattr(self.readings[-1], field) is None:

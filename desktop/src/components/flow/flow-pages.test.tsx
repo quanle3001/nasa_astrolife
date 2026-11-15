@@ -252,7 +252,7 @@ describe("MeasurePage", () => {
     expect(primary()).toBeDisabled();
     expect(screen.getByText("Required")).toBeInTheDocument();
     expect(screen.getByText(/Connect the ESP32 sensor to take your reading/)).toBeInTheDocument();
-    expect(screen.getByText("Waiting for a usable reading")).toBeInTheDocument();
+    expect(screen.getByText("Waiting for three agreeing reports")).toBeInTheDocument();
     expect(screen.queryByRole("radiogroup")).not.toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
   });
@@ -263,15 +263,25 @@ describe("MeasurePage", () => {
     expect(primary()).toBeDisabled();
   });
 
+  it("keeps collecting until three reports agree", () => {
+    renderPage({
+      ...INITIAL_SENSOR, connected: true, usable: true, heartRate: 72, spo2: 98,
+      source: "sensor", readingState: "collecting", samplesCollected: 2,
+    });
+    expect(screen.getByText(/Collecting stable reports \(2\/3\)/)).toBeInTheDocument();
+    expect(primary()).toBeDisabled();
+  });
+
   it("asks the backend for its own sensor reading instead of sending numbers", () => {
-    const onSubmit = renderPage({ ...INITIAL_SENSOR, connected: true, usable: true, heartRate: 72, spo2: 98, source: "sensor" });
+    const onSubmit = renderPage({ ...INITIAL_SENSOR, connected: true, usable: true, measurementReady: true, heartRate: 72, spo2: 98, source: "sensor", readingState: "steady", samplesCollected: 3 });
     expect(screen.getByText("Your sensor measurement")).toBeInTheDocument();
+    expect(screen.getByText(/Stable measurement ready from 3 agreeing reports/)).toBeInTheDocument();
     fireEvent.click(primary());
     expect(onSubmit).toHaveBeenCalledWith({ use: "sensor" });
   });
 
   it("labels simulated data", () => {
-    renderPage({ ...INITIAL_SENSOR, connected: true, usable: true, heartRate: 72, spo2: 98, source: "simulated" });
+    renderPage({ ...INITIAL_SENSOR, connected: true, usable: true, measurementReady: true, heartRate: 72, spo2: 98, source: "simulated", readingState: "steady", samplesCollected: 3 });
     expect(screen.getByText("Simulated data · not a measurement")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Continue with simulated demo values/ })).toBeEnabled();
     expect(screen.queryByRole("button", { name: /Use this reading/ })).not.toBeInTheDocument();

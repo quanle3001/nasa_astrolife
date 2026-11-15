@@ -7,8 +7,9 @@ vi.mock("@/components/monitor/ppg-chart", () => ({ PpgChart: () => <div data-tes
 const { SensorPage } = await import("@/components/pages/sensor-page");
 
 const base: Omit<SensorViewState, "fault"> = {
-  connected: false, connecting: false, status: "Disconnected", usable: false, heartRate: null, spo2: null, bundle: null, lastUpdate: null, lastUsableAt: null,
+  connected: false, connecting: false, status: "Disconnected", measurementReady: false, usable: false, heartRate: null, spo2: null, bundle: null, lastUpdate: null, lastUsableAt: null,
   source: null, signalStatus: null, sampleRateHz: null, firmware: null, readingState: null, opticalState: null, measuredAt: null,
+  samplesCollected: 0, samplesRequired: 3,
 };
 
 describe("SensorPage", () => {

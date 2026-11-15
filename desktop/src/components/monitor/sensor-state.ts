@@ -5,6 +5,8 @@ export interface SensorViewState {
   connected: boolean;
   connecting: boolean;
   status: string;
+  /** True only after the backend has aggregated three agreeing reports. */
+  measurementReady: boolean;
   usable: boolean;
   heartRate: number | null;
   spo2: number | null;
@@ -27,12 +29,16 @@ export interface SensorViewState {
   opticalState: string | null;
   /** Backend receive time (ISO 8601, UTC) of the newest complete report. */
   measuredAt: string | null;
+  /** Progress toward the stable report window used for the saved measurement. */
+  samplesCollected: number;
+  samplesRequired: number;
 }
 
 export const INITIAL_SENSOR: SensorViewState = {
-  connected: false, connecting: false, status: "Disconnected", usable: false,
+  connected: false, connecting: false, status: "Disconnected", measurementReady: false, usable: false,
   heartRate: null, spo2: null, bundle: null, lastUpdate: null, lastUsableAt: null, fault: null,
   source: null, signalStatus: null, sampleRateHz: null, firmware: null, readingState: null, opticalState: null, measuredAt: null,
+  samplesCollected: 0, samplesRequired: 3,
 };
 
 /** Plain words for the engineering checks; none of these establish clinical accuracy. */

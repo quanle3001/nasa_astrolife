@@ -14,7 +14,11 @@ const formatError = (text: string) => (text.trim() === "" || Number.isFinite(Num
 
 /** What still stands between the astronaut and a usable sensor reading. */
 function sensorStep(sensor: SensorViewState): string {
-  if (sensor.usable) return "Reading ready. Keep still and continue.";
+  if (sensor.measurementReady) return `Stable measurement ready from ${sensor.samplesRequired} agreeing reports.`;
+  if (sensor.usable) {
+    if (sensor.readingState === "changing") return "Recent readings disagree. Keep your finger still while a fresh window is collected.";
+    return `Reading detected. Collecting stable reports (${sensor.samplesCollected}/${sensor.samplesRequired})…`;
+  }
   if (sensor.connecting) return "Opening the sensor link…";
   if (!sensor.connected) return "Connect the ESP32 sensor to take your reading.";
   return "Sensor connected. Rest your fingertip on the lit window and hold still until a reading appears.";
@@ -59,14 +63,14 @@ export function MeasurePage({ sensor, onConnectStart, onBack, onSubmit, busy, er
     <FlowPage
       wide title="Measure your pulse and blood oxygen"
       lead="Every check-in includes a reading from your fingertip sensor. Rest a fingertip on the lit window and hold still for a few seconds."
-      onBack={onBack} onNext={() => onSubmit({ use: "sensor" })} nextDisabled={!sensor.usable} busy={busy}
+      onBack={onBack} onNext={() => onSubmit({ use: "sensor" })} nextDisabled={!sensor.measurementReady} busy={busy}
       nextLabel={sensor.source === "simulated" ? "Continue with simulated demo values" : "Use this reading and see my findings"}
-      aside={<>{!sensor.usable && <span className="flow-hint">Waiting for a usable reading</span>}{aside}</>}
+      aside={<>{!sensor.measurementReady && <span className="flow-hint">Waiting for three agreeing reports</span>}{aside}</>}
     >
-      <p className={cn("measure-status", sensor.usable && "is-ready")} role="status">
+      <p className={cn("measure-status", sensor.measurementReady && "is-ready")} role="status">
         <span className="measure-required">Required</span>
         {sensorStep(sensor)}
-        {sensor.usable && <ProvenanceBadge kind={sensor.source === "simulated" ? "simulated" : "measurement"} />}
+        {sensor.measurementReady && <ProvenanceBadge kind={sensor.source === "simulated" ? "simulated" : "measurement"} />}
       </p>
       <SensorDock state={sensor} onConnectStart={onConnectStart} autoConnect />
       <LiveMonitor state={sensor} onSimulate={simulate} />

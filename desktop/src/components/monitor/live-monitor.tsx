@@ -17,6 +17,7 @@ export function LiveMonitor({ state, onSimulate, compact }: { state: SensorViewS
     ["Firmware window", state.signalStatus ?? "—"],
     ["Optical check", state.opticalState ?? "—"],
     ["Report consistency", state.readingState ? READING_STATE_TEXT[state.readingState] ?? state.readingState : "—"],
+    ["Stable window", `${state.samplesCollected}/${state.samplesRequired} agreeing reports`],
     ["Last complete report", state.measuredAt ? new Date(state.measuredAt).toLocaleTimeString() : "—"],
   ];
   return (
