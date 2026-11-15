@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
 import { Info } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
+import { Component, lazy, Suspense, useMemo, useState, type ReactNode } from "react";
 import { BodyMap2D } from "@/components/compass/body-map-2d";
 import { COMPASS_REGIONS, regionForCondition } from "@/components/compass/regions";
 import { ActionItem } from "@/components/flow/actions-page";
@@ -10,18 +10,36 @@ import { useCalmMotion } from "@/lib/motion-preference";
 import { cn } from "@/lib/utils";
 import type { FollowupAction, Knowledge, SessionResult } from "@/types/flow";
 
+const AnatomyViewer = lazy(() => import("@/components/compass/anatomy-viewer"));
+
+/** True when this device can create a WebGL context for the 3D viewer. */
+export function webglAvailable(): boolean {
+  try {
+    const canvas = document.createElement("canvas");
+    return Boolean(canvas.getContext("webgl2") ?? canvas.getContext("webgl"));
+  } catch { return false; }
+}
+
+/** Falls back to the 2D map if the 3D viewer fails to load or render. */
+class ViewerBoundary extends Component<{ onError: () => void; children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch() { this.props.onError(); }
+  render() { return this.state.failed ? null : this.props.children; }
+}
+
 /**
  * Health Compass: select a body region to see, kept apart, (1) what was
  * recorded for it, (2) the app's rule-based prompts, (3) NASA research and the
  * related hazards, and (4) the follow-up actions.
  *
- * `viewer` lets a 3D anatomical viewer replace the 2D map when it is available;
- * the evidence panel is identical for both.
+ * The body is shown as an interactive 3D anatomical model when the device
+ * supports WebGL, and as a 2D body map otherwise (or by choice). The evidence
+ * panel is identical for both.
  */
-export function CompassPage({ result, actions, knowledge, conditionTitles, onToggleAction, onBack, onNext, nextLabel, viewer, framed = true }: {
+export function CompassPage({ result, actions, knowledge, conditionTitles, onToggleAction, onBack, onNext, nextLabel, framed = true }: {
   result: SessionResult | null; actions: FollowupAction[]; knowledge: Knowledge; conditionTitles: Record<string, string>;
   onToggleAction: (action: FollowupAction) => void; onBack?: () => void; onNext?: () => void; nextLabel?: string;
-  viewer?: (props: { selected: string; highlighted: Set<string>; onSelect: (regionId: string) => void }) => ReactNode;
   /** False on the dashboard tab, where the step heading and controls are not wanted. */
   framed?: boolean;
 }) {
@@ -30,6 +48,9 @@ export function CompassPage({ result, actions, knowledge, conditionTitles, onTog
   const findings = result?.assessment.findings ?? [];
   const highlighted = useMemo(() => new Set(findings.filter((finding) => finding.level !== "info").map((finding) => regionForCondition(finding.condition_id)?.id).filter((id): id is string => Boolean(id))), [findings]);
   const [selected, setSelected] = useState<string>(() => [...highlighted][0] ?? "heart");
+  const [canRender3d] = useState(webglAvailable);
+  const [mode, setMode] = useState<"3d" | "2d">(canRender3d ? "3d" : "2d");
+  const [viewerFailed, setViewerFailed] = useState(false);
   const region = COMPASS_REGIONS.find((item) => item.id === selected) ?? COMPASS_REGIONS[0];
   const checkin = result?.checkin;
   const measured = region.measurement && checkin ? checkin[region.measurement] : null;
@@ -38,7 +59,21 @@ export function CompassPage({ result, actions, knowledge, conditionTitles, onTog
   const body = (
     <div className="compass-layout">
       <Card className="compass-map">
-        {viewer ? viewer({ selected, highlighted, onSelect: setSelected }) : <BodyMap2D selected={selected} highlighted={highlighted} onSelect={setSelected} />}
+        {canRender3d && !viewerFailed && (
+          <div className="compass-mode" role="radiogroup" aria-label="Body view">
+            {(["3d", "2d"] as const).map((option) => (
+              <button key={option} type="button" role="radio" aria-checked={mode === option} className={cn("layer-chip", mode === option && "is-on")} onClick={() => setMode(option)}>{option === "3d" ? "3D anatomy" : "2D map"}</button>
+            ))}
+          </div>
+        )}
+        {mode === "3d" && !viewerFailed ? (
+          <ViewerBoundary onError={() => { setViewerFailed(true); setMode("2d"); }}>
+            <Suspense fallback={<p className="compass-loading" aria-busy="true">Loading the 3D anatomical model…</p>}>
+              <AnatomyViewer selected={selected} highlighted={highlighted} onSelect={setSelected} calm={Boolean(reduced)} />
+            </Suspense>
+          </ViewerBoundary>
+        ) : <BodyMap2D selected={selected} highlighted={highlighted} onSelect={setSelected} />}
+        {(!canRender3d || viewerFailed) && <p className="compass-legend">3D is not available on this device, so the 2D body map is shown. Everything else works the same.</p>}
         <p className="compass-legend"><Info className="size-3.5 shrink-0" aria-hidden="true" /> A highlighted region has a prompt to review. It does not mean something is wrong there, and a region without a highlight is not confirmed healthy.</p>
         <nav className="compass-chips" aria-label="Body regions">
           {COMPASS_REGIONS.map((item) => (

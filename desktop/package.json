@@ -28,6 +28,7 @@
     "lucide-react": "^0.552.0",
     "maath": "^0.10.8",
     "motion": "^14.14.0",
+    "open-anatomy-3d": "^0.1.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "tailwind-merge": "^3.3.1",

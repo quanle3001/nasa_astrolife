@@ -14,6 +14,9 @@ versions are authoritative for the installed dependency graph.
 | React Three Fiber / Drei | React Three.js renderer and helpers | MIT |
 | Three.js | WebGL starfield | MIT |
 | Lucide | Interface icons | ISC |
+| uPlot | Live optical pulse (PPG) chart | MIT |
+| XState, @xstate/react | Guided-flow navigation state machine | MIT |
+| open-anatomy-3d 0.1.0 (`MervinR07/open-anatomy-3d`) | 3D anatomical models and structure catalog for the Health Compass, bundled locally | Code MIT; models and catalog CC BY 4.0 |
 | Electron | Native desktop host | MIT |
 
 The original copyright and license texts remain available through each installed
@@ -95,3 +98,18 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+## Anatomy models (Health Compass)
+
+The Health Compass shows the `open-anatomy-3d` models. They are adapted works and
+the following credit line is displayed next to the viewer, as their licence requires:
+
+> Anatomy: BodyParts3D © The Database Center for Life Science (CC BY 4.0);
+> female organs: Human Reference Atlas 3D Reference Organs, HuBMAP (CC BY 4.0);
+> female body: MakeHuman (CC0). Modified by open-anatomy-3d
+> (https://github.com/MervinR07/open-anatomy-3d), CC BY 4.0.
+
+AstroLife changes how the models are displayed, not the model files: each
+structure is coloured from the package catalog, structures can be highlighted or
+faded, and the skin surface and reproductive structures are never rendered. The
+models are an educational reference, not a scan of any person and not for diagnosis.

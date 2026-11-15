@@ -572,11 +572,11 @@ input, textarea { caret-color: var(--color-space-cyan); }
 .action-observation { margin-top:5px; color:var(--color-space-muted); font-size:var(--text-xs); line-height:1.55; }
 
 /* ---------- Health Compass ---------- */
-.compass-layout { display:grid; grid-template-columns:minmax(300px,.8fr) minmax(0,1.2fr); align-items:start; gap:18px; }
+.compass-layout { display:grid; grid-template-columns:minmax(360px,.95fr) minmax(0,1.05fr); align-items:start; gap:18px; }
 .compass-map { position:sticky; top:8px; padding:18px; }
 .body-map { display:flex; flex-direction:column; align-items:center; gap:10px; }
-.body-map svg { width:min(240px,100%); height:auto; }
-.body-outline { fill:rgba(23,36,57,.55); stroke:rgba(150,190,225,.35); stroke-width:1.2; }
+.body-map svg { width:min(250px,100%); height:auto; }
+.body-outline { fill:rgba(23,36,57,.5); stroke:rgba(150,190,225,.4); stroke-width:1.4; stroke-linejoin:round; }
 .body-region { cursor:pointer; fill:rgba(70,217,232,.1); stroke:rgba(70,217,232,.45); stroke-width:1; outline:none; transition:fill var(--duration-fast), stroke var(--duration-fast), stroke-width var(--duration-fast); }
 .body-region:hover, .body-region:focus-visible { fill:rgba(70,217,232,.3); stroke:#fff; stroke-width:1.6; }
 .body-region.is-highlighted { fill:rgba(245,198,123,.3); stroke:var(--status-review); }
@@ -661,3 +661,21 @@ input, textarea { caret-color: var(--color-space-cyan); }
 .chart-pause { min-height:28px; border:1px solid rgba(120,156,196,.3); border-radius:var(--radius-pill); background:transparent; padding:0 12px; color:var(--color-space-silver); font-size:var(--text-xs); font-weight:600; }
 .chart-pause:hover { border-color:rgba(70,217,232,.5); color:#fff; }
 .chart-pause[aria-pressed="true"] { border-color:var(--status-review); color:var(--status-review); }
+
+/* Health Compass: 3D anatomy viewer */
+.compass-mode, .anatomy-model { display:flex; flex-wrap:wrap; gap:6px; }
+.compass-mode { margin-bottom:12px; }
+.compass-loading { display:grid; min-height:420px; place-items:center; color:var(--color-space-muted); font-size:var(--text-sm); }
+.anatomy-canvas { position:relative; height:min(62vh,560px); min-height:420px; overflow:hidden; border:1px solid var(--panel-border); border-radius:var(--radius-lg); background:radial-gradient(ellipse at 50% 35%, rgba(23,36,57,.75), rgba(3,7,17,.6) 70%); }
+.anatomy-canvas canvas { outline:none; }
+.anatomy-readout { pointer-events:none; position:absolute; left:10px; right:10px; bottom:10px; border-radius:var(--radius-md); background:rgba(3,7,17,.72); padding:7px 11px; color:var(--color-space-silver); font-size:var(--text-xs); line-height:1.5; }
+.anatomy-readout strong { color:var(--color-space-white); }
+.anatomy-controls { margin-top:12px; display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:12px; }
+.anatomy-layers { display:flex; flex-wrap:wrap; gap:6px; }
+.anatomy-layers legend { margin-bottom:6px; color:var(--color-space-subtle); font-size:var(--text-label); font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+.layer-chip { display:inline-flex; min-height:30px; cursor:pointer; align-items:center; gap:6px; border:1px solid rgba(120,156,196,.28); border-radius:var(--radius-pill); background:rgba(3,7,17,.4); padding:0 11px; color:var(--color-space-muted); font-size:var(--text-xs); font-weight:600; transition:border-color var(--duration-fast), color var(--duration-fast), background var(--duration-fast); }
+.layer-chip:hover { border-color:rgba(70,217,232,.5); color:#fff; }
+.layer-chip.is-on { border-color:rgba(70,217,232,.65); background:rgba(70,217,232,.12); color:#fff; }
+.layer-chip input { position:absolute; opacity:0; width:1px; height:1px; }
+.layer-chip:has(input:focus-visible) { box-shadow:var(--focus-ring); }
+.anatomy-credit { margin-top:10px; color:var(--color-space-subtle); font-size:var(--text-label); line-height:1.6; }

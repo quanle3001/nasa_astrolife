@@ -28,3 +28,26 @@ export const COMPASS_REGIONS: CompassRegion[] = [
 ];
 
 export const regionForCondition = (conditionId: string) => COMPASS_REGIONS.find((region) => region.conditionIds.includes(conditionId));
+
+/** The fields of an anatomy-catalog structure that decide its compass region. */
+export interface StructureLike { key: string; system: string; category: string }
+
+/**
+ * Compass region for a structure of the 3D anatomy catalog, or null when
+ * AstroLife has no health topic for it (for example the kidneys). The mapping
+ * only groups structures for navigation; it says nothing about their state.
+ */
+export function regionForStructure(structure: StructureLike): CompassRegion | null {
+  const id =
+    ["brain", "brainstem", "cerebellum"].includes(structure.key) ? "brain"
+      : structure.key.startsWith("eye_") ? "eyes"
+        : structure.category === "Cardiovascular" ? "heart"
+          : structure.category === "Respiratory" ? "lungs"
+            : structure.category === "Digestive" ? "digestive"
+              : structure.category === "Immune / Lymphatic" ? "immune"
+                : structure.system === "skin" ? "whole_body"
+                  : structure.category === "Musculoskeletal" && structure.system === "muscles" ? "muscles"
+                    : structure.category === "Musculoskeletal" && (structure.system === "skeleton" || structure.system === "joints") ? "skeleton"
+                      : null;
+  return COMPASS_REGIONS.find((region) => region.id === id) ?? null;
+}

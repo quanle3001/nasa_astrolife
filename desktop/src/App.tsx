@@ -304,6 +304,8 @@ export default function App() {
   const closeConcern = () => send({ type: "CLOSE_URGENT" });
   const linking = (port: string) => setSensor((current) => ({ ...current, connecting: true, fault: null, status: `Opening ${port}…` }));
 
+  const compassOpen = view === "compass" || (view === "dashboard" && page === "compass");
+
   let screen: ReactNode = null;
   let screenKey: string = view;
   if (view === "welcome") {
@@ -370,7 +372,8 @@ export default function App() {
           <source src="./videos/blackhole.webm" type="video/webm" />
         </video>
       </div>
-      <Suspense fallback={null}><StarBackground reducedMotion={reducedMotion} /></Suspense>
+      {/* One WebGL scene at a time: the starfield yields to the 3D anatomy viewer. */}
+      {!compassOpen && <Suspense fallback={null}><StarBackground reducedMotion={reducedMotion} /></Suspense>}
       <div className="mission-atmosphere" data-mission={mission} aria-hidden="true" />
       <AppShell
         page={page} setPage={setPage} mission={mission} connected={sensor.connected} backendReady={backendReady} disclaimer={config.disclaimer}

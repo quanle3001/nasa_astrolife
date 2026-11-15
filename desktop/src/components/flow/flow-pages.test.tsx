@@ -345,6 +345,15 @@ describe("CompassPage (2D body map)", () => {
     expect(screen.getByText("98%")).toBeInTheDocument();
   });
 
+  it("falls back to the working 2D body map when the device has no WebGL", () => {
+    render(<CompassPage result={result} actions={[]} knowledge={knowledge} conditionTitles={config.condition_titles} onToggleAction={() => undefined} onNext={() => undefined} />);
+    expect(screen.getByText(/3D is not available on this device, so the 2D body map is shown/)).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: /Body map/ })).toBeInTheDocument();
+    expect(screen.queryByRole("radiogroup", { name: "Body view" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: "Brain and behavior" })[0]);
+    expect(screen.getByRole("heading", { name: "Sleep loss and fatigue" })).toBeInTheDocument();
+  });
+
   it("works before any check-in exists", () => {
     render(<CompassPage framed={false} result={null} actions={[]} knowledge={knowledge} conditionTitles={config.condition_titles} onToggleAction={() => undefined} />);
     expect(screen.getByText("Complete a check-in to see your own observations here.")).toBeInTheDocument();
