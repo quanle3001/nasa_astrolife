@@ -74,6 +74,7 @@ Event: `{"event": "sensor.reading", "payload": {...}}`
 | `knowledge.get` | NASA catalog, mission context, question registry, HRR evidence, indicators, OSDR studies |
 | `mission.get`, `mission.save`, `mission.plan` | Mission profile and the check-in plan derived from it |
 | `session.current`, `session.start`, `session.save` | Open session, new session, save progress |
+| `session.remeasure` | Discard the saved reading of an open session and restart the agreement window ("Measure again") |
 | `session.preview` | Assess the answers so far (used by the safety screen) |
 | `session.submit` | Assess answers plus the backend's own sensor reading; save; create actions |
 | `actions.list`, `actions.update` | Follow-up actions |
@@ -168,7 +169,7 @@ Every finding in a submitted check-in carries an evidence trace built by
 | `rule_reason`, `actions` | What the rule said and the follow-up it created |
 | `traceability.nasa_source_ids`, `nasa_risk_ids` | Catalog sources and HRR risks |
 | `traceability.question_ids`, `observation_ids`, `rule_ids` | What was asked, what was observed, which rule inputs fired |
-| `traceability.rules_engine`, `rules_version` | `astrotip.analysis.rules.assess`, `2026.11.1` |
+| `traceability.rules_engine`, `rules_version` | `astrotip.analysis.rules.assess`, `2026.11.2` |
 | `traceability.catalog_reviewed_on`, `question_registry_version`, `evidence_reviewed_on` | Versions of the knowledge used |
 | `traceability.action_ids`, `history_entry_id`, `session_id` | Where the result was stored |
 

@@ -8,6 +8,8 @@ Reviewed against NASA's public pages on **2026-11-14**. This is a curated, offli
 
 The user-supplied [hazards overview](https://www.nasa.gov/hrp/hazards/), [risk overview](https://www.nasa.gov/hrp/risks/), and [research overview](https://www.nasa.gov/hrp/ongoing-hrp-research/) define the coverage. Individual risk pages linked from those overviews support the condition summaries and countermeasure context. All URLs, titles, and stable internal source IDs are stored in `nasa_sources.json`. Separate [MedlinePlus](https://medlineplus.gov/lab-tests/pulse-oximetry/) and [FDA](https://www.fda.gov/medical-devices/products-and-medical-procedures/pulse-oximeters) references support general pulse-oximetry guidance and limitations; they are not NASA flight standards.
 
+MedlinePlus [Pulse](https://medlineplus.gov/ency/article/003399.htm), [Healthy Sleep](https://medlineplus.gov/healthysleep.html) and [Dizziness](https://medlineplus.gov/ency/article/003093.htm), and the FDA's [Pulse Oximeter Basics](https://www.fda.gov/consumers/consumer-updates/pulse-oximeter-basics), were added on 2026-11-15. They support the general resting heart-rate reference (60 to 100 bpm), the measuring instructions and the plain self-care steps in `care_guidance.json`. They are general references, not NASA limits.
+
 [MedlinePlus emergency-recognition guidance](https://medlineplus.gov/ency/article/001927.htm) supports symptom-based escalation prompts. These general emergency signs are separate from NASA's descriptions of long-term spaceflight risks.
 
 The catalog covers all five hazards and groups the 17 entries visible in the risk overview into 13 app topics:

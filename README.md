@@ -24,7 +24,7 @@ It runs offline on one computer. Nothing is sent anywhere.
 | 3. Safety screen | Ticks urgent symptoms or "none of these" | Shows emergency guidance immediately if anything is ticked |
 | 4. Questions | Answers one question at a time | Adapts: follow-ups appear and disappear, and each card says why it is asked |
 | 5. Measurement | Rests a fingertip on the sensor until three reports agree | Saves their median for the open check-in, then allows the fingertip to be removed before continuing |
-| 6. Findings | Reads the prompts | Runs the Python rules and traces each prompt: mission → hazard → NASA risk → observation → rule → follow-up |
+| 6. Findings | Reads the prompts | Runs the Python rules. Each prompt lists simple steps the astronaut can take and when to involve the crew, and is traced: mission → hazard → NASA risk → observation → rule → follow-up. Each measured value is colour coded against a cited general reference. |
 | 7. Health Compass | Explores a 3D body | Shows recorded values, prompts and NASA research per body region |
 | 8. Actions | Marks follow-ups done, or reassesses | Stores them locally |
 | Later | Opens the app again | Starts on a dashboard with the mission, latest check-in, live values and open actions |
@@ -40,6 +40,7 @@ A "Report concern" button is on every screen.
 | NASA space-biology study | Retrieved from the NASA OSDR **Biological Data API** (study OSD-104), validated and cached. |
 | NASA hazards, risks and evidence | Curated from NASA Human Research Program pages and Human Research Roadmap evidence reports, with a link for every statement. |
 | Assessment | Deterministic Python rules. No machine learning and no language model. |
+| Self-care steps and measuring instructions | Restated from cited sources (NASA risk pages, MedlinePlus, FDA) in `software/resources/care_guidance.json`. General guidance, not prescriptions. |
 | Simulated sensor stream | A demo fallback. It is labelled "simulated · not a measurement" everywhere, including in saved history. |
 
 AstroLife always separates four kinds of information: **NASA scientific
@@ -119,6 +120,7 @@ docs/         Documentation
 | [docs/UI_UX.md](docs/UI_UX.md) | Design system, reused components and licenses, Health Compass, motion, design reviews |
 | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Setup, test cycle, environment variables, working rules |
 | [docs/DEMO.md](docs/DEMO.md) | Three-minute demo script, fallback plan, known limitations |
+| [docs/CHALLENGE_REVIEW.md](docs/CHALLENGE_REVIEW.md) | The app checked against the challenge statement, the judging rubric and the submission checklist |
 | [docs/CHANGELOG.md](docs/CHANGELOG.md) | Commit history by phase |
 | [desktop/THIRD_PARTY_NOTICES.md](desktop/THIRD_PARTY_NOTICES.md) | Licenses and attribution |
 
@@ -132,8 +134,8 @@ QT_QPA_PLATFORM=offscreen .venv/bin/python -m unittest discover -s software/test
 cd desktop && npm run typecheck && npm test && npm run build && npm run bridge:proof
 ```
 
-At the last full cycle: 184 Python tests (2 opt-in live NASA tests skipped) and
-125 interface tests in 21 files passed.
+At the last full cycle: 197 Python tests (2 opt-in live NASA tests skipped) and
+142 interface tests in 24 files passed.
 
 ## Known limitations
 
@@ -157,6 +159,9 @@ The full list is in [docs/DEMO.md](docs/DEMO.md#known-limitations).
 - **Anatomy models:** BodyParts3D © The Database Center for Life Science
   (CC BY 4.0); Human Reference Atlas 3D Reference Organs, HuBMAP (CC BY 4.0);
   MakeHuman (CC0); modified by open-anatomy-3d (CC BY 4.0).
+- **General health guidance:** MedlinePlus (U.S. National Library of Medicine)
+  and the U.S. Food and Drug Administration, restated in plain words with a
+  source on every step.
 - **Interface:** Space Portfolio, Space UI, Magic UI, shadcn/ui, Radix UI (all
   MIT) and the libraries listed in the third-party notices.
 - **AI assistance:** parts of the code and documentation were written with AI

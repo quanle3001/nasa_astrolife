@@ -184,6 +184,25 @@ guides; this changelog (renamed from `ui-changelog.md`); `UI_UX.md` (renamed
 from `ui-components.md`, with `software/UI_REDESIGN.md` merged in); READMEs.
 See `git log --oneline -- docs README.md` for the commits.
 
+## Phase 17: Sensor capture, palette and motion (15 November, with Codex)
+
+| Commit | Summary |
+|---|---|
+| `32b2945`, `e431404` | Firmware: emit each PPG record in one write; synchronize serial monitor output |
+| `77f9d70` | Require three agreeing firmware reports; save their median as the check-in reading |
+| `f5a0a9c`, `7a5e573` | Dark ocean palette; neutral white lighting for the astronaut |
+| `47e0cff` | Overlapping screen transitions, animated stepper, astronaut poses through mission setup |
+| `509579f`, `506d32c` | Lighter glass on the intro; black-hole crown on the welcome screen only |
+
+## Phase 18: Assessment guidance and merged-build review
+
+| Commit | Summary |
+|---|---|
+| `c1d4a6b` | Rules 2026.11.2: sourced self-care steps per prompt, resting heart-rate reference, indicator status for colour coding, measuring instructions. Keeps the session-saved reading. Restores component surfaces with the ocean-blue accents. Fixes the reported-section spacing, astronaut overlap, legend alignment and navbar bleed |
+| `3d411f4` | "Measure again" for a saved reading; tests for guidance, indicators and follow-up actions |
+
+The challenge and rubric check is in `CHALLENGE_REVIEW.md`.
+
 ## Conventions for further work
 
 - Branch from this branch (or `main` after merge); keep one concern per commit.

@@ -78,8 +78,8 @@ npm run bridge:proof
 
 | Suite | Size at the last full cycle | Covers |
 |---|---|---|
-| Python `unittest` | 184 tests, 2 skipped (opt-in live NASA calls) | Rules, serial parsing, PPG batching, bridge, questionnaire, sessions and storage, RadLab, OSDR, NASA-driven behaviour, history trends, Qt fallback |
-| Vitest | 125 tests in 21 files | Question engine and machines, flow pages, Compass, monitor, NASA pages, shell, shortcuts |
+| Python `unittest` | 197 tests, 2 skipped (opt-in live NASA calls) | Rules, serial parsing, PPG batching, bridge, questionnaire, sessions and storage, RadLab, OSDR, NASA-driven behaviour, history trends, Qt fallback |
+| Vitest | 142 tests in 24 files | Question engine and machines, flow pages, Compass, monitor, NASA pages, shell, shortcuts |
 | `bridge:proof` | 1 script | Starts the real Python backend from Node and exercises the protocol |
 
 Live NASA checks (network needed):

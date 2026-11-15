@@ -37,7 +37,7 @@ repository.
 ## 1. Human Research Program hazards and risks
 
 - **Pages:** [hazards](https://www.nasa.gov/hrp/hazards/), [risks](https://www.nasa.gov/hrp/risks/), [ongoing research](https://www.nasa.gov/hrp/ongoing-hrp-research/) and the risk pages linked from them.
-- **File:** `software/resources/nasa_sources.json` (schema 1, reviewed 2026-11-14): 5 hazards, 13 health topics, 26 sources. Details and the topic-to-risk table are in `software/resources/dataset_manifest.md`.
+- **File:** `software/resources/nasa_sources.json` (schema 1, reviewed 2026-11-14): 5 hazards, 13 health topics, 30 sources (23 NASA pages and 7 general health references from MedlinePlus and the FDA). Details and the topic-to-risk table are in `software/resources/dataset_manifest.md`.
 - **Also:** `software/resources/mission_context.json` gives each mission (low Earth orbit, lunar, Mars / deep space) a hazard order with a NASA statement and source for each emphasized hazard.
 
 **What it changes in the app**
@@ -238,6 +238,26 @@ DigitalSpace Corporation), unchanged. It is decoration. Credits and usage terms
 are in `desktop/THIRD_PARTY_NOTICES.md`.
 
 ---
+
+## General health references (not NASA)
+
+Simple self-care steps, measuring instructions and the general reference
+values come from public U.S. government health pages. They are named on screen
+next to every step, and they are never presented as NASA limits.
+
+| Source | Used for |
+|---|---|
+| [MedlinePlus: Pulse Oximetry](https://medlineplus.gov/lab-tests/pulse-oximetry/) | SpO₂ reference values (88% and 92%) |
+| [MedlinePlus: Pulse](https://medlineplus.gov/ency/article/003399.htm) | Resting heart-rate reference (60 to 100 bpm), rest 10 minutes before a resting pulse |
+| [MedlinePlus: Healthy Sleep](https://medlineplus.gov/healthysleep.html) | Sleep habits, 7 to 9 hours for adults |
+| [MedlinePlus: Dizziness](https://medlineplus.gov/ency/article/003093.htm) | Home care for dizziness and when to get help |
+| [MedlinePlus: Recognizing medical emergencies](https://medlineplus.gov/ency/article/001927.htm) | Emergency signs behind the safety screen |
+| [FDA: Pulse Oximeters](https://www.fda.gov/medical-devices/products-and-medical-procedures/pulse-oximeters), [Pulse Oximeter Basics](https://www.fda.gov/consumers/consumer-updates/pulse-oximeter-basics) | Accuracy limits; how to take a fingertip reading |
+
+The four pages added on 2026-11-15 (Pulse, Healthy Sleep, Dizziness, Pulse
+Oximeter Basics) were read that day and each step in
+`software/resources/care_guidance.json` restates what the page says. Spaceflight
+countermeasures in the same file cite the NASA risk pages already in the catalog.
 
 ## How NASA information becomes application behaviour
 

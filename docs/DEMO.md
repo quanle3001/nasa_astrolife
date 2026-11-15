@@ -48,12 +48,13 @@ every prompt is traced back to NASA evidence and the astronaut's own answers.
 | 1:20 | **Back**, change to **Okay** | "Change the answer and the follow-ups disappear. This is a state machine, not a model. Same answers, same questions, every time." |
 | 1:30 | Finish the remaining questions with `2`, choose **Missed** for exercise → Continue to measurement | |
 | 1:45 | Finger on the sensor; wait for **Saved measurement**, then remove it and continue | "This is the real sensor: an ESP32 with a MAX30102. AstroLife saves the median once three reports agree. Removing the finger withdraws the live values, but the clearly labelled check-in snapshot remains ready for findings and history." |
-| 2:05 | **Use this reading and see my findings** | "Python rules produce the prompts. Each one is traced: mission, NASA hazard, NASA risk, my own observation, the rule, the follow-up." |
+| 2:05 | **Use saved reading and see my findings** | "Python rules produce the prompts. Each one gives simple steps I can take myself and when to involve the crew, and is traced: mission, NASA hazard, NASA risk, my own observation, the rule, the follow-up. My pulse and oxygen are colour coded against cited references." |
 | 2:20 | **Explore the Health Compass** → Muscles → Show NASA research | "The 3D body shows where each prompt belongs. Here is a real NASA space-biology study, clearly marked as mouse data, not mine." |
 | 2:35 | See my next steps → mark one action done → dashboard → **NASA data** | "Follow-ups are tracked. And this is real NASA instrument data from the RadLab API: the Curiosity rover's radiation detector, analysed with pandas, with full provenance. It is labelled as historical data, never as my exposure." |
 | 2:50 | Quit and relaunch | "Everything is stored locally. It resumes where I left off, offline." |
 
 Tips: number keys answer the current question (`1` first option, `2` second).
+If the saved reading looks wrong, press **Measure again** on the Measurement screen.
 If the reading takes too long, keep talking through the trace; do not skip the
 honesty point about withdrawn values.
 
@@ -66,7 +67,7 @@ simulated stream. It goes through the same parser as the real firmware, and
 the app labels it simulated everywhere, including in saved history, and
 excludes it from trends."
 
-The primary button changes to **Continue with simulated demo values**, and the
+The primary button changes to **Continue with saved simulated demo values**, and the
 header shows "Simulated". That labelling is itself a point worth showing.
 
 If the app cannot start at all, the earlier Qt monitor still reads the sensor:
@@ -79,7 +80,7 @@ No scores are claimed here. Each row says what can be shown and what is not done
 | Criterion | What to show | Not done |
 |---|---|---|
 | Relevance | One flow from mission to follow-up: gather, evaluate, explain, act, track | No clinical validation; not a medical device |
-| Works | Full flow in the built app; restart resumes; works offline; 184 Python and 125 interface tests | Packaged installer not re-verified after the last backend changes; Windows untested for the React app |
+| Works | Full flow in the built app; restart resumes; works offline; 197 Python and 142 interface tests | Packaged installer not re-verified after the last backend changes; Windows untested for the React app |
 | NASA data | RadLab API with validation, analysis and provenance; OSDR Biological Data API study; HRP hazards and risks driving question order; Roadmap evidence reports on every finding | RadLab unit not verified (its documentation was unavailable), shown as "unit not stated by the API" |
 | ESP32 | MAX30102 → firmware → serial → Python → live chart and values; values withdrawn on contact loss | Accuracy not compared with a reference oximeter |
 | Creativity | Mission-driven adaptive check-in; evidence trace per prompt; 3D Health Compass; cursor-reactive interface | — |
@@ -88,7 +89,7 @@ No scores are claimed here. Each row says what can be shown and what is not done
 ## Questions you may get
 
 **Is this diagnosing anyone?** No. It produces prompts to follow up, with their
-reasons. It never says a person is healthy, and missing data is "unassessed".
+reasons, simple sourced steps and when to involve the crew. It never says a person is healthy, and missing data is "unassessed".
 
 **Where is the AI?** The check-in is adaptive and explainable, built on
 deterministic rules and state machines. There is deliberately no machine
