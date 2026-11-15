@@ -44,6 +44,8 @@ class PpgBatcher:
         self._queue: deque = deque()
         self._dropped = 0
         self._batch_seq = 0
+        self._last: tuple[int, float] | None = None
+        self.duplicates = 0
         self.stream_id = 0
         self.source = "sensor"
 
@@ -52,11 +54,21 @@ class PpgBatcher:
         self._queue.clear()
         self._dropped = 0
         self._batch_seq = 0
+        self._last = None
+        self.duplicates = 0
         self.stream_id += 1
         self.source = source
         return self.stream_id
 
     def add(self, sample) -> None:
+        # Seen on the real board: when the port opens, the serial adapter can
+        # deliver one stale sample many times. A repeat of the previous sample
+        # (same device sequence and device time) carries no new information.
+        identity = (sample.sequence, sample.elapsed_seconds)
+        if identity == self._last:
+            self.duplicates += 1
+            return
+        self._last = identity
         if len(self._queue) >= self.MAX_QUEUE:
             self._queue.popleft()
             self._dropped += 1

@@ -96,6 +96,21 @@ class PpgBatcherTests(unittest.TestCase):
         batch, = self.batches
         self.assertEqual((batch["source"], batch["batch_seq"], batch["seq"]), ("simulated", 0, [0]))
 
+    def test_exact_repeats_of_one_sample_are_forwarded_once(self):
+        # Observed with the physical ESP32: a stale sample repeated at the moment the port opens.
+        for _ in range(53):
+            self.batcher.add(sample(582))
+        for index in range(3):
+            self.batcher.add(sample(index))
+        self.batcher.flush()
+        self.assertEqual([seq for batch in self.batches for seq in batch["seq"]], [582, 0, 1, 2])
+        self.assertEqual(self.batcher.duplicates, 52)
+        self.batcher.start_stream("sensor")
+        self.assertEqual(self.batcher.duplicates, 0)
+        self.batcher.add(sample(582))
+        self.batcher.flush()
+        self.assertEqual(self.batches[-1]["seq"], [582], "A new stream forgets the previous sample")
+
     def test_contact_states_use_raw_counts_only(self):
         self.assertEqual(contact_state(sample(0)), "ok")
         self.assertEqual(contact_state(sample(0, infrared=50000)), "no_contact")
