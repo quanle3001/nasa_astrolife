@@ -22,7 +22,7 @@ versions are authoritative for the installed dependency graph.
 The original copyright and license texts remain available through each installed
 package. AstroLife's NASA media (images and preview clips) follows NASA's media usage
 guidelines and retains asset IDs, credits and classification in
-`software/assets/nasa/media_manifest.json`. See `docs/ui-components.md`.
+`software/assets/nasa/media_manifest.json`. See `docs/UI_UX.md` and `docs/NASA_DATA.md`.
 
 NASA names, insignia, logotypes, and identifiers are not used to imply
 endorsement.

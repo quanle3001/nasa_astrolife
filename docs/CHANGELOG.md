@@ -1,21 +1,21 @@
-# UI branch changelog: `astrotip-space-ui`
+# Changelog
 
-This file organizes every commit on the UI branch into phases so reviewers can
-read the history in order. Hashes are the real local commits. The branch is
-based on `main` at `22957bd` and has not been merged. It was renamed from
-`codex/astrotip-space-ui` to `astrotip-space-ui` before its first push.
+Commits grouped into phases so the history can be read in order. Hashes are
+the real local commits. Two branches are covered:
 
-Read the whole branch:
+- **`astrotip-space-ui`** (phases 0–8): the React and Electron interface,
+  based on `main` at `22957bd`.
+- **`feat/astrolife-mission-flow`** (phases 9–16): the guided mission flow,
+  created from `astrotip-space-ui` with `origin/main` (`2ec011a`) merged in.
+  Nothing on this branch has been pushed or merged into `main`.
 
 ```bash
 git log --oneline 22957bd..HEAD
 ```
 
 Each commit follows [Conventional Commits](https://www.conventionalcommits.org/)
-(`type(scope): summary`), contains one coherent change, and was checked before
-committing (`npm run typecheck`, `npx vitest run`, and for media or bridge work
-the Python suite). No commit touches firmware, sensor algorithms, assessment
-rules, storage or the serial protocol.
+(`type(scope): summary`), holds one coherent change, and was checked before
+committing (typecheck, Vitest, and the Python suite for backend work).
 
 ## Phase 0: Baseline (work from the earlier Codex session)
 
@@ -113,6 +113,77 @@ commit that follows `f91e3b4`.
 The branding docs are added by the `docs(brand)` commit that follows
 `93b69aa`.
 
+# Guided mission flow: `feat/astrolife-mission-flow`
+
+## Phase 9: Merge and repair
+
+| Commit | Summary |
+|---|---|
+| `594dbf9` | Merge `origin/main`: teammate's firmware `astro-life-ppg-2`, PPG stream, optical quality checks, mission-free check-ins |
+| `ecad748` | Adapt the desktop bridge to check-ins without a mission field |
+
+## Phase 10: Real sensor stream in React
+
+| Commit | Summary |
+|---|---|
+| `f14f00f` | Stream PPG samples to the React interface (batcher, dedicated IPC channel, ring buffer, uPlot chart, labelled simulated stream) |
+| `ae93b93` | Make the sensor reading a required part of every check-in; the backend uses its own reading |
+| `5bbea55` | Drop repeated deliveries of the same optical sample (seen on the real board) |
+
+## Phase 11: Mission, questions and sessions
+
+| Commit | Summary |
+|---|---|
+| `2584ecd` | Mission context and hazard mapping |
+| `2a6657c` | Adaptive question registry, sessions and follow-up storage |
+| `40d0ddb` | Desktop question engine and navigation state machine |
+| `4f435c8` | Let the safety preview run before later required questions |
+| `7a0f7e7` | Drive branching with an XState machine; explain why each question is asked |
+
+## Phase 12: Guided flow interface
+
+| Commit | Summary |
+|---|---|
+| `62267a6` | Health Compass, Action Center, dashboard and monitor components |
+| `4638810` | Guided onboarding: welcome, mission, context, hazards, safety, questions, measurement, findings |
+| `9560589` | Impeccable craft floor applied to the guided flow |
+
+## Phase 13: Health Compass in 3D
+
+| Commit | Summary |
+|---|---|
+| `69ea4bc` | 3D anatomy with `open-anatomy-3d`; skin surface and reproductive structures never rendered |
+| `f563756` | Guide pins, hover summaries and fly-to zoom |
+| `7903405` | NASA astronaut as a cursor-responsive decorative scene |
+
+## Phase 14: NASA data
+
+| Commit | Summary |
+|---|---|
+| `a428a7a` | RadLab radiation dataset: retrieval, validation, verified cache |
+| `ce756ab` | Radiation Explorer on the NASA data tab |
+| `79862aa` | Human Research Roadmap evidence reports for every health topic |
+| `37d051c` | NASA hazard and risk knowledge drives the assessment plan and trace |
+| `fd6189d` | Assessment plan, evidence trace and radiation analysis in the interface |
+| `4e771be` | pandas, NumPy and Pydantic for NASA and history analysis |
+| `17ccb3a` | OSDR Biological Data API: one space-biology study with the muscle topic |
+
+## Phase 15: Design review and motion
+
+| Commit | Summary |
+|---|---|
+| `caf7248` | Apply the Impeccable and UI UX Pro Max findings |
+| `72ee9f7` | Cursor-reactive hover, press and scroll feedback |
+| `8eaed08` | Shared priority labels in health history |
+| `1eee253` | Plain wording on the sensor dock |
+
+## Phase 16: Documentation
+
+Architecture, question engine, NASA data, hardware, development and demo
+guides; this changelog (renamed from `ui-changelog.md`); `UI_UX.md` (renamed
+from `ui-components.md`, with `software/UI_REDESIGN.md` merged in); READMEs.
+See `git log --oneline -- docs README.md` for the commits.
+
 ## Conventions for further work
 
 - Branch from this branch (or `main` after merge); keep one concern per commit.
@@ -124,3 +195,5 @@ The branding docs are added by the `docs(brand)` commit that follows
   screenshots or health records.
 - Test UI flows against a scratch database:
   `ASTROTIP_HISTORY_PATH=/tmp/astrotip-test.sqlite3 npm run dev`.
+- Do not push, merge into `main`, force-push or rewrite history without the
+  team's explicit go-ahead.

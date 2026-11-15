@@ -1,14 +1,17 @@
-# AstroLife UI components, sources and design system
+# AstroLife UI and UX
 
-This document records which open-source UI ecosystems were researched for the
-AstroLife desktop interface (`desktop/`), what was reused or adapted, where it
-came from, and under which license. It also documents the design tokens and
-the NASA media rules the renderer follows.
+This document covers the interface in `desktop/`: which open-source UI work
+was researched and reused (with source and license), the design system, the
+NASA media rules, the guided flow, the Health Compass, cursor-reactive motion,
+and the design reviews with what they changed.
 
-AstroLife's architecture is unchanged: React + TypeScript + Tailwind v4 in
-Electron, with the existing Python modules (rules, serial reader, SQLite) as a
-private child-process backend. No health logic, thresholds, firmware or storage
-behavior is affected by anything below.
+The interface is React + TypeScript + Tailwind v4 in Electron. The Python
+modules (rules, serial reader, NASA pipelines, SQLite) run as a private child
+process. Nothing below changes health logic, thresholds, firmware or storage.
+
+Contents: 1 Research · 2 Adapted components · 3 Design system · 4 NASA media ·
+5 First design review · 6 Brand · 7 Guided flow · 8 Health Compass ·
+9 Cursor-reactive motion · 10 Second design review · 11 Qt fallback
 
 ## 1. Research summary
 
@@ -59,18 +62,19 @@ Full license texts are reproduced in `desktop/THIRD_PARTY_NOTICES.md`.
 Tokens live in `desktop/src/styles.css`:
 
 - **Colors** (`@theme`, generates Tailwind utilities such as `bg-space-surface`):
-  `space-black #030711`, `space-bg #080e1c`, `space-surface #101a2b`,
-  `space-elevated #172439`, `space-border #263a54`, `space-blue #3b82f6`,
+  `space-black #02040b`, `space-bg #060a16`, `space-surface #0c1424`,
+  `space-elevated #141e34`, `space-border #263a54`, `space-blue #3b82f6`,
   `space-cyan #46d9e8`, `space-white #f1f6ff`, `space-silver`, `space-muted`,
   `space-subtle`, and a reserved `space-violet` for small atmospheric touches.
 - **Status colors** (`--status-urgent/review/watch/info/live`): clinical
   meaning only, never decorative; unchanged from the original priority colors.
-- **Surfaces:** `--panel-bg` (18–30% tint, 6px blur, after Space Portfolio's
-  near-transparent cards), `--panel-border`, `--panel-highlight`,
-  `--shadow-panel`, `--shadow-float`.
+- **Surfaces:** `--panel-bg` (50–62% tint with a 4px blur: dark enough to read
+  over the starfield, open enough to let the cursor light through),
+  `--panel-border`, `--panel-border-hover`, `--panel-highlight`,
+  `--shadow-panel`, `--shadow-float`, `--shadow-lift`.
 - **Radius** `--radius-sm/md/lg/xl/pill`; **spacing** `--space-1…8`,
   `--page-max`, `--page-gutter`, `--nav-height`, `--control-height`.
-- **Type scale** `--text-label` (10px floor), `--text-xs/sm/base`,
+- **Type scale** `--text-label` (11px floor), `--text-xs` (12px), `--text-sm/base`,
   `--text-hero`, `--text-page-title`; `--font-sans/display/mono`.
 - **Motion** `--ease-out`, `--ease-in-out`, `--duration-fast/base/slow/atmosphere`.
 - **Focus** `--focus-ring` (2px space-black gap + 2px cyan ring).
@@ -92,10 +96,12 @@ Shared UI language:
 ### Motion budget
 
 Decorative motion is compositor-only (transforms and opacity): star rotation,
-orbital tracks, Ken Burns drift, scan sweep, floating cards. The proximity
-grid animates only on pointer movement. Exactly one WebGL canvas (the
-starfield) exists. `prefers-reduced-motion` disables all of it, hides the
-crown video and stops autoplay; state and focus feedback remain.
+orbital tracks, Ken Burns drift, scan sweep. Cards that hold values being read
+do not move. The proximity grid and the cursor effects (§9) animate only on
+pointer movement. One WebGL scene runs at a time: the star and astronaut scene
+is unmounted while the 3D anatomy viewer is open. The navbar's "Pause motion"
+control and `prefers-reduced-motion` disable all of it, hide the crown video
+and stop autoplay; state and focus feedback remain.
 
 ## 4. NASA media
 
@@ -124,7 +130,7 @@ Rules enforced by the code:
 
 NASA does not endorse AstroLife, and NASA insignia are not used as branding.
 
-## 5. Design review: Impeccable and UI UX Pro Max
+## 5. First design review: Impeccable and UI UX Pro Max (dashboard UI)
 
 The UI was reviewed against two design skills: Impeccable 4.9.1 (Operate mode
 and craft floor) and UI UX Pro Max (`--design-system` for a dark health
@@ -159,7 +165,7 @@ polish pass fixed:
 |---|---|---|
 | P1 | Failed serial connect showed only "Disconnected" (backend error overwritten) | Fault kept as a `role="alert"` with recovery guidance; real linking state |
 | P2 | Focus dropped to `<body>` after the NASA media dialog | Focus returns to the opening expand button |
-| P2 | Telemetry had one heading | `h2` for ESP32 uplink, Live interpretation, Local-first by design |
+| P2 | Telemetry had one heading | `h2` for the sensor dock, Live interpretation, Local-first by design |
 | P2 | "Archive" vs "Health history" vs "Save to history" | Nav renamed "History" |
 | P2 | Navbar collided at 200% zoom (490 px) | Duplicate home mark hidden below 600 px |
 
@@ -171,7 +177,7 @@ cards (`/impeccable distill`), grouping the 17 symptom checkboxes
 (`/impeccable layout`), contextual help for SpO2 estimates and priorities
 (`/impeccable clarify`).
 
-The full, phase-grouped commit history is in [`ui-changelog.md`](ui-changelog.md).
+The full, phase-grouped commit history is in [`CHANGELOG.md`](CHANGELOG.md).
 
 ## 6. AstroLife brand
 
@@ -197,3 +203,157 @@ Design sources:
 NASA's red chevron, wordmark and insignia are intentionally absent; the
 mark must not suggest NASA endorsement.
 
+## 7. Guided flow
+
+The app is one journey with Back, save and resume, not a set of tabs. Tabs
+(Dashboard, Monitor, Compass, NASA data, History) appear after the first
+check-in. The steps and their logic are listed in
+[ARCHITECTURE.md](ARCHITECTURE.md).
+
+Shared pieces in `desktop/src/components/flow/common.tsx`:
+
+| Piece | Purpose |
+|---|---|
+| `FlowPage` | Title, lead, content, and a sticky bar with Back, the primary action and the reason it is disabled |
+| `ProvenanceBadge` | The four kinds of information: NASA scientific evidence, historical research measurement, your measurement (sensor, manual, simulated), rule-based prompt |
+| `SourceList`, `EvidenceReports` | NASA source links and Human Research Roadmap reports |
+| `EvidenceTrace`, `TraceAudit` | The six-step chain behind a prompt, and its identifiers |
+| `LEVEL_LABELS` | One wording for priorities everywhere: Act now, Medical review, Follow up, Monitoring only |
+
+Writing rules used on every screen:
+
+- A missing value is "No reading" or "unassessed", never a dash that could be
+  read as normal.
+- "No prompt" is never phrased as a clearance.
+- A disabled primary action says what is missing.
+- Simulated data is named as simulated wherever it appears.
+- Urgent guidance is shown before anything else, on the findings screen and on
+  the dashboard.
+
+Reused from the existing UI rather than rebuilt: `MissionSelector`,
+`MissionViewport`, the Space UI `StatusBadge`, `Card`, `Button`, the Radix
+dialog, the design tokens, the motion-pause preference and the shortcut map.
+
+## 8. Health Compass
+
+The Compass shows the body in 3D with `open-anatomy-3d` 0.1.0 (code MIT,
+models CC BY 4.0, bundled locally; credit line beside the viewer). The 2D body
+map has the same functions and is the fallback when WebGL is unavailable.
+
+| Behaviour | Detail |
+|---|---|
+| Guide labels | Pins on the model name the selectable regions; a blue dot marks a region with a prompt |
+| Hover, then pick | Hovering a structure or pin shows a short summary card; selecting opens the full panel |
+| Zoom | The camera flies to the selected region; "Reset view" steps back; drag to rotate, scroll to zoom |
+| Layers | Skeleton, muscles, organs, vessels, nerves; selecting a region turns on the layer it lives in |
+| Seeing through | Everything except the selection fades so an organ behind the ribs is visible |
+| Not rendered | The skin surface and reproductive structures are never drawn |
+| Keyboard and screen readers | Every region is also a button below the viewer; pins are buttons with their prompt state in text |
+| Panel | What was recorded (with provenance), rule-based prompts, NASA evidence, related OSDR study, follow-up actions |
+
+A highlight means "there is a prompt to review here". It never means something
+is wrong there, and an unmarked region is never called healthy.
+
+The NASA astronaut model is separate and decorative. It appears only on the
+welcome and mission-context screens, lit in the mission's colours, and turns
+toward the cursor.
+
+## 9. Cursor-reactive motion
+
+The user asked for the feel of modern cursor-reactive sites (Antigravity was
+the reference) on a dark space theme. The rule adopted: **the interface
+answers the cursor, and nothing moves on its own over content.**
+
+| Effect | Where | Implementation |
+|---|---|---|
+| Cursor aura | Whole window, behind content | `CursorAura` in `effects/interactive.tsx`: one window listener, one style write per frame |
+| Surface spotlight | Panels, hazard cards, question cards, options | A radial light at the pointer position, above the surface's background and below its content |
+| Lift and press | Buttons, options, chips, instrument cards | `translate` on hover, settle on press; the primary button has a sheen |
+| Magnetic primary action | Flow "Continue" and dashboard actions | `Magnetic`, a few pixels toward the cursor |
+| Scroll settle | Dashboard tiles, hazard cards, page sections | CSS scroll-driven animation; content starts dimmed, never invisible |
+| Particle field | Welcome screen | Canvas 2D, particles yield to the cursor |
+| Astronaut | Welcome, mission context | Turns and drifts toward the cursor |
+| Anatomy hover card | Health Compass | Follows the pointer inside the viewer |
+
+All of it is written with Motion, CSS and Canvas 2D that were already in the
+project. No animation library was added. Everything is disabled by "Pause
+motion" and by the OS reduced-motion setting.
+
+## 10. Second design review: the guided flow
+
+The guided flow was reviewed with both skills on 2026-11-15, from screenshots
+of the built app and the source.
+
+**Method.** Impeccable's critique Assessment A (design review and Nielsen
+scoring) ran as an isolated sub-agent. Its Assessment B (the detector) was run
+in the main session before A had finished, so the two were not fully
+independent. The detector reported one finding (an unused `.gradient-text`
+rule), now removed. UI UX Pro Max was run as a separate review against its
+priority list.
+
+### Impeccable: Nielsen heuristics, before the fixes
+
+| # | Heuristic | Score | Key issue found |
+|---|---|---|---|
+| 1 | Visibility of system status | 2 | A simulated stream was labelled "Sensor live" / "Online" |
+| 2 | Match with the real world | 2 | The measurement step spoke serial-port language |
+| 3 | User control and freedom | 3 | No "Save and exit" for a first-run user |
+| 4 | Consistency and standards | 2 | Several names for one list; two priority-label maps |
+| 5 | Error prevention | 3 | EVA and gravity default to "No"; one keypress answers and advances |
+| 6 | Recognition over recall | 3 | The 3D model needs a text guide |
+| 7 | Flexibility and efficiency | 3 | No keys for Next, Back, Not sure or Skip |
+| 8 | Aesthetic and minimalist | 2 | Too many decorative loops on the dashboard |
+| 9 | Error recovery | 3 | Two failures were swallowed silently |
+| 10 | Help and documentation | 3 | Priority levels are not explained |
+| | **Total** | **26/40** | Acceptable |
+
+This score describes the app **before** the fixes below. It was not re-scored
+afterwards.
+
+### What was fixed
+
+| Finding | Source | Change |
+|---|---|---|
+| Simulated stream shown as a live sensor | Both | "Simulated" in the header, viewport, vitals cards, dashboard, history and the measurement button |
+| Measurement led with plumbing | Impeccable | Instruction first; diagnostics in a closed section; plain dock labels |
+| Disabled buttons with no reason | UUPM | A hint beside the action on safety, questions and measurement |
+| Findings buried the prompts | Impeccable | Prompts are the first section |
+| Topic heading outranked the question; focus lost | Both | Question is the largest text and receives focus |
+| "Report concern" opened on vitals fields | Impeccable | Symptoms first; emergency line on top; "Nothing here is sent to anyone" |
+| Copy called the required reading optional | Impeccable | Corrected |
+| Focus ring missing on four controls | UUPM | Outline rings on hazard headers, body regions, pins, mission cards |
+| Focus stayed on a removed control after a screen change | UUPM | Focus moves to the new screen |
+| Urgent result not on the dashboard | UUPM | Urgent panel repeated there; `role="alert"` |
+| Silent failures | Both | Save, assess and simulate failures are shown on every screen |
+| Targets under 32 px | UUPM | Raised to 32 px |
+| Input border contrast about 1.4:1 | UUPM | Raised |
+| Amber prompt markers read as "medical review" | Impeccable | Markers are blue; the historical badge no longer shares a priority colour |
+| Astronaut covered text; floating vitals; tilting tiles | Impeccable | Astronaut only where there is room; values stay still |
+| Two priority-label maps; raw level text | Both | One map, used everywhere including history |
+| 10–11 px labels | UUPM | 11 px and 12 px |
+| PPG channels differed only by colour; flat idle line | UUPM | Dashed red channel; "No usable signal" label |
+| 3D viewer ignored "Pause motion" while open | UUPM | It follows the setting |
+
+### Not done
+
+- "Save and exit" for a first-run user, and keys for Next, Back, Not sure and
+  Skip.
+- One name for the follow-up list (it is still "next steps", "follow-up
+  actions" and "Action Center" in different places).
+- An explanation of the priority levels.
+- EVA and gravity transition still default to "No" on the context screen.
+- A failed attempt to open a NASA link is still silent.
+- The app was reviewed at one window size (1440 × 888).
+
+## 11. Qt fallback
+
+The earlier PySide6 interface still runs:
+
+```bash
+python software/run.py
+```
+
+It uses the same Python health modules and the same local NASA media, with a
+space theme restyle (`b92f88e`). It is not the primary interface. It stays so
+that a problem in the desktop shell never blocks sensor work, and as a backup
+monitor during a demo.
