@@ -1,12 +1,21 @@
-# AstroTip — Native Desktop Application
+# AstroTip — Desktop Application
 
-The AstroTip desktop application is developed in **Python using PySide6 (Qt)**. It is designed as an offline-first interface for collecting, visualizing, storing, and eventually analyzing astronaut health indicators.
+AstroTip's primary desktop interface is developed with **React, TypeScript, and
+Electron**. It is an offline-first interface for collecting, visualizing,
+storing, and analyzing astronaut health indicators. The existing Python modules
+remain the source of truth for assessment rules, ESP32 serial input, and SQLite
+history; Electron talks to them through a private structured child-process
+bridge.
+
+The original **PySide6 (Qt)** interface remains available as a fallback during
+the migration.
 
 ## Software Architecture
 
 | Directory | Responsibility |
 |---|---|
-| `run.py` | Main application entry point |
+| `../desktop/` | Primary React/TypeScript/Electron interface and native packaging |
+| `run.py` | Legacy PySide6 fallback entry point |
 | `astrotip/ui/` | Desktop windows, dashboard, navigation, and interactive pages |
 | `astrotip/inputs/` | ESP32 serial data, questionnaires, manual inputs, images, and camera capture |
 | `astrotip/analysis/` | Measurement validation, local ML, and NASA-informed guidance |
@@ -64,13 +73,21 @@ python -m pip install --upgrade pip
 python -m pip install -r software/requirements.txt
 ```
 
-### 4. Run the application
+### 4. Run the primary React desktop application
+
+```bash
+cd desktop
+npm install
+npm start
+```
+
+### 5. Run the PySide6 fallback
 
 ```bash
 python software/run.py
 ```
 
-### 5. Stop the application
+### 6. Stop the application
 
 Close the application window or press `Ctrl + C` in the terminal.
 
@@ -112,29 +129,29 @@ Uploading and reading real sensor data require physical hardware. Compiling does
 
 The initial firmware outputs descriptive serial reports containing red/infrared optical measurements, heart-rate and SpO₂ estimates, and measurement validity.
 
-## Planned Application Features
+## Application Features
 
-- **Live Dashboard:** Display real-time sensor data, signal quality, and health trends.
+- **Live Dashboard:** Display real-time ESP32/MAX30102 estimates, freshness, and connection state.
 - **Daily Check-in:** Collect sleep, mood, fatigue, symptoms, and activity information.
 - **Manual Health Input:** Record measurements from external instruments.
 - **Photos & Camera:** Import image files or capture images directly with a webcam.
-- **Health History:** Store and visualize measurements over time.
-- **Local Assessment:** Interpret measurements using validated rules and optional lightweight ML.
+- **Health History:** Store and review explicitly saved local check-ins and assessments.
+- **Local Assessment:** Interpret reported observations using validated local rules.
 - **NASA Sources:** Provide traceable evidence for spaceflight-related health guidance.
+- **Mission Context:** Select LEO, lunar, or Mars/deep-space context with cached NASA imagery.
+- **Reduced Motion:** Set `ASTROTIP_REDUCED_MOTION=1` to disable decorative motion.
 
 ## Current Limitations
 
-The current application is a **navigation-only placeholder**.
+- This is an educational prototype, not a diagnosis or flight-certified medical device.
+- Sensor estimates depend on the experimental ESP32/MAX30102 firmware and are not clinically validated.
+- Local history is intentionally explicit and unencrypted.
+- Mission media is decorative and does not affect health analysis.
+- Photos/camera and trained machine-learning analysis are not part of the current health workflow.
 
-It does not yet:
-
-- Connect to the ESP32 or process live serial data.
-- Capture or analyze medical images.
-- Save completed health records.
-- Run a trained machine-learning model.
-- Generate medical assessments.
-
-These capabilities will be implemented incrementally.
+See [the React desktop guide](../desktop/README.md) for the bridge architecture,
+native packaging, visual stack, test commands, and third-party notices. See
+[UI_REDESIGN.md](UI_REDESIGN.md) for migration notes and the retained fallback.
 
 When the desktop serial reader is added, close the PlatformIO Serial Monitor before connecting PySerial, since both programs generally cannot access the same serial port simultaneously.
 
