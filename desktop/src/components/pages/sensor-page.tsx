@@ -1,12 +1,13 @@
 import { motion, useReducedMotion } from "motion/react";
-import { Activity, Cable, ChevronRight, CircleGauge, HeartPulse, RefreshCw, Satellite, ShieldAlert, Sparkles, Waves } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Cable, ChevronRight, CircleGauge, ClipboardCheck, PlugZap, RefreshCw, ShieldAlert, Sparkles } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { BorderBeam } from "@/components/effects/border-beam";
+import { MissionViewport } from "@/components/hero/mission-viewport";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import type { AssessmentBundle, SerialPort } from "@/types/backend";
+import type { AssessmentBundle, MissionId, SerialPort } from "@/types/backend";
 
 export interface SensorViewState {
   connected: boolean;
@@ -18,43 +19,11 @@ export interface SensorViewState {
   bundle: AssessmentBundle | null;
 }
 
-function OrbitalTelemetry({ state }: { state: SensorViewState }) {
+export function SensorPage({ state, mission, onReview, onCheckin }: {
+  state: SensorViewState; mission: MissionId; onReview: (bundle: AssessmentBundle) => void; onCheckin: () => void;
+}) {
   const reduced = useReducedMotion();
-  const float = (delay: number, amount = 9) => reduced ? undefined : {
-    y: [0, -amount, 0], rotate: [0, 1.5, 0],
-    transition: { duration: 4.8, delay, repeat: Infinity, ease: "easeInOut" as const },
-  };
-  return (
-    <div className="orbital-telemetry" aria-label="Live orbital telemetry display">
-      <div className="orbit-grid" />
-      <div className="orbit-ring orbit-ring-one" />
-      <div className="orbit-ring orbit-ring-two" />
-      <div className="orbit-ring orbit-ring-three" />
-      <motion.div className="metric-pod metric-pod-heart" animate={float(0)}>
-        <span className="metric-pod-icon"><HeartPulse className="size-5" /></span>
-        <span><small>HEART RATE</small><strong>{state.heartRate ?? "—"} <em>bpm</em></strong></span>
-      </motion.div>
-      <motion.div className="metric-pod metric-pod-oxygen" animate={float(.8, 7)}>
-        <span className="metric-pod-icon"><Waves className="size-5" /></span>
-        <span><small>ESTIMATED SpO₂</small><strong>{state.spo2 ?? "—"} <em>%</em></strong></span>
-      </motion.div>
-      <motion.div className="metric-pod metric-pod-link" animate={float(1.4, 6)}>
-        <span className={cn("live-pulse", state.connected && "is-live")} />
-        <span><small>SENSOR LINK</small><strong>{state.connected ? "ONLINE" : "STANDBY"}</strong></span>
-      </motion.div>
-      <div className="orbit-core">
-        <div className="orbit-core-halo" />
-        <Satellite className="size-8" />
-        <small>ASTROTIP</small>
-        <strong>BIOMED</strong>
-      </div>
-      <span className="orbit-satellite orbit-satellite-one"><Activity className="size-4" /></span>
-      <span className="orbit-satellite orbit-satellite-two"><Sparkles className="size-3.5" /></span>
-    </div>
-  );
-}
-
-export function SensorPage({ state, onReview }: { state: SensorViewState; onReview: (bundle: AssessmentBundle) => void }) {
+  const portInput = useRef<HTMLInputElement>(null);
   const [ports, setPorts] = useState<SerialPort[]>([]);
   const [port, setPort] = useState("");
   const [error, setError] = useState("");
@@ -81,18 +50,22 @@ export function SensorPage({ state, onReview }: { state: SensorViewState; onRevi
   return (
     <div className="page-grid sensor-experience">
       <section className="sensor-hero">
-        <motion.div className="sensor-hero-copy" initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: .7 }}>
+        <motion.div className="sensor-hero-copy" initial={reduced ? false : { opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: .7, ease: [0.22, 1, 0.36, 1] }}>
           <div className="welcome-pill"><Sparkles className="size-3.5" /> NASA-inspired crew health console</div>
           <h1><span className="nowrap">Mission health,</span><br /><span className="gradient-text">in orbit.</span></h1>
           <p>Connect local biomedical telemetry, record how the crew feels, and turn observations into clear next steps—without sending health data to the cloud.</p>
+          <div className="hero-actions">
+            <Button variant="primary" size="lg" onClick={onCheckin}><ClipboardCheck className="size-4" /> Start daily check-in</Button>
+            <Button size="lg" onClick={() => { portInput.current?.scrollIntoView({ block: "center", behavior: reduced ? "auto" : "smooth" }); portInput.current?.focus({ preventScroll: true }); }}><PlugZap className="size-4" /> Connect sensor</Button>
+          </div>
           <div className="hero-facts">
             <span><b>01</b> Private Python analysis</span>
             <span><b>02</b> Local sensor link</span>
             <span><b>03</b> Explainable priorities</span>
           </div>
         </motion.div>
-        <motion.div initial={{ opacity: 0, x: 35 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: .8, delay: .12 }}>
-          <OrbitalTelemetry state={state} />
+        <motion.div className="sensor-hero-visual" initial={reduced ? false : { opacity: 0, x: 28 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: .8, delay: .1, ease: [0.22, 1, 0.36, 1] }}>
+          <MissionViewport mission={mission} telemetry={state} />
         </motion.div>
       </section>
 
@@ -100,7 +73,7 @@ export function SensorPage({ state, onReview }: { state: SensorViewState; onRevi
         {state.usable && <BorderBeam duration={7} />}
         <div className="command-dock-title"><Cable className="size-4" /><span><b>ESP32 UPLINK</b><small>MAX30102 · 115200 BAUD</small></span></div>
         <div className="command-dock-control">
-          <input list="serial-ports" value={port} onChange={(event) => setPort(event.target.value)} disabled={state.connected || state.connecting} className="control" aria-label="ESP32 serial port" placeholder="Select or enter a serial port" />
+          <input ref={portInput} list="serial-ports" value={port} onChange={(event) => setPort(event.target.value)} disabled={state.connected || state.connecting} className="control" aria-label="ESP32 serial port" placeholder="Select or enter a serial port" />
           <datalist id="serial-ports">{ports.map((item) => <option key={item.device} value={item.device}>{item.description}</option>)}</datalist>
           <Button onClick={refresh} disabled={state.connected || state.connecting} size="icon" aria-label="Refresh serial ports"><RefreshCw className="size-4" /></Button>
           <Button variant="primary" onClick={toggle} className="min-w-28">{state.connected || state.connecting ? "Disconnect" : "Initiate link"}</Button>
