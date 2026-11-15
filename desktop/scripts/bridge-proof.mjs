@@ -46,7 +46,7 @@ function call(method, params = {}) {
 
 try {
   const ping = await call("system.ping");
-  const assessment = await call("health.assess", { mission: "leo", heart_rate: 72, spo2: 98 });
+  const assessment = await call("health.assess", { heart_rate: 72, spo2: 98 });
   if (ping.protocol !== 1 || !assessment.assessment_id || assessment.checkin.heart_rate !== 72) {
     throw new Error("Unexpected bridge proof response");
   }

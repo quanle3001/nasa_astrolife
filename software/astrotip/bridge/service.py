@@ -20,11 +20,14 @@ from PySide6.QtCore import QCoreApplication, QObject, Signal, Slot
 from astrotip.analysis.nasa_guidance import load_catalog
 from astrotip.analysis.rules import assess
 from astrotip.inputs.sensor_serial import SerialReader, available_ports
-from astrotip.models.health_indicator import CheckIn, MISSION_LABELS, SYMPTOMS
+from astrotip.models.health_indicator import CheckIn, SYMPTOMS
 from astrotip.storage.database import HistoryStore
 
 
 MAX_LINE_BYTES = 1_000_000
+# Mission labels are presentation context for the desktop shell. They are not
+# part of a CheckIn and never influence the assessment rules.
+MISSION_LABELS = {"leo": "Low Earth orbit", "lunar": "Lunar mission", "mars": "Mars / deep space"}
 
 
 def _json_default(value):

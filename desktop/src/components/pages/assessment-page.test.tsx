@@ -14,7 +14,7 @@ const config: AppConfig = {
 const urgent: AssessmentBundle = {
   assessment_id: "assessment-1",
   checkin: {
-    mission: "mars", heart_rate: 72, spo2: 87.5, signal_quality: "good", sleep_hours: null,
+    heart_rate: 72, spo2: 87.5, signal_quality: "good", sleep_hours: null,
     symptoms: [], exercise_completed: null, notes: "", input_source: "manual",
   },
   assessment: {

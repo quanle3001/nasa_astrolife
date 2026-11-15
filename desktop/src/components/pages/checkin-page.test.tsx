@@ -22,7 +22,6 @@ describe("CheckinPage", () => {
 
     await waitFor(() => expect(onAssess).toHaveBeenCalledOnce());
     expect(onAssess).toHaveBeenCalledWith(expect.objectContaining({
-      mission: "leo",
       heart_rate: 72,
       spo2: null,
       symptoms: ["vision_changes"],

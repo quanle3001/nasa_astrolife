@@ -76,7 +76,7 @@ export function CheckinPage({ config, mission, setMission, onAssess, busy }: {
     if (firstInvalid) { document.getElementById(`checkin-${firstInvalid}`)?.focus(); return; }
     try {
       await onAssess({
-        mission, heart_rate: optionalNumber(heartRate), spo2: optionalNumber(spo2), signal_quality: quality,
+        heart_rate: optionalNumber(heartRate), spo2: optionalNumber(spo2), signal_quality: quality,
         sleep_hours: optionalNumber(sleep), symptoms: [...symptoms],
         exercise_completed: exercise === "yes" ? true : exercise === "no" ? false : null,
         notes: notes.trim(), input_source: "manual", sensor_port: "", sensor_received_at: "",

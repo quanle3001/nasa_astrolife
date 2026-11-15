@@ -1,8 +1,8 @@
 export type MissionId = "leo" | "lunar" | "mars";
 export type PriorityLevel = "urgent" | "review" | "watch" | "info";
 
+/** Health observations sent to the Python rules. Mission context is deliberately not part of it. */
 export interface CheckIn {
-  mission: MissionId;
   heart_rate: number | null;
   spo2: number | null;
   signal_quality: "unknown" | "good" | "poor";

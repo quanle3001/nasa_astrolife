@@ -51,7 +51,6 @@ class BridgeTests(unittest.TestCase):
     def test_ping_assessment_save_and_history_use_existing_python_logic(self):
         self.assertTrue(self.call("system.ping")["result"]["offline"])
         result = self.call("health.assess", {
-            "mission": "mars",
             "heart_rate": 72,
             "spo2": 87.5,
             "signal_quality": "poor",
@@ -61,7 +60,7 @@ class BridgeTests(unittest.TestCase):
             "notes": "Bridge integration check",
         })["result"]
         self.assertEqual(result["assessment"]["level"], "urgent")
-        self.assertEqual(result["checkin"]["mission"], "mars")
+        self.assertNotIn("mission", result["checkin"])
         saved = self.call("health.save", {"assessment_id": result["assessment_id"]})
         self.assertTrue(saved["result"]["saved"])
         history = self.call("history.list")["result"]["entries"]
@@ -71,9 +70,12 @@ class BridgeTests(unittest.TestCase):
     def test_bridge_rejects_unknown_methods_and_invalid_health_fields(self):
         unknown = self.call("shell.execute", {"command": "anything"})
         self.assertFalse(unknown["ok"])
-        invalid = self.call("health.assess", {"mission": "leo", "invented": True})
+        invalid = self.call("health.assess", {"heart_rate": 70, "invented": True})
         self.assertFalse(invalid["ok"])
         self.assertIn("unsupported fields", invalid["error"]["message"])
+        # Mission context is presentation only and is rejected as a health field.
+        mission = self.call("health.assess", {"mission": "mars", "heart_rate": 70})
+        self.assertFalse(mission["ok"])
 
 
 if __name__ == "__main__":
