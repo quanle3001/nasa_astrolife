@@ -15,6 +15,7 @@ export const api: AstroLifeDesktopApi = window.astrotip ?? {
   assess: async () => unavailable(),
   saveAssessment: async () => unavailable(),
   listHistory: async () => unavailable(),
+  getTrends: async () => unavailable(),
   getKnowledge: async () => unavailable(),
   getMission: async () => unavailable(),
   saveMission: async () => unavailable(),

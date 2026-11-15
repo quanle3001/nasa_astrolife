@@ -1,13 +1,13 @@
 import { Activity, BookOpen, ClipboardList, ListChecks, TrendingUp } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { FALLBACK_URGENT_ACTION, UrgentPanel } from "@/components/flow/urgent-panel";
-import { EvidenceReports, EvidenceTrace, FlowPage, LEVEL_LABELS, measurementKind, ProvenanceBadge, SourceList } from "@/components/flow/common";
+import { EvidenceReports, EvidenceTrace, FlowPage, LEVEL_LABELS, TraceAudit, measurementKind, ProvenanceBadge, SourceList } from "@/components/flow/common";
 import { PointerGlow } from "@/components/effects/interactive";
 import { Card } from "@/components/ui/card";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import type { AppConfig, HistoryEntry } from "@/types/backend";
-import type { Knowledge, SessionResult } from "@/types/flow";
+import type { AppConfig } from "@/types/backend";
+import type { HistoryTrends, Knowledge, SessionResult, TrendIndicator } from "@/types/flow";
 
 function Section({ icon: Icon, title, badge, children }: { icon: typeof Activity; title: string; badge?: ReactNode; children: ReactNode }) {
   return (
@@ -34,8 +34,9 @@ export function FindingsPage({ result, entryId, config, knowledge, onNext, onExi
   const { checkin, assessment, session_notes: notes } = result;
   const trace = new Map((result.evidence_trace ?? []).map((entry) => [entry.condition_id, entry]));
   const { catalog } = knowledge;
-  const [history, setHistory] = useState<HistoryEntry[] | null>(null);
-  useEffect(() => { let alive = true; api.listHistory().then((data) => { if (alive) setHistory(data.entries); }).catch(() => { if (alive) setHistory([]); }); return () => { alive = false; }; }, [entryId]);
+  // Trends are computed by the backend (pandas) from the saved measurements; simulated entries are excluded there.
+  const [trends, setTrends] = useState<HistoryTrends | null | "unavailable">(null);
+  useEffect(() => { let alive = true; api.getTrends().then((data) => { if (alive) setTrends(data); }).catch(() => { if (alive) setTrends("unavailable"); }); return () => { alive = false; }; }, [entryId]);
 
   const hasMeasurement = checkin.heart_rate != null || checkin.spo2 != null;
   const kind = measurementKind(checkin.input_source, hasMeasurement);
@@ -43,7 +44,7 @@ export function FindingsPage({ result, entryId, config, knowledge, onNext, onExi
   const later = assessment.level === "urgent" ? assessment.findings.filter((finding) => finding.level !== "info" && finding.level !== "urgent") : [];
   const notAssessed = notes.filter((note) => /^(Unsure|Skipped|Not answered):/.test(note));
   const otherNotes = notes.filter((note) => !/^(Unsure|Skipped|Not answered):/.test(note) && !note.startsWith("These items"));
-  const earlier = (history ?? []).filter((entry) => entry.id !== entryId && (entry.checkin.heart_rate != null || entry.checkin.spo2 != null) && entry.checkin.input_source !== "simulated").slice(0, 4);
+  const trendRows: TrendIndicator[] = trends && trends !== "unavailable" ? Object.values(trends.indicators).filter((indicator) => indicator.count >= 2) : [];
   const qualityNotes = assessment.data_notes.filter((note) => /signal quality|pulse oximeters|spo2 was not provided|heart rate was not provided|spo2 prompts/i.test(note));
 
   return (
@@ -86,20 +87,30 @@ export function FindingsPage({ result, entryId, config, knowledge, onNext, onExi
       </Section>
 
       <Section icon={TrendingUp} title="Compared with earlier saved measurements">
-        {history === null ? <p className="empty-line" aria-busy="true">Loading saved measurements…</p>
-          : !hasMeasurement || earlier.length === 0 ? <p className="empty-line">A trend needs this check-in and at least one earlier saved measurement. None is available yet, so no trend is shown.</p>
-            : (
-              <>
-                <table className="trend-table">
-                  <thead><tr><th scope="col">Recorded</th><th scope="col">Heart rate</th><th scope="col">SpO₂</th><th scope="col">Source</th></tr></thead>
-                  <tbody>
-                    <tr className="is-current"><td>This check-in</td><td>{checkin.heart_rate ?? "—"}</td><td>{checkin.spo2 ?? "—"}</td><td>{checkin.input_source}</td></tr>
-                    {earlier.map((entry) => <tr key={entry.id}><td>{when(entry.created_at)}</td><td>{entry.checkin.heart_rate ?? "—"}</td><td>{entry.checkin.spo2 ?? "—"}</td><td>{entry.checkin.input_source ?? "manual"}</td></tr>)}
-                  </tbody>
-                </table>
-                <p className="empty-line">Values are listed for your own comparison. AstroLife does not interpret a change between them; share an unexpected change with the medical team.</p>
-              </>
-            )}
+        {trends === null ? <p className="empty-line" aria-busy="true">Loading saved measurements…</p>
+          : trends === "unavailable" ? <p className="empty-line">Saved measurements could not be read, so no trend is shown.</p>
+            : trendRows.length === 0 ? <p className="empty-line">A trend needs at least two saved real measurements of the same kind. {trends.simulated_excluded > 0 ? `${trends.simulated_excluded} simulated entr${trends.simulated_excluded > 1 ? "ies are" : "y is"} not counted. ` : ""}None is available yet, so no trend is shown.</p>
+              : (
+                <>
+                  <table className="trend-table">
+                    <thead><tr><th scope="col">Indicator</th><th scope="col">Saved values</th><th scope="col">Latest</th><th scope="col">Previous</th><th scope="col">Change</th><th scope="col">Range</th><th scope="col">Mean</th></tr></thead>
+                    <tbody>
+                      {trendRows.map((indicator) => (
+                        <tr key={indicator.label}>
+                          <th scope="row" className="text-left font-normal">{indicator.label}</th>
+                          <td>{indicator.count}</td>
+                          <td>{indicator.latest} {indicator.unit}</td>
+                          <td>{indicator.previous ?? "—"}</td>
+                          <td>{indicator.change_from_previous != null ? `${indicator.change_from_previous > 0 ? "+" : ""}${indicator.change_from_previous}` : "—"}</td>
+                          <td>{indicator.minimum} to {indicator.maximum}</td>
+                          <td>{indicator.mean?.toFixed(1)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <p className="empty-line">{trends.limits}{trends.simulated_excluded > 0 ? ` ${trends.simulated_excluded} simulated entr${trends.simulated_excluded > 1 ? "ies were" : "y was"} left out.` : ""} Share an unexpected change with the medical team.</p>
+                </>
+              )}
       </Section>
 
       <Section icon={ListChecks} title="Follow-up prompts" badge={<ProvenanceBadge kind="rule" />}>
@@ -110,7 +121,7 @@ export function FindingsPage({ result, entryId, config, knowledge, onNext, onExi
               <header><h3>{config.condition_titles[finding.condition_id] ?? finding.condition_id}</h3><span className={cn("priority-badge", `priority-${finding.level}`)}>{LEVEL_LABELS[finding.level]}</span></header>
               <p>{finding.reason}</p>
               {finding.actions.length > 0 ? <ul className="dot-list">{[...new Set(finding.actions)].map((action) => <li key={action}>{action}</li>)}</ul> : assessment.level === "urgent" && <p>{FALLBACK_URGENT_ACTION}</p>}
-              {trace.get(finding.condition_id) && <EvidenceTrace entry={trace.get(finding.condition_id)!} />}
+              {trace.get(finding.condition_id) && <><EvidenceTrace entry={trace.get(finding.condition_id)!} /><TraceAudit entry={trace.get(finding.condition_id)!} /></>}
             </article>
           ))}
         </div>

@@ -62,7 +62,22 @@ export interface RadLabInstrumentAnalysis {
   observations: string[];
 }
 
+/** What is needed to reproduce the analysis. */
+export interface AnalysisProvenance {
+  algorithm_version: string;
+  libraries: Record<string, string>;
+  dataset_request_url: string;
+  dataset_retrieved_at: string;
+  dataset_sha256: string;
+  measurement: string;
+  unit: string | null;
+  instruments: string[];
+  pipeline_version: string | null;
+  transformation_steps: string[];
+}
+
 export interface RadLabAnalysis {
+  provenance: AnalysisProvenance;
   method: { gap_rule: string; excursion_rule: string; statistics: string; limits: string };
   instruments: Record<string, RadLabInstrumentAnalysis>;
   by_environment: Record<MissionId, string[]>;

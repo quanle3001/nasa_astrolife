@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld("astrotip", {
   assess: (checkin) => ipcRenderer.invoke("backend:assess", checkin),
   saveAssessment: (assessmentId) => ipcRenderer.invoke("backend:save", { assessment_id: assessmentId }),
   listHistory: () => ipcRenderer.invoke("backend:history"),
+  getTrends: () => ipcRenderer.invoke("backend:history-trends"),
   getKnowledge: () => ipcRenderer.invoke("backend:knowledge"),
   getMission: () => ipcRenderer.invoke("backend:mission-get"),
   saveMission: (profile) => ipcRenderer.invoke("backend:mission-save", { profile }),

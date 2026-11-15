@@ -143,8 +143,45 @@ export interface FollowupAction {
 
 /** One step of evidence behind a finding: an answer the astronaut gave or a value that was measured. */
 export type TraceObservation =
-  | { kind: "answer"; question_id: string; question: string; answer: string }
-  | { kind: "measurement"; indicator_id: string; label: string; value: number; unit: string; source: string };
+  | { kind: "answer"; observation_id: string; question_id: string; question: string; answer_id: AnswerValue; answer: string; rule_ids: string[] }
+  | { kind: "measurement"; observation_id: string; indicator_id: string; label: string; value: number; unit: string; source: string;
+      sensor_port: string; measured_at: string; signal_quality: string; rule_ids: string[] };
+
+/** Identifiers that make one finding auditable end to end. */
+export interface Traceability {
+  nasa_source_ids: string[];
+  nasa_risk_ids: number[];
+  question_ids: string[];
+  observation_ids: string[];
+  rule_ids: string[];
+  rules_engine: string;
+  rules_version: string;
+  catalog_reviewed_on: string;
+  question_registry_version: string;
+  evidence_reviewed_on: string;
+  action_ids: number[];
+  history_entry_id?: number;
+  session_id?: string;
+}
+
+/** Backend summary of one recorded indicator across saved check-ins. */
+export interface TrendIndicator {
+  label: string;
+  unit: string;
+  count: number;
+  points: { entry_id: number; created_at: string; value: number; source: string }[];
+  mean?: number; minimum?: number; maximum?: number; latest?: number;
+  previous?: number | null;
+  change_from_previous?: number | null;
+}
+
+export interface HistoryTrends {
+  algorithm_version: string;
+  entries_considered: number;
+  simulated_excluded: number;
+  indicators: Record<"heart_rate" | "spo2", TrendIndicator>;
+  limits: string;
+}
 
 /**
  * Why a finding relates to the mission: the NASA hazard and risk it belongs
@@ -161,6 +198,8 @@ export interface EvidenceTraceEntry {
   observations: TraceObservation[];
   rule_reason: string;
   actions: string[];
+  /** Absent on check-ins saved before identifiers were recorded. */
+  traceability?: Traceability;
 }
 
 /** Output of the Python rules for one check-in, plus what was not assessed. */

@@ -115,6 +115,29 @@ export function EvidenceTrace({ entry }: { entry: EvidenceTraceEntry }) {
   );
 }
 
+/** The identifiers behind a finding, for anyone who wants to audit it. Closed by default. */
+export function TraceAudit({ entry }: { entry: EvidenceTraceEntry }) {
+  const audit = entry.traceability;
+  if (!audit) return null;
+  const rows: [string, string][] = [
+    ["Assessment rules", `${audit.rules_engine} · version ${audit.rules_version}`],
+    ["Rule inputs", audit.rule_ids.join(", ") || "none"],
+    ["Questions", audit.question_ids.join(", ") || "none"],
+    ["Observations", audit.observation_ids.join(", ") || "none"],
+    ["NASA risks (Human Research Roadmap)", audit.nasa_risk_ids.join(", ")],
+    ["NASA sources", audit.nasa_source_ids.join(", ")],
+    ["Follow-up actions", audit.action_ids.length ? audit.action_ids.map((id) => `#${id}`).join(", ") : "none"],
+    ["Saved as", audit.history_entry_id != null ? `history entry #${audit.history_entry_id}` : "not saved"],
+    ["Versions", `question registry ${audit.question_registry_version} · catalog reviewed ${audit.catalog_reviewed_on} · evidence reviewed ${audit.evidence_reviewed_on}`],
+  ];
+  return (
+    <details className="trace-audit">
+      <summary>Audit details</summary>
+      <dl>{rows.map(([term, value]) => <div key={term}><dt>{term}</dt><dd>{value}</dd></div>)}</dl>
+    </details>
+  );
+}
+
 /** Common frame for one guided step: heading, content and Back / Continue controls. */
 export function FlowPage({ title, lead, children, onBack, onNext, nextLabel = "Continue", nextDisabled, busy, aside, wide }: {
   title: ReactNode; lead?: ReactNode; children: ReactNode;

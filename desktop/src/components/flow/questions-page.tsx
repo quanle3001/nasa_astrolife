@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useCalmMotion } from "@/lib/motion-preference";
 import { cn } from "@/lib/utils";
 import { answerError, SKIPPED, UNSURE, type QuestionnaireView } from "@/questions/engine";
-import type { AnswerValue, Knowledge, Question } from "@/types/flow";
+import type { AnswerValue, AssessmentPlan, Knowledge, Question } from "@/types/flow";
 
 function answerLabel(question: Question, value: AnswerValue | undefined): string {
   if (value === undefined) return "";
@@ -40,8 +40,11 @@ function NumberAnswer({ question, value, onAnswer }: { question: Question; value
  * marked as such. The list of questions comes from the engine and changes as
  * answers change; this component only presents it.
  */
-export function QuestionsPage({ view, knowledge, index, onIndex, onAnswer, onBack, onDone, aside, notice, error }: {
-  view: QuestionnaireView; knowledge: Knowledge; index: number; onIndex: (index: number) => void;
+export function QuestionsPage({ view, knowledge, plan, index, onIndex, onAnswer, onBack, onDone, aside, notice, error }: {
+  view: QuestionnaireView; knowledge: Knowledge;
+  /** Backend plan for this mission; supplies the reason each topic is asked. */
+  plan?: AssessmentPlan | null;
+  index: number; onIndex: (index: number) => void;
   onAnswer: (question: Question, value: AnswerValue) => void; onBack: () => void; onDone: () => void;
   aside?: React.ReactNode; notice?: string; error?: string;
 }) {
@@ -53,6 +56,13 @@ export function QuestionsPage({ view, knowledge, index, onIndex, onAnswer, onBac
   const parent = question?.parent ? knowledge.registry.questions.find((item) => item.id === question.parent) : null;
   const hazards = (domain?.hazard_ids ?? []).map((id) => knowledge.catalog.hazards.find((hazard) => hazard.id === id)?.title ?? id);
   const current = question ? view.answers[question.id] : undefined;
+  // Why this question is on screen: a follow-up names the answer that opened it, otherwise the plan's reason for the topic.
+  const parentAnswer = parent ? view.answers[parent.id] : undefined;
+  const why = !question ? "" : parent
+    ? `Asked because you answered "${answerLabel(parent, parentAnswer)}" to the previous question.`
+    : question.show_if && "mission" in question.show_if
+      ? "Asked because of what you entered about your mission."
+      : plan?.topics.find((topic) => topic.domain_id === question.domain)?.reason ?? "";
   // Keyboard: 1-9 pick an option, matching the numbers shown on the buttons.
   useEffect(() => {
     if (!question || question.input === "number") return undefined;
@@ -104,7 +114,8 @@ export function QuestionsPage({ view, knowledge, index, onIndex, onAnswer, onBac
                   {question.allow_skip && <Button variant="ghost" size="sm" onClick={() => onAnswer(question, SKIPPED)} aria-pressed={current === SKIPPED}><SkipForward className="size-3.5" /> Skip</Button>}
                   {current !== undefined && <span className="text-xs text-space-subtle">Current answer: {answerLabel(question, current)}</span>}
                 </div>
-                <div className="question-evidence"><ProvenanceBadge kind="evidence" label="Why we ask · NASA source" /><SourceList ids={question.evidence_ids} sources={knowledge.catalog.sources} /></div>
+                {why && <p className="question-why"><strong>Why this question:</strong> {why}</p>}
+                <div className="question-evidence"><ProvenanceBadge kind="evidence" label="NASA source" /><SourceList ids={question.evidence_ids} sources={knowledge.catalog.sources} /></div>
               </motion.div>
             </AnimatePresence>
           </motion.section>

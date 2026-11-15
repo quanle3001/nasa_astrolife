@@ -7,8 +7,11 @@ import registry from "../../../../software/resources/question_registry.json";
 import type { AppConfig, Assessment, CheckIn } from "@/types/backend";
 import type { Answers, AssessmentPlan, EvidenceTraceEntry, FollowupAction, Knowledge, MissionProfile, SessionResult } from "@/types/flow";
 
+const noTrends = { algorithm_version: "history-descriptive-1.0", entries_considered: 1, simulated_excluded: 1, limits: "Descriptive only. AstroLife has no personal baseline or approved mission limit and does not interpret a change.",
+  indicators: { heart_rate: { label: "Heart rate", unit: "bpm", count: 1, points: [] }, spo2: { label: "Estimated SpO2", unit: "%", count: 1, points: [] } } };
+const getTrends = vi.fn(() => Promise.resolve(noTrends as unknown));
 vi.mock("@/lib/api", () => ({ api: {
-  listPorts: () => Promise.resolve([]), listHistory: () => Promise.resolve({ entries: [] }), openNasaSource: vi.fn(() => Promise.resolve(true)),
+  listPorts: () => Promise.resolve([]), listHistory: () => Promise.resolve({ entries: [] }), getTrends: () => getTrends(), openNasaSource: vi.fn(() => Promise.resolve(true)),
   connectSensor: vi.fn(), disconnectSensor: vi.fn(), simulateSensor: vi.fn(() => Promise.resolve({})),
 } }));
 vi.mock("@/components/monitor/ppg-chart", () => ({ PpgChart: () => <div data-testid="ppg-chart" /> }));
@@ -186,6 +189,7 @@ describe("QuestionsPage", () => {
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Mood and teamwork");
     expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(1);
     expect(screen.getByText(/Related NASA hazards: Isolation and confinement · Distance from Earth/)).toBeInTheDocument();
+    expect(screen.queryByText(/Why this question:/)).not.toBeInTheDocument();
     expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuemax", String(current.questions.length));
     fireEvent.click(screen.getByRole("radio", { name: /Yes/ }));
     expect(onAnswer).toHaveBeenCalledWith(current.questions[0], "yes");
@@ -201,6 +205,7 @@ describe("QuestionsPage", () => {
     const position = view(mission, answers).questions.findIndex((question) => question.id === "sleep.hours");
     const { onAnswer } = setup(mission, answers, position);
     expect(screen.getByText(/Follow-up to "How well have you been sleeping\?"/)).toBeInTheDocument();
+    expect(screen.getByText(/Asked because you answered "Poorly" to the previous question/)).toBeInTheDocument();
     const input = screen.getByLabelText(/how many hours did you sleep/i);
     fireEvent.change(input, { target: { value: "30" } });
     expect(screen.getByText("Enter a number from 0 to 24.")).toBeInTheDocument();
@@ -308,7 +313,7 @@ describe("FindingsPage", () => {
     expect(screen.getByText("Poor sleep or disrupted schedule")).toBeInTheDocument();
     expect(screen.getByText("Not assessed · not treated as normal")).toBeInTheDocument();
     expect(screen.getByText("Unsure: Have you felt low, anxious or isolated?")).toBeInTheDocument();
-    expect(await screen.findByText(/no trend is shown/)).toBeInTheDocument();
+    expect(await screen.findByText(/no trend is shown/)).toHaveTextContent("1 simulated entry is not counted.");
     expect(screen.getByText("Contact the crew medical officer promptly.")).toBeInTheDocument();
     expect(screen.queryByText("No specific concern was reported.")).not.toBeInTheDocument();
     expect(screen.getAllByText("Rule-based prompt").length).toBeGreaterThan(0);
@@ -321,8 +326,13 @@ describe("FindingsPage", () => {
       condition_id: "sleep", condition_title: "Sleep loss and fatigue", level: "watch", mission_title: "Mars / Deep Space",
       hazards: [{ id: "isolation", title: "Isolation and confinement", rank: 3, emphasized: true }, { id: "environment", title: "Hostile or closed environments", rank: 5, emphasized: false }],
       nasa_risks: [{ risk_id: 100, risk_title: "Risk of Performance Decrements and Adverse Health Outcomes Resulting from Sleep Loss, Circadian Desynchronization, and Work Overload", risk_url: "https://humanresearchroadmap.nasa.gov/Risks/?i=100", report_title: "Evidence Report", report_url: "https://humanresearchroadmap.nasa.gov/evidence/reports/Sleep.pdf" }],
-      observations: [{ kind: "answer", question_id: "sleep.quality", question: "How well have you been sleeping?", answer: "Poorly" }],
+      observations: [{ kind: "answer", observation_id: "answer:sleep.quality", question_id: "sleep.quality", question: "How well have you been sleeping?", answer_id: "poorly", answer: "Poorly", rule_ids: ["observation:poor_sleep"] }],
       rule_reason: "Reported: poor sleep or disrupted schedule.", actions: ["Review fatigue and workload with the crew."],
+      traceability: {
+        nasa_source_ids: ["sleep", "research"], nasa_risk_ids: [100], question_ids: ["sleep.quality"], observation_ids: ["answer:sleep.quality"],
+        rule_ids: ["observation:poor_sleep"], rules_engine: "astrotip.analysis.rules.assess", rules_version: "2026.11.1", catalog_reviewed_on: "2026-11-14",
+        question_registry_version: "2026.11.1", evidence_reviewed_on: "2026-11-15", action_ids: [7], history_entry_id: 5, session_id: "abc",
+      },
     };
     render(<FindingsPage result={result({ evidence_trace: [entry] })} entryId={5} config={config} knowledge={knowledge} onNext={() => undefined} />);
     const steps = within(screen.getByRole("list", { name: "Why AstroLife shows this prompt for Sleep loss and fatigue" })).getAllByRole("listitem");
@@ -334,8 +344,28 @@ describe("FindingsPage", () => {
     expect(steps[3]).toHaveTextContent("How well have you been sleeping? Poorly");
     expect(steps[4]).toHaveTextContent("Follow up");
     expect(steps[5]).toHaveTextContent("1 action in your Action Center");
+    // Identifiers for an audit are present but folded away.
+    const audit = screen.getByText("Audit details").closest("details")!;
+    expect(audit).not.toHaveAttribute("open");
+    expect(audit).toHaveTextContent("astrotip.analysis.rules.assess · version 2026.11.1");
+    expect(audit).toHaveTextContent("observation:poor_sleep");
+    expect(audit).toHaveTextContent("answer:sleep.quality");
+    expect(audit).toHaveTextContent("#7");
+    expect(audit).toHaveTextContent("history entry #5");
     // The hypoxia prompt has no trace entry in this result and shows none.
     expect(screen.getAllByRole("list", { name: /Why AstroLife shows this prompt/ })).toHaveLength(1);
+  });
+
+  it("shows the backend's computed trend for real saved measurements without interpreting it", async () => {
+    getTrends.mockResolvedValueOnce({ ...noTrends, entries_considered: 3, simulated_excluded: 0, indicators: {
+      heart_rate: { label: "Heart rate", unit: "bpm", count: 3, points: [], mean: 70, minimum: 60, maximum: 80, latest: 80, previous: 70, change_from_previous: 10 },
+      spo2: { label: "Estimated SpO2", unit: "%", count: 1, points: [], mean: 97, minimum: 97, maximum: 97, latest: 97, previous: null, change_from_previous: null },
+    } });
+    render(<FindingsPage result={result()} entryId={5} config={config} knowledge={knowledge} onNext={() => undefined} />);
+    const row = (await screen.findByRole("rowheader", { name: "Heart rate" })).closest("tr")!;
+    expect(row).toHaveTextContent("380 bpm70+1060 to 8070.0");
+    expect(screen.queryByRole("rowheader", { name: "Estimated SpO2" })).not.toBeInTheDocument();
+    expect(screen.getByText(/does not interpret a change/)).toBeInTheDocument();
   });
 
   it("says a missing measurement is unassessed and shows urgent guidance first", () => {

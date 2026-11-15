@@ -156,6 +156,17 @@ export function RadiationExplorer({ knowledge, mission }: { knowledge: Knowledge
                 {stats.first_half_mean != null && stats.second_half_mean != null && <li>Mean of the first half of the day {number(stats.first_half_mean)}, second half {number(stats.second_half_mean)}.</li>}
               </ul>
               <p className="flow-footnote">{analysis.method.statistics} {analysis.method.limits}</p>
+              <details className="trace-audit">
+                <summary>How this was computed</summary>
+                <dl>
+                  <div><dt>Pipeline</dt><dd>Retrieve, validate, clean, analyze, store, explain · {analysis.provenance.pipeline_version ?? "version not recorded"}</dd></div>
+                  <div><dt>Analysis</dt><dd>{analysis.provenance.algorithm_version} · {Object.entries(analysis.provenance.libraries).map(([name, version]) => `${name} ${version}`).join(", ")}</dd></div>
+                  <div><dt>Dataset</dt><dd>{analysis.provenance.measurement.replaceAll("_", " ")} · retrieved {when(analysis.provenance.dataset_retrieved_at)} · checksum {analysis.provenance.dataset_sha256.slice(0, 12)}…</dd></div>
+                  <div><dt>Instrument</dt><dd>{active} (RadLab id) · unit {analysis.provenance.unit ?? "not stated by the API"}</dd></div>
+                  <div><dt>Steps applied</dt><dd><ol className="step-list">{analysis.provenance.transformation_steps.map((step) => <li key={step}>{step}</li>)}</ol></dd></div>
+                  <div><dt>Rules</dt><dd>{analysis.method.gap_rule} {analysis.method.excursion_rule}</dd></div>
+                </dl>
+              </details>
             </section>
           )}
 

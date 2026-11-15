@@ -41,6 +41,12 @@ const result = (fields: Partial<RadLabResult> = {}): RadLabResult => ({
   },
   summary: Object.fromEntries(["BPD", "CRaTER-D1D2", "DosTel1", "MSL-RAD-Surface"].map((id) => [id, { count: 2, minimum: 2.5, maximum: 510.4, median: 4.74, first_timestamp: "2023-01-01T00:00:00", last_timestamp: "2023-01-01T01:00:00" }])),
   analysis: {
+    provenance: {
+      algorithm_version: "radlab-descriptive-1.1", libraries: { pandas: "3.1.1", numpy: "2.5.4" },
+      dataset_request_url: "https://visualization.osdr.nasa.gov/radlab/api/?query=x&columns+=absorbed_dose_rate", dataset_retrieved_at: "2026-11-15T08:41:40+00:00",
+      dataset_sha256: "b04bdf6ce30e" + "0".repeat(52), measurement: "absorbed_dose_rate", unit: null, instruments: ["BPD", "CRaTER-D1D2", "DosTel1", "MSL-RAD-Surface"],
+      pipeline_version: "radlab-pipeline-1.1", transformation_steps: ["Validated 6 rows from the API response with the RadLabReading model.", "No exact duplicate rows found."],
+    },
     method: { gap_rule: "g", excursion_rule: "e", statistics: "Mean, median and range of the published values.", limits: "Descriptive only." },
     instruments: {
       BPD: instrumentAnalysis(null, { zero_count: 6 }),
@@ -72,7 +78,7 @@ describe("RadiationExplorer", () => {
     expect(provenance).toHaveTextContent("2023-01-01 to 2023-01-02");
     expect(provenance).toHaveTextContent("b04bdf6ce30e… verified");
     expect(screen.getByText(/Request: https:\/\/visualization\.osdr\.nasa\.gov\/radlab\/api\//)).toBeInTheDocument();
-    expect(screen.getByText(/unit not stated by the API/)).toBeInTheDocument();
+    expect(screen.getAllByText(/unit not stated by the API/).length).toBeGreaterThan(0);
     expect(getRadLab).toHaveBeenCalledWith(undefined);
   });
 
@@ -104,6 +110,11 @@ describe("RadiationExplorer", () => {
     expect(panel).toHaveTextContent("No readings in 22 hours of the day.");
     expect(panel).toHaveTextContent("Highest hourly mean in the hour starting 01:00");
     expect(panel).toHaveTextContent("Descriptive only.");
+    const method = within(panel).getByText("How this was computed").closest("details")!;
+    expect(method).toHaveTextContent("radlab-descriptive-1.1 · pandas 3.1.1, numpy 2.5.4");
+    expect(method).toHaveTextContent("Retrieve, validate, clean, analyze, store, explain · radlab-pipeline-1.1");
+    expect(method).toHaveTextContent("Validated 6 rows from the API response with the RadLabReading model.");
+    expect(method).toHaveTextContent("DosTel1 (RadLab id) · unit not stated by the API");
     fireEvent.click(screen.getByRole("radio", { name: /BPD/ }));
     expect(screen.getByLabelText("Analysis of the retrieved readings")).toHaveTextContent("6 readings are exactly zero");
     // The radiation hazard is connected to what crews do about it, from NASA sources.

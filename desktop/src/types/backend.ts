@@ -1,5 +1,5 @@
 import type { RadLabResult } from "@/types/nasa";
-import type { Answers, AppState, AssessmentPlan, FollowupAction, Knowledge, MeasurementChoice, MissionProfile, Session, SessionPreview, SubmittedSession } from "@/types/flow";
+import type { Answers, AppState, AssessmentPlan, FollowupAction, HistoryTrends, Knowledge, MeasurementChoice, MissionProfile, Session, SessionPreview, SubmittedSession } from "@/types/flow";
 
 export type MissionId = "leo" | "lunar" | "mars";
 export type PriorityLevel = "urgent" | "review" | "watch" | "info";
@@ -96,6 +96,8 @@ export interface AstroLifeDesktopApi {
   assess: (checkin: CheckIn) => Promise<AssessmentBundle>;
   saveAssessment: (assessmentId: string) => Promise<{ saved: boolean; entry_id: number }>;
   listHistory: () => Promise<{ entries: HistoryEntry[] }>;
+  /** Descriptive summary of saved measurements, computed by the backend; simulated entries excluded. */
+  getTrends: () => Promise<HistoryTrends>;
   /** Curated NASA catalog, mission context and question registry, validated by the backend. */
   getKnowledge: () => Promise<Knowledge>;
   getMission: () => Promise<{ profile: MissionProfile | null }>;

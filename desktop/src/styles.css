@@ -752,3 +752,14 @@ input, textarea { caret-color: var(--color-space-cyan); }
 .series-key { display:inline-flex; align-items:center; gap:6px; }
 .series-key i { display:inline-block; width:16px; height:2px; background:#f5c67b; }
 .series-key i.is-dashed { background:repeating-linear-gradient(90deg,#f5c67b 0 6px,transparent 6px 10px); }
+
+/* Audit details: identifiers and method, closed until asked for */
+.trace-audit { margin-top:10px; font-size:var(--text-xs); }
+.trace-audit summary { cursor:pointer; color:var(--color-space-muted); font-weight:600; }
+.trace-audit summary:hover { color:var(--color-space-white); }
+.trace-audit dl { margin-top:8px; display:grid; gap:6px; border-left:1px solid var(--panel-border); padding-left:12px; }
+.trace-audit dt { color:var(--color-space-subtle); font-size:var(--text-label); font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+.trace-audit dd { color:var(--color-space-silver); font-family:var(--font-mono); font-size:11px; line-height:1.5; overflow-wrap:anywhere; }
+.step-list { list-style:decimal; padding-left:16px; font-family:var(--font-sans); }
+.question-why { margin-top:16px; color:var(--color-space-muted); font-size:var(--text-sm); line-height:1.5; }
+.question-why strong { color:var(--color-space-silver); font-weight:600; }

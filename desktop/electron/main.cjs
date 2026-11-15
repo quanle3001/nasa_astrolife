@@ -134,6 +134,7 @@ handle("backend:sensor-simulate", "sensor.simulate");
 handle("backend:assess", "health.assess");
 handle("backend:save", "health.save");
 handle("backend:history", "history.list");
+handle("backend:history-trends", "history.trends");
 handle("backend:knowledge", "knowledge.get");
 handle("backend:mission-get", "mission.get");
 handle("backend:mission-save", "mission.save");

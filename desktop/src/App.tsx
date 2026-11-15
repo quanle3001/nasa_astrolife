@@ -32,6 +32,7 @@ import { useCalmMotion } from "@/lib/motion-preference";
 import { ppgBuffer, startPpgStream } from "@/lib/ppg-store";
 import { isTypingTarget, matchShortcut } from "@/lib/shortcuts";
 import { questionnaireView } from "@/questions/engine";
+import { applyAnswer, questionnaireMachine } from "@/questions/questionnaire-machine";
 import type { AppConfig, Assessment, AssessmentBundle, BackendEvent, CheckIn } from "@/types/backend";
 import type { Answers, AnswerValue, AppState, AssessmentPlan, FollowupAction, Knowledge, MeasurementChoice, MissionProfile, Question, Session, SessionResult } from "@/types/flow";
 
@@ -87,9 +88,15 @@ export default function App() {
   // Guided check-in state. The backend holds the durable copy of all of it.
   const [profile, setProfile] = useState<MissionProfile>(DEFAULT_PROFILE);
   const [session, setSession] = useState<Session | null>(null);
-  const [answers, setAnswers] = useState<Answers>({});
-  const [questionIndex, setQuestionIndex] = useState(0);
-  const [notice, setNotice] = useState("");
+  // Answers and position live in the questionnaire state machine; every change goes through it.
+  const [questionnaire, sendQuestionnaire] = useMachine(questionnaireMachine);
+  const answers = questionnaire.context.answers;
+  const questionIndex = questionnaire.context.index;
+  const droppedCount = questionnaire.context.dropped.length;
+  const notice = droppedCount ? `${droppedCount} follow-up answer${droppedCount > 1 ? "s" : ""} no longer applied and ${droppedCount > 1 ? "were" : "was"} removed.` : "";
+  const loadQuestionnaire = useCallback((source: Knowledge, mission: MissionProfile, loaded: Answers, index?: number) => {
+    sendQuestionnaire({ type: "LOAD", registry: source.registry, mission, hazardOrder: source.mission_context.missions[mission.environment].hazard_order, answers: loaded, index });
+  }, [sendQuestionnaire]);
   const [result, setResult] = useState<{ result: SessionResult; entryId: number | null; sessionId: string } | null>(null);
   const [flowBusy, setFlowBusy] = useState(false);
   const [flowError, setFlowError] = useState("");
@@ -108,13 +115,14 @@ export default function App() {
   const crownVideo = useRef<HTMLVideoElement>(null);
   useAmbientVideo(crownVideo, Boolean(config));
 
-  const applyState = useCallback((state: AppState) => {
+  const applyState = useCallback((state: AppState, source: Knowledge) => {
     setAppState(state);
     if (state.mission) setProfile(state.mission);
     setSession(state.open);
-    setAnswers(state.open?.answers ?? {});
+    if (state.open) loadQuestionnaire(source, state.open.mission, state.open.answers);
+    else sendQuestionnaire({ type: "RESET" });
     if (state.latest?.result) setResult({ result: state.latest.result, entryId: state.latest.entry_id, sessionId: state.latest.session_id });
-  }, []);
+  }, [loadQuestionnaire, sendQuestionnaire]);
 
   const start = async () => {
     try {
@@ -122,9 +130,10 @@ export default function App() {
       await api.ping();
       const [loadedConfig, loadedKnowledge, state] = await Promise.all([api.getConfig(), api.getKnowledge(), api.currentSession()]);
       setKnowledge(loadedKnowledge);
-      applyState(state);
+      applyState(state, loadedKnowledge);
       setConfig(loadedConfig);
       setBackendReady(true);
+      if (state.mission) setPlan(await api.planMission(state.mission).catch(() => null));
       // Onboarding is complete once a mission is saved and one check-in was submitted.
       send({ type: "LOADED", onboarded: Boolean(state.mission && state.latest) });
     } catch (reason) {
@@ -185,7 +194,7 @@ export default function App() {
     setFlowBusy(true); setFlowError("");
     try { await work(); } catch (reason) { setFlowError(message(reason)); } finally { setFlowBusy(false); }
   };
-  const refreshState = async () => applyState(await api.currentSession());
+  const refreshState = async () => { if (knowledge) applyState(await api.currentSession(), knowledge); };
 
   const saveContext = () => guarded(async () => {
     const { profile: stored } = await api.saveMission(profile);
@@ -194,7 +203,7 @@ export default function App() {
     // The check-in plan is derived by the backend from the NASA catalog for this mission.
     setPlan(await api.planMission(stored).catch(() => null));
     // A check-in started under the old context no longer matches; it is closed when a new one starts.
-    if (session && JSON.stringify(session.mission) !== JSON.stringify(stored)) { setSession(null); setAnswers({}); }
+    if (session && JSON.stringify(session.mission) !== JSON.stringify(stored)) { setSession(null); sendQuestionnaire({ type: "RESET" }); }
     send({ type: "NEXT" });
   });
 
@@ -202,7 +211,8 @@ export default function App() {
   const ensureSession = async (): Promise<Session> => {
     if (session && session.status === "in_progress") return session;
     const started = await api.startSession();
-    setSession(started); setAnswers({}); setQuestionIndex(0); setNotice("");
+    setSession(started);
+    if (knowledge) loadQuestionnaire(knowledge, started.mission, {}, 0);
     setAppState((current) => ({ ...current, open: started }));
     return started;
   };
@@ -213,8 +223,8 @@ export default function App() {
     const open = appState.open;
     const resumed = questionnaireView(knowledge.registry, open.mission, open.answers, knowledge.mission_context.missions[open.mission.environment].hazard_order);
     const step: ResumableStep = !resumed.safetyComplete ? "safety" : resumed.next ? "questions" : "measure";
-    setSession(open); setAnswers(open.answers);
-    setQuestionIndex(resumed.next ? resumed.questions.indexOf(resumed.next) : resumed.questions.length);
+    setSession(open);
+    loadQuestionnaire(knowledge, open.mission, open.answers);
     send({ type: "RESUME", step });
   };
 
@@ -222,20 +232,18 @@ export default function App() {
     const current = await ensureSession();
     const preview = await api.previewSession(current.session_id, answers, "safety");
     if (preview.urgent) { setConcern({ stage: "safety", assessment: preview.assessment }); send({ type: "REPORT_URGENT" }); return; }
-    if (questionView) setQuestionIndex(questionView.next ? questionView.questions.indexOf(questionView.next) : 0);
+    if (questionView) sendQuestionnaire({ type: "GOTO", index: questionView.next ? questionView.questions.indexOf(questionView.next) : 0 });
     send({ type: "NEXT" });
   });
 
   const answerQuestion = useCallback((question: Question, value: AnswerValue) => {
-    if (!knowledge || !session) return;
-    const next = questionnaireView(knowledge.registry, session.mission, { ...answers, [question.id]: value }, hazardOrder);
-    setAnswers(next.answers);
-    setNotice(next.dropped.length ? `${next.dropped.length} follow-up answer${next.dropped.length > 1 ? "s" : ""} no longer applied and ${next.dropped.length > 1 ? "were" : "was"} removed.` : "");
-    const position = next.questions.findIndex((item) => item.id === question.id);
-    setQuestionIndex(position + 1);
+    if (!session) return;
+    // The machine applies the answer; the same pure step gives the state to save.
+    const next = applyAnswer(questionnaire.context, question.id, value);
+    sendQuestionnaire({ type: "ANSWER", questionId: question.id, value });
     setFlowError("");
-    api.saveSession(session.session_id, next.answers, next.questions[position + 1]?.id ?? "review").catch((reason) => setFlowError(`Your answer is shown here but could not be saved: ${message(reason)}`));
-  }, [knowledge, session, answers, hazardOrder]);
+    api.saveSession(session.session_id, next.answers, `question:${next.index}`).catch((reason) => setFlowError(`Your answer is shown here but could not be saved: ${message(reason)}`));
+  }, [session, questionnaire.context, sendQuestionnaire]);
 
   const submitCheckin = (measurement: MeasurementChoice) => guarded(async () => {
     if (!session) throw new Error("This check-in is no longer open. Start a new one from the dashboard.");
@@ -325,9 +333,9 @@ export default function App() {
   } else if (view === "hazards") {
     screen = <HazardsPage profile={profile} knowledge={knowledge} plan={plan && plan.environment === profile.environment ? plan : null} onBack={() => send({ type: "BACK" })} onNext={() => void beginCheckin("NEXT")} />;
   } else if (view === "safety" && questionView) {
-    screen = <SafetyPage questions={questionView.safety} answers={answers} onChange={setAnswers} onBack={() => send({ type: "BACK" })} onNext={() => void submitSafety()} busy={flowBusy} error={flowError} aside={exitAside} />;
+    screen = <SafetyPage questions={questionView.safety} answers={answers} onChange={(next) => sendQuestionnaire({ type: "SET_ANSWERS", answers: next })} onBack={() => send({ type: "BACK" })} onNext={() => void submitSafety()} busy={flowBusy} error={flowError} aside={exitAside} />;
   } else if (view === "questions" && questionView) {
-    screen = <QuestionsPage view={questionView} knowledge={knowledge} index={questionIndex} onIndex={setQuestionIndex} onAnswer={answerQuestion} onBack={() => send({ type: "BACK" })} onDone={() => send({ type: "NEXT" })} aside={exitAside} notice={notice} error={flowError} />;
+    screen = <QuestionsPage view={questionView} knowledge={knowledge} plan={plan} index={questionIndex} onIndex={(index) => sendQuestionnaire({ type: "GOTO", index })} onAnswer={answerQuestion} onBack={() => send({ type: "BACK" })} onDone={() => send({ type: "NEXT" })} aside={exitAside} notice={notice} error={flowError} />;
   } else if (view === "measure") {
     screen = <MeasurePage sensor={sensor} onConnectStart={linking} onBack={() => send({ type: "BACK" })} onSubmit={(measurement) => void submitCheckin(measurement)} busy={flowBusy} error={flowError} aside={exitAside} />;
   } else if (view === "findings" && result) {
