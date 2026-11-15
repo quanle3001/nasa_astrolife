@@ -227,9 +227,9 @@ input, textarea { caret-color: var(--color-space-cyan); }
 .viewport-scan { pointer-events:none; position:absolute; z-index:3; left:0; right:0; top:0; height:28%; background:linear-gradient(to bottom, transparent, color-mix(in oklab, var(--accent, #46d9e8) 5%, transparent) 55%, color-mix(in oklab, var(--accent, #46d9e8) 11%, transparent) 82%, transparent); animation:scan-sweep 9s cubic-bezier(.45,0,.55,1) infinite; }
 @keyframes scan-sweep { from { transform:translateY(-110%); } to { transform:translateY(380%); } }
 .viewport-scrim { pointer-events:none; position:absolute; z-index:4; left:0; right:0; bottom:0; height:44%; background:linear-gradient(to top, rgba(3,7,17,.88), rgba(3,7,17,.42) 55%, transparent); }
-.viewport-hud { position:absolute; z-index:5; top:18px; left:44px; right:44px; display:flex; justify-content:space-between; gap:12px; color:rgba(241,246,255,.82); font-size:var(--text-label); font-weight:600; letter-spacing:.14em; text-transform:uppercase; text-shadow:0 1px 6px rgba(0,0,0,.7); }
+.viewport-hud { position:absolute; z-index:5; top:18px; left:44px; right:150px; display:flex; justify-content:flex-start; gap:12px; color:rgba(241,246,255,.82); font-size:var(--text-label); font-weight:600; letter-spacing:.14em; text-transform:uppercase; text-shadow:0 1px 6px rgba(0,0,0,.7); }
 .viewport-hud span { display:inline-flex; align-items:center; gap:7px; }
-.viewport-hud .font-mono { letter-spacing:.04em; text-transform:none; }
+.viewport-hud-id { margin-left:6px; color:rgba(241,246,255,.62); font-family:var(--font-mono); letter-spacing:.02em; text-transform:none; }
 .viewport-hud-dot { width:6px; height:6px; border-radius:50%; background:var(--accent, #46d9e8); box-shadow:0 0 10px var(--accent, #46d9e8); animation:halo-pulse 2.4s ease-in-out infinite; }
 /* Shared viewfinder corners: hero viewport and mission cards use the same HUD language. */
 .hud-brackets { pointer-events:none; position:absolute; z-index:5; inset:12px; }
@@ -256,6 +256,10 @@ input, textarea { caret-color: var(--color-space-cyan); }
 .viewport-card strong { display:block; margin-top:3px; color:var(--color-space-white); font-family:var(--font-mono); font-size:18px; line-height:1.2; white-space:nowrap; }
 .viewport-card em { color:var(--color-space-subtle); font-family:var(--font-sans); font-size:var(--text-xs); font-style:normal; }
 .viewport-card-icon { display:grid; flex:none; width:34px; height:34px; place-items:center; border-radius:var(--radius-md); background:rgba(70,217,232,.1); color:var(--color-space-cyan); }
+.viewport-card.is-stale strong:not(.is-empty) { color:var(--color-space-subtle); }
+.viewport-card.is-stale .viewport-card-icon { background:rgba(245,198,123,.1); color:var(--status-review); }
+.viewport-link-detail { display:block; margin-top:2px; color:var(--color-space-muted); font-size:var(--text-xs); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.viewport-link-detail.is-warning { color:var(--status-review); }
 .viewport-card-heart { left:0; top:22%; }
 .viewport-card-oxygen { right:0; bottom:24%; }
 .viewport-card-link { right:3%; top:2%; min-width:0; }

@@ -25,4 +25,18 @@ describe("MissionViewport", () => {
     expect(screen.queryByText("No reading")).not.toBeInTheDocument();
     expect(screen.getByText("Online")).toBeInTheDocument();
   });
+
+  it("marks a link with no new data for over 10 s as stalled and dims old values", () => {
+    const old = Date.now() - 15_000;
+    const { container } = render(<MissionViewport mission="leo" telemetry={{ connected: true, connecting: false, heartRate: 72, spo2: 97, lastUpdate: old, lastUsableAt: old }} />);
+    expect(screen.getByText("Stalled")).toBeInTheDocument();
+    expect(screen.getByText(/No new data · 1[5-6]s/)).toBeInTheDocument();
+    expect(container.querySelectorAll(".viewport-card.is-stale")).toHaveLength(2);
+  });
+
+  it("shows the update time while readings are fresh", () => {
+    render(<MissionViewport mission="leo" telemetry={{ connected: true, connecting: false, heartRate: 72, spo2: 97, lastUpdate: Date.now(), lastUsableAt: Date.now() }} />);
+    expect(screen.getByText("Online")).toBeInTheDocument();
+    expect(screen.getByText(/^Updated /)).toBeInTheDocument();
+  });
 });

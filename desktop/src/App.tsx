@@ -14,7 +14,7 @@ import type { AppConfig, AssessmentBundle, BackendEvent, CheckIn, MissionId } fr
 
 const INITIAL_SENSOR: SensorViewState = {
   connected: false, connecting: false, status: "Disconnected", usable: false,
-  heartRate: null, spo2: null, bundle: null,
+  heartRate: null, spo2: null, bundle: null, lastUpdate: null, lastUsableAt: null,
 };
 const StarBackground = lazy(() => import("@/components/effects/star-background").then((module) => ({ default: module.StarBackground })));
 const requestedPage = new URLSearchParams(window.location.search).get("page") as PageId | null;
@@ -67,13 +67,14 @@ export default function App() {
       setBackendReady(false); setSensor((current) => ({ ...current, connected: false, connecting: false, status: "Local backend stopped" }));
     } else if (message.event === "sensor.connection") {
       const state = String(message.payload.state);
-      setSensor((current) => ({ ...current, connected: state === "connected", connecting: state === "connecting", status: state === "connected" ? `Connected to ${message.payload.port ?? "sensor"} · receiving telemetry` : "Disconnected", ...(state === "disconnected" ? { usable: false, heartRate: null, spo2: null, bundle: null } : {}) }));
+      setSensor((current) => ({ ...current, connected: state === "connected", connecting: state === "connecting", status: state === "connected" ? `Connected to ${message.payload.port ?? "sensor"} · receiving telemetry` : "Disconnected", ...(state === "disconnected" ? { usable: false, heartRate: null, spo2: null, bundle: null, lastUpdate: null, lastUsableAt: null } : {}) }));
     } else if (message.event === "sensor.status") {
       setSensor((current) => ({ ...current, status: String(message.payload.message ?? "Sensor status changed"), usable: false, heartRate: null, spo2: null, bundle: null }));
     } else if (message.event === "sensor.reading") {
       const usable = Boolean(message.payload.usable);
+      const receivedAt = Date.now();
       setSensor((current) => ({
-        ...current, usable,
+        ...current, usable, lastUpdate: receivedAt, lastUsableAt: usable ? receivedAt : current.lastUsableAt,
         heartRate: usable && typeof message.payload.heart_rate === "number" ? message.payload.heart_rate : null,
         spo2: usable && typeof message.payload.spo2 === "number" ? message.payload.spo2 : null,
         bundle: usable && message.payload.assessment_id ? message.payload as unknown as AssessmentBundle : null,

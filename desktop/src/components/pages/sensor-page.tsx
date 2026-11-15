@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { useCalmMotion } from "@/lib/motion-preference";
-import { Cable, ChevronRight, CircleGauge, ClipboardCheck, PlugZap, RefreshCw, ShieldAlert, Sparkles } from "lucide-react";
+import { Cable, ChevronRight, CircleGauge, ClipboardCheck, LoaderCircle, PlugZap, RefreshCw, ShieldAlert, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { BorderBeam } from "@/components/effects/border-beam";
 import { MissionViewport } from "@/components/hero/mission-viewport";
@@ -18,6 +18,10 @@ export interface SensorViewState {
   heartRate: number | null;
   spo2: number | null;
   bundle: AssessmentBundle | null;
+  /** Client time of the newest sensor message (usable or not). */
+  lastUpdate: number | null;
+  /** Client time of the newest usable reading. */
+  lastUsableAt: number | null;
 }
 
 export function SensorPage({ state, mission, onReview, onCheckin }: {
@@ -77,7 +81,7 @@ export function SensorPage({ state, mission, onReview, onCheckin }: {
           <input ref={portInput} list="serial-ports" value={port} onChange={(event) => setPort(event.target.value)} disabled={state.connected || state.connecting} className="control" aria-label="ESP32 serial port" placeholder="Select or enter a serial port" />
           <datalist id="serial-ports">{ports.map((item) => <option key={item.device} value={item.device}>{item.description}</option>)}</datalist>
           <Button onClick={refresh} disabled={state.connected || state.connecting} size="icon" aria-label="Refresh serial ports"><RefreshCw className="size-4" /></Button>
-          <Button variant="primary" onClick={toggle} className="min-w-28">{state.connected || state.connecting ? "Disconnect" : "Initiate link"}</Button>
+          <Button variant="primary" onClick={toggle} className="min-w-28" aria-busy={state.connecting || undefined}>{state.connecting ? <><LoaderCircle className="size-4 animate-spin" /> Cancel</> : state.connected ? "Disconnect" : "Initiate link"}</Button>
         </div>
         <div className="command-dock-state"><span className={cn("live-pulse", state.connected && "is-live", state.connecting && "is-connecting")} />{error || state.status}</div>
       </Card>

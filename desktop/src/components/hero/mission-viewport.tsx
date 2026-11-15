@@ -3,6 +3,7 @@ import { useCalmMotion } from "@/lib/motion-preference";
 import { Activity, HeartPulse, Sparkles, Waves } from "lucide-react";
 import { ProximityGrid } from "@/components/spaceui/proximity-grid";
 import { MISSIONS } from "@/lib/missions";
+import { formatAge, formatClock, isStale, useNow } from "@/lib/freshness";
 import { cn } from "@/lib/utils";
 import type { MissionId } from "@/types/backend";
 
@@ -11,6 +12,8 @@ export interface ViewportTelemetry {
   connecting: boolean;
   heartRate: number | null;
   spo2: number | null;
+  lastUpdate?: number | null;
+  lastUsableAt?: number | null;
 }
 
 /**
@@ -25,12 +28,12 @@ function floatAnimation(reduced: boolean | null, delay: number, amount = 9) {
   };
 }
 
-function TelemetryCard({ className, icon, label, value, unit, float }: {
+function TelemetryCard({ className, icon, label, value, unit, float, stale = false }: {
   className: string; icon: React.ReactNode; label: string; value: number | null; unit: string;
-  float: ReturnType<typeof floatAnimation>;
+  float: ReturnType<typeof floatAnimation>; stale?: boolean;
 }) {
   return (
-    <motion.div className={cn("viewport-card", className)} animate={float}>
+    <motion.div className={cn("viewport-card", stale && "is-stale", className)} animate={float} title={stale ? "This value is older than 10 seconds" : undefined}>
       <span className="viewport-card-icon">{icon}</span>
       <span>
         <small>{label}</small>
@@ -50,6 +53,14 @@ function TelemetryCard({ className, icon, label, value, unit, float }: {
 export function MissionViewport({ mission, telemetry }: { mission: MissionId; telemetry: ViewportTelemetry }) {
   const reduced = useCalmMotion();
   const media = MISSIONS[mission];
+  const now = useNow(telemetry.connected);
+  const valuesStale = telemetry.connected && isStale(telemetry.lastUsableAt, now);
+  const linkStale = telemetry.connected && isStale(telemetry.lastUpdate, now);
+  const linkDetail = telemetry.connecting ? "Opening serial port"
+    : !telemetry.connected ? "Not connected"
+    : telemetry.lastUpdate == null ? "Waiting for data"
+    : linkStale ? `No new data · ${formatAge(telemetry.lastUpdate, now)}`
+    : `Updated ${formatClock(telemetry.lastUpdate)}`;
   return (
     <ProximityGrid className="mission-viewport" data-mission={mission} style={{ "--accent": media.color } as React.CSSProperties}>
       <div className="viewport-orbit viewport-orbit-a" aria-hidden="true"><span className="viewport-orbit-spin"><i /></span></div>
@@ -73,8 +84,7 @@ export function MissionViewport({ mission, telemetry }: { mission: MissionId; te
         <span className="viewport-scan" aria-hidden="true" />
         <span className="hud-brackets" aria-hidden="true"><i /><i /><i /><i /></span>
         <div className="viewport-hud" aria-hidden="true">
-          <span><b className="viewport-hud-dot" /> Mission view</span>
-          <span className="font-mono">{media.nasa_id}</span>
+          <span><b className="viewport-hud-dot" /> Mission view <span className="viewport-hud-id">{media.nasa_id}</span></span>
         </div>
         <span className="viewport-scrim" aria-hidden="true" />
         <figcaption className="viewport-caption">
@@ -84,13 +94,17 @@ export function MissionViewport({ mission, telemetry }: { mission: MissionId; te
         </figcaption>
       </figure>
 
-      <TelemetryCard className="viewport-card-heart" icon={<HeartPulse className="size-4" />} label="Heart rate" value={telemetry.heartRate} unit="bpm" float={floatAnimation(reduced, 0)} />
-      <TelemetryCard className="viewport-card-oxygen" icon={<Waves className="size-4" />} label="Estimated SpO₂" value={telemetry.spo2} unit="%" float={floatAnimation(reduced, .8, 7)} />
+      <TelemetryCard className="viewport-card-heart" icon={<HeartPulse className="size-4" />} label="Heart rate" value={telemetry.heartRate} unit="bpm" stale={valuesStale} float={floatAnimation(reduced, 0)} />
+      <TelemetryCard className="viewport-card-oxygen" icon={<Waves className="size-4" />} label="Estimated SpO₂" value={telemetry.spo2} unit="%" stale={valuesStale} float={floatAnimation(reduced, .8, 7)} />
       <span className="viewport-satellite viewport-satellite-one" aria-hidden="true"><Activity className="size-4" /></span>
       <span className="viewport-satellite viewport-satellite-two" aria-hidden="true"><Sparkles className="size-3.5" /></span>
       <motion.div className="viewport-card viewport-card-link" animate={floatAnimation(reduced, 1.4, 6)}>
-        <span className={cn("live-pulse", telemetry.connected && "is-live", telemetry.connecting && "is-connecting")} />
-        <span><small>Sensor link</small><strong className="viewport-link-state">{telemetry.connected ? "Online" : telemetry.connecting ? "Linking" : "Standby"}</strong></span>
+        <span className={cn("live-pulse", telemetry.connected && !linkStale && "is-live", (telemetry.connecting || linkStale) && "is-connecting")} />
+        <span>
+          <small>Sensor link</small>
+          <strong className="viewport-link-state" role="status">{telemetry.connected ? (linkStale ? "Stalled" : "Online") : telemetry.connecting ? "Linking" : "Standby"}</strong>
+          <span className={cn("viewport-link-detail", linkStale && "is-warning")}>{linkDetail}</span>
+        </span>
       </motion.div>
     </ProximityGrid>
   );
