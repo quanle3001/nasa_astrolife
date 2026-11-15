@@ -7,16 +7,18 @@ architecture, run instructions, tests, packaging, NASA provenance, and licenses.
 
 ## Current design direction
 
-The React shell adapts the MIT-licensed Space Portfolio's cinematic composition:
-an animated black-hole crown, R3F star depth, translucent capsule navigation,
-large purple-to-cyan hero typography, and floating orbital modules. Motion,
-Radix/shadcn-style primitives, Magic UI's border-beam pattern, Three.js, and
-Lucide provide reusable interaction and visual components. The health telemetry
-orbit and workflow screens are AstroTip-specific.
+The React shell uses a deep-space palette (near-black and midnight-navy
+surfaces, silver type, restrained cyan/blue accents) defined as design tokens
+in `desktop/src/styles.css`. Atmosphere follows the MIT-licensed Space
+Portfolio: a blue-shifted black-hole crown, R3F star depth and translucent
+glass surfaces. The Telemetry hero frames the selected mission's NASA
+photograph in a HUD-style viewport with floating live-telemetry cards; mission
+cards share the same viewfinder language and play short, honestly labelled
+NASA clips on hover. Space UI, Magic UI, Radix and Motion provide the reused
+interaction components.
 
-Mission media remains local and offline. Cards expose NASA asset IDs, credits,
-dates, and official source links. Apollo media is labeled as a historical lunar
-reference, and NASA branding is not used to imply endorsement.
+Sources, licenses, rejected alternatives and the token reference are in
+[`docs/ui-components.md`](../docs/ui-components.md).
 
 ## Retained PySide6 fallback
 

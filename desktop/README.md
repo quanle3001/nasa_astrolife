@@ -89,24 +89,51 @@ QT_QPA_PLATFORM=offscreen .venv/bin/python -m unittest discover -s software/test
 
 ## Design system and performance
 
-- shadcn-style local primitives backed by Radix Dialog/Tooltip/Slot
-- Motion for short page, card, and navigation transitions
-- React Three Fiber/Drei for a lazy-loaded, low-density starfield
-- Magic UI's border-beam pattern for the selected mission card
-- Lucide icons, local NASA images, and no startup network dependency
-- `prefers-reduced-motion` stops continuous star motion and removes transition
-  movement while preserving state and focus feedback
+The deep-space design system (tokens, shared components, motion budget) and the
+research behind every reused component are documented in
+[`docs/ui-components.md`](../docs/ui-components.md).
 
-The Three.js starfield is a separate lazy chunk. Clinical content and urgent
-actions do not wait for it and do not depend on animation.
+- Tokens in `src/styles.css`: Tailwind v4 `@theme` colors (`space-black`,
+  `space-surface`, `space-cyan`, …) plus CSS variables for status colors,
+  radius, spacing, type scale, motion and focus ring. Primitives live in
+  `@layer components` so utilities can override them per element.
+- Space UI (MIT) adaptations in `src/components/spaceui/`: ProximityGrid
+  (Interactive Grid Hero), FrostBlurred and StatusBadge.
+- Space Portfolio (MIT) atmosphere: lazy R3F starfield, black-hole crown
+  (blue-shifted; full strength on Telemetry, dimmed on clinical pages) and
+  translucent glass surfaces.
+- Magic UI border beam on the selected mission card, masked to a ring.
+- Motion for floating telemetry cards, page/card transitions and the
+  mission-image cross-fade; Radix Dialog/Tooltip/Slot; Lucide icons.
+- `prefers-reduced-motion` stops all decorative motion and video autoplay while
+  keeping state and focus feedback.
+
+Exactly one WebGL canvas (the starfield, a separate lazy chunk) is used.
+Clinical content and urgent actions never wait on animation.
 
 ## NASA media
 
-The renderer ships the cached files in `software/assets/nasa`. Provenance is
-recorded in `media_manifest.json`, displayed in the expanded mission view, and
-linked to official NASA asset pages. The Apollo image is labeled as a historical
-reference. NASA does not endorse AstroTip, and NASA marks are not used as app
-branding.
+The renderer bundles the cached files in `software/assets/nasa` (images and two
+~2.2 MB preview clips). `media_manifest.json` is the single source of NASA IDs,
+credits, classification and source links; `src/lib/missions.ts` derives from it
+and falls back to the still image when a file is missing. Clips are labelled
+"Footage" or "Visualization", play muted one at a time on hover/focus, pause
+offscreen, and never autoplay under reduced motion. The Apollo image is labelled
+as a historical reference. NASA does not endorse AstroTip, and NASA marks are
+not used as app branding.
+
+Refresh the cache (network required; the app itself never downloads media):
+
+```bash
+python software/scripts/fetch_nasa_media.py --with-video
+```
+
+## Visual testing tip
+
+`ASTROTIP_HISTORY_PATH=/tmp/astrotip-test.sqlite3` points the backend at a
+scratch history database, so UI testing never writes to your real local
+records. `ASTROTIP_SCREENSHOT=out.png` (optionally with
+`ASTROTIP_SCREENSHOT_PAGE=checkin`) captures the packaged renderer and exits.
 
 See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for reused component and
 library licenses.
