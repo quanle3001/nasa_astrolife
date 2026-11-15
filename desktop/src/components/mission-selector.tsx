@@ -80,6 +80,7 @@ function MissionCard({ media, selected, onSelect, onPreview, onKeyDown, buttonRe
           />
         )}
         <span className="mission-card-shade" aria-hidden="true" />
+        <span className="hud-brackets" aria-hidden="true"><i /><i /><i /><i /></span>
         <FrostBlurred side="bottom" height="46%" tint={0.55} />
         <span className="mission-card-top">
           <span className={cn("mission-card-eyebrow", selected && "is-selected")}>

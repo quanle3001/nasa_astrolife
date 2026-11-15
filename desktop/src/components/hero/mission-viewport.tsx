@@ -1,6 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Activity, HeartPulse, Sparkles, Waves } from "lucide-react";
-import { FrostBlurred } from "@/components/spaceui/frost-blurred";
 import { ProximityGrid } from "@/components/spaceui/proximity-grid";
 import { MISSIONS } from "@/lib/missions";
 import { cn } from "@/lib/utils";
@@ -34,7 +33,9 @@ function TelemetryCard({ className, icon, label, value, unit, float }: {
       <span className="viewport-card-icon">{icon}</span>
       <span>
         <small>{label}</small>
-        <strong>{value ?? "—"} <em>{unit}</em></strong>
+        {value == null
+          ? <strong className="is-empty">No reading</strong>
+          : <strong>{value} <em>{unit}</em></strong>}
       </span>
     </motion.div>
   );
@@ -49,30 +50,36 @@ export function MissionViewport({ mission, telemetry }: { mission: MissionId; te
   const reduced = useReducedMotion();
   const media = MISSIONS[mission];
   return (
-    <ProximityGrid className="mission-viewport" data-mission={mission}>
+    <ProximityGrid className="mission-viewport" data-mission={mission} style={{ "--accent": media.color } as React.CSSProperties}>
       <div className="viewport-orbit viewport-orbit-a" aria-hidden="true"><span className="viewport-orbit-spin"><i /></span></div>
       <div className="viewport-orbit viewport-orbit-b" aria-hidden="true"><span className="viewport-orbit-spin"><i /></span></div>
 
       <figure className="viewport-frame">
         <AnimatePresence initial={false}>
-          {media.image_url && <motion.img
-            key={mission}
-            src={media.image_url}
-            alt={`${media.title}: ${media.description}`}
-            className="viewport-image"
-            style={{ objectPosition: media.focus }}
-            initial={reduced ? false : { opacity: 0, scale: 1.04 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={reduced ? undefined : { opacity: 0 }}
-            transition={{ duration: reduced ? 0 : 0.7, ease: [0.22, 1, 0.36, 1] }}
-            draggable={false}
-          />}
+          {media.image_url && (
+            <motion.div
+              key={mission}
+              className="viewport-media"
+              initial={reduced ? false : { opacity: 0, scale: 1.06, filter: "blur(6px)" }}
+              animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+              exit={reduced ? undefined : { opacity: 0 }}
+              transition={{ duration: reduced ? 0 : 0.8, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <img src={media.image_url} alt={`${media.title}: ${media.description}`} className="viewport-image" style={{ objectPosition: media.focus }} draggable={false} />
+            </motion.div>
+          )}
         </AnimatePresence>
-        <FrostBlurred side="bottom" height="38%" tint={0.6} />
+        <span className="viewport-scan" aria-hidden="true" />
+        <span className="hud-brackets" aria-hidden="true"><i /><i /><i /><i /></span>
+        <div className="viewport-hud" aria-hidden="true">
+          <span><b className="viewport-hud-dot" /> Mission view</span>
+          <span className="font-mono">{media.nasa_id}</span>
+        </div>
+        <span className="viewport-scrim" aria-hidden="true" />
         <figcaption className="viewport-caption">
-          <span className="telemetry-label">{media.eyebrow}</span>
+          <span className="viewport-eyebrow">{media.eyebrow}</span>
           <strong>{media.title}</strong>
-          <small>NASA · {media.nasa_id} · {media.classification}</small>
+          <small>{media.classification} · {media.credit}</small>
         </figcaption>
       </figure>
 
