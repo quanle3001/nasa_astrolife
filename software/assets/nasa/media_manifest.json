@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "notice": "Decorative NASA media. NASA does not endorse AstroTip.",
+  "api": "https://images-api.nasa.gov",
+  "assets": [
+    {
+      "mission": "leo",
+      "nasa_id": "iss058e005282",
+      "title": "View of the Earth's limb with an aurora",
+      "classification": "Photograph",
+      "credit": "JSC",
+      "date_created": "2019-01-18T00:00:00Z",
+      "description": "iss058e005282 (Jan. 19, 2019) --- A portion of the International Space Station's solar arrays caps this nighttime view of the Earth's limb with an aurora as the orbital complex orbited 258 miles above Ukraine and Russia.",
+      "media_type": "image",
+      "local_path": "images/leo.jpg",
+      "asset_url": "http://images-assets.nasa.gov/image/iss058e005282/iss058e005282~medium.jpg",
+      "metadata_url": "https://images-assets.nasa.gov/image/iss058e005282/metadata.json",
+      "source_url": "https://images.nasa.gov/details/iss058e005282"
+    },
+    {
+      "mission": "lunar",
+      "nasa_id": "as17-134-20473",
+      "title": "View of Earth above the antenna of the lunar roving vehicle during EVA",
+      "classification": "Photograph · historical Apollo surface reference",
+      "credit": "JSC",
+      "date_created": "1972-12-13T00:00:00Z",
+      "description": "AS17-134-20473 (13 Dec. 1972) --- Earth appears in the far distant background above the hi-gain antenna of the Lunar Roving Vehicle in this photograph taken by scientist-astronaut Harrison H. Schmitt during the third Apollo 17 extravehicular activity (EVA) at the Taurus-Littrow landing site. Astronaut Eugene A. Cernan, Apollo 17 commander, stands beside the LRV. Schmitt is the mission's lunar module pilot. While Cernan and Schmitt descended in the lunar module \"Challenger\" to explore the moon, astronaut Ronald E. Evans, command module pilot, remained with the Command and Service Modules in lunar orbit.",
+      "media_type": "image",
+      "local_path": "images/lunar.jpg",
+      "asset_url": "http://images-assets.nasa.gov/image/as17-134-20473/as17-134-20473~medium.jpg",
+      "metadata_url": "https://images-assets.nasa.gov/image/as17-134-20473/metadata.json",
+      "source_url": "https://images.nasa.gov/details/as17-134-20473"
+    },
+    {
+      "mission": "mars",
+      "nasa_id": "PIA24264",
+      "title": "Mastcam-Z's First 360-Degree Panorama",
+      "classification": "Rover panorama mosaic",
+      "credit": "JPL",
+      "date_created": "2021-02-24T00:00:00Z",
+      "description": "This is the first 360-degree panorama taken by Mastcam-Z, a zoomable pair of cameras aboard NASA's Perseverance Mars rover. The panorama was stitched together on Earth from 142 individual images taken on Sol 3, the third Martian day of the mission (Feb. 21, 2021).  Annotated versions of this panorama include a scale bar and close-ups of rock features seen in the distance. A detail shot from the top of the panorama shows the rim of Jezero Crater, Perseverance's landing site.  Arizona State University in Tempe leads the operations of the Mastcam-Z instrument, working in collaboration with Malin Space Science Systems in San Diego.  A key objective for Perseverance's mission on Mars is astrobiology, including the search for signs of ancient microbial life. The rover will characterize the planet's geology and past climate, pave the way for human exploration of the Red Planet, and be the first mission to collect and cache Martian rock and regolith (broken rock and dust).  Subsequent NASA missions, in cooperation with ESA (European Space Agency), would send spacecraft to Mars to collect these sealed samples from the surface and return them to Earth for in-depth analysis.  https://photojournal.jpl.nasa.gov/catalog/PIA24264",
+      "media_type": "image",
+      "local_path": "images/mars.jpg",
+      "asset_url": "http://images-assets.nasa.gov/image/PIA24264/PIA24264~medium.jpg",
+      "metadata_url": "https://images-assets.nasa.gov/image/PIA24264/metadata.json",
+      "source_url": "https://images.nasa.gov/details/PIA24264"
+    }
+  ]
+}
