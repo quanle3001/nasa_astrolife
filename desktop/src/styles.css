@@ -185,7 +185,9 @@ select.control option { background: var(--color-space-surface); color: var(--col
 .nav-capsule-active { position:absolute; inset:0; border:1px solid rgba(70,217,232,.32); border-radius:inherit; background:linear-gradient(110deg,rgba(59,130,246,.2),rgba(70,217,232,.1)); box-shadow:inset 0 1px rgba(255,255,255,.07); }
 .nav-status { display:flex; align-items:center; justify-self:end; gap:7px; }
 .mission-chip { display:flex; height:32px; align-items:center; gap:6px; border:1px solid rgba(255,255,255,.1); border-radius:var(--radius-pill); background:rgba(255,255,255,.03); padding:0 11px; color:var(--color-space-silver); font-size:var(--text-label); font-weight:800; letter-spacing:.1em; }
-.space-footer { margin:0 auto 24px; display:flex; width:min(1240px,calc(100% - 48px)); align-items:center; justify-content:center; gap:7px; border-top:1px solid rgba(255,255,255,.07); padding-top:16px; color:var(--color-space-subtle); font-size:var(--text-label); letter-spacing:.08em; text-transform:uppercase; }
+.space-footer { margin:8px auto 24px; display:flex; width:min(calc(var(--page-max) - var(--page-gutter) * 2),calc(100% - var(--page-gutter) * 2)); flex-direction:column; align-items:center; gap:10px; border-top:1px solid rgba(255,255,255,.07); padding-top:18px; text-align:center; }
+.space-footer-disclaimer { margin:0; max-width:100%; color:var(--color-space-muted); font-size:var(--text-xs); line-height:1.6; white-space:nowrap; }
+.space-footer-tagline { margin:0; display:flex; align-items:center; justify-content:center; gap:7px; color:var(--color-space-subtle); font-size:var(--text-label); letter-spacing:.08em; text-transform:uppercase; }
 
 /* ---------- Telemetry hero ---------- */
 .sensor-experience { width:min(1320px,100%); }
@@ -275,6 +277,10 @@ select.control option { background: var(--color-space-surface); color: var(--col
   .sensor-hero-copy { padding-left:0; }
   .mission-viewport { width:min(560px,100%); }
   .interpretation-grid { grid-template-columns:1fr; }
+}
+@media (max-width: 900px) {
+  /* Below the app's 980px minimum window width only: never clip the disclaimer. */
+  .space-footer-disclaimer { white-space:normal; text-wrap:balance; }
 }
 @media (max-width: 760px) {
   .form-grid { grid-template-columns: 1fr; }

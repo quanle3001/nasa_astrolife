@@ -15,8 +15,8 @@ const NAV = [
   { id: "history" as const, label: "Archive", icon: Database },
 ];
 
-export function AppShell({ page, setPage, mission, connected, backendReady, children }: {
-  page: PageId; setPage: (page: PageId) => void; mission: MissionId; connected: boolean; backendReady: boolean;
+export function AppShell({ page, setPage, mission, connected, backendReady, disclaimer, children }: {
+  page: PageId; setPage: (page: PageId) => void; mission: MissionId; connected: boolean; backendReady: boolean; disclaimer: string;
   children: ReactNode;
 }) {
   const reduced = useReducedMotion();
@@ -51,7 +51,10 @@ export function AppShell({ page, setPage, mission, connected, backendReady, chil
 
       <main ref={scroller} className="cosmic-scroll">
         {children}
-        <footer className="space-footer"><Sparkles className="size-3" /> AstroTip educational prototype · Local-first crew wellness interface</footer>
+        <footer className="space-footer">
+          <p className="space-footer-disclaimer">{disclaimer}</p>
+          <p className="space-footer-tagline"><Sparkles className="size-3" /> AstroTip educational prototype · Local-first crew wellness interface</p>
+        </footer>
       </main>
     </div>
   );

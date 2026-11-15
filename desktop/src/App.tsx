@@ -111,12 +111,11 @@ export default function App() {
       </div>
       <Suspense fallback={null}><StarBackground reducedMotion={reducedMotion} /></Suspense>
       <div className="mission-atmosphere" data-mission={mission} aria-hidden="true" />
-      <AppShell page={page} setPage={setPage} mission={mission} connected={sensor.connected} backendReady={backendReady}>
+      <AppShell page={page} setPage={setPage} mission={mission} connected={sensor.connected} backendReady={backendReady} disclaimer={config.disclaimer}>
         <PageStage active={page === "sensor"}><SensorPage state={sensor} mission={mission} onReview={reviewSensor} onCheckin={() => setPage("checkin")} /></PageStage>
         <PageStage active={page === "checkin"}><CheckinPage config={config} mission={mission} setMission={setMission} onAssess={assess} busy={busy} /></PageStage>
         <PageStage active={page === "assessment"}><AssessmentPage config={config} bundle={latest} saved={saved} saving={saving} onSave={save} onEdit={() => setPage("checkin")} /></PageStage>
         <PageStage active={page === "history"}><HistoryPage config={config} active={page === "history"} refreshKey={historyRefresh} /></PageStage>
-        <footer className="mx-auto mt-4 w-[min(1280px,calc(100%-48px))] border-t border-white/[.08] pt-3 text-[11px] leading-5 text-slate-400">{config.disclaimer}</footer>
       </AppShell>
     </div>
   );
