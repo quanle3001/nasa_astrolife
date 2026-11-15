@@ -156,7 +156,7 @@ The full list is in [docs/DEMO.md](docs/DEMO.md#known-limitations).
 
 ## Credits
 
-- **Team:** Quan Le and Jayden Nguyen.
+- **Team:** Ben Vo, Jayden Nguyen, and Quan Le.
 - **NASA:** Human Research Program hazard and risk pages, Human Research
   Roadmap evidence reports, the Open Science Data Repository (RadLab and
   Biological Data APIs), the NASA Image and Video Library and NASA 3D
