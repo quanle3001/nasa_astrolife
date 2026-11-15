@@ -56,6 +56,14 @@ describe("WelcomePage", () => {
     rerender(<WelcomePage onBegin={begin} onResume={() => undefined} />);
     expect(screen.getByRole("button", { name: /Resume Previous Mission/ })).toBeInTheDocument();
   });
+
+  it("leads a returning astronaut from the intro to the dashboard", () => {
+    const dashboard = vi.fn();
+    render(<WelcomePage onBegin={() => undefined} onDashboard={dashboard} />);
+    expect(screen.queryByRole("button", { name: /Begin Mission Assessment/ })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Open Mission Dashboard/ }));
+    expect(dashboard).toHaveBeenCalledOnce();
+  });
 });
 
 describe("ContextPage", () => {
@@ -467,7 +475,7 @@ describe("ActionsPage", () => {
   });
 });
 
-describe("CompassPage (2D body map)", () => {
+describe("CompassPage (region buttons; the 3D viewer needs WebGL, which the test environment lacks)", () => {
   const result: SessionResult = {
     checkin: checkin({ heart_rate: 72, spo2: 98, input_source: "sensor" }),
     assessment: assessment({ level: "watch", findings: [
@@ -501,19 +509,19 @@ describe("CompassPage (2D body map)", () => {
   it("does not call an unhighlighted region healthy", () => {
     render(<CompassPage result={result} actions={[]} knowledge={knowledge} conditionTitles={config.condition_titles} onToggleAction={() => undefined} onNext={() => undefined} />);
     expect(screen.getByText(/a region without a mark is not confirmed healthy/)).toBeInTheDocument();
-    // The body-map region and the chip below it are both buttons for the same region.
-    fireEvent.click(screen.getAllByRole("button", { name: "Eyes" })[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Eyes" }));
     expect(screen.getByText(/This area was not examined and is not ruled out/)).toBeInTheDocument();
-    fireEvent.keyDown(screen.getAllByRole("button", { name: "Lungs and oxygen" })[0], { key: "Enter" });
+    fireEvent.click(screen.getByRole("button", { name: "Lungs and oxygen" }));
     expect(screen.getByText("98%")).toBeInTheDocument();
   });
 
-  it("falls back to the working 2D body map when the device has no WebGL", () => {
+  it("stays usable through the region buttons when the device cannot draw 3D, with no 2D map", () => {
     render(<CompassPage result={result} actions={[]} knowledge={knowledge} conditionTitles={config.condition_titles} onToggleAction={() => undefined} onNext={() => undefined} />);
-    expect(screen.getByText(/3D is not available on this device, so the 2D body map is shown/)).toBeInTheDocument();
-    expect(screen.getByRole("group", { name: /Body map/ })).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(/The 3D body cannot be shown on this device. Choose a body region from the buttons below/);
+    expect(screen.queryByRole("group", { name: /Body map/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("radiogroup", { name: "Body view" })).not.toBeInTheDocument();
-    fireEvent.click(screen.getAllByRole("button", { name: "Brain and behavior" })[0]);
+    expect(within(screen.getByRole("navigation", { name: "Body regions" })).getAllByRole("button")).toHaveLength(10);
+    fireEvent.click(screen.getByRole("button", { name: "Brain and behavior" }));
     expect(screen.getByRole("heading", { name: "Sleep loss and fatigue" })).toBeInTheDocument();
   });
 

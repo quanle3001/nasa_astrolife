@@ -53,7 +53,7 @@ export function IndicatorStatusList({ indicators, sources, compact }: { indicato
         return (
           <li key={item.id} className={`indicator-status is-${item.status}`}>
             <div className="indicator-value"><strong>{item.value}</strong><span>{item.unit}</span><em>{item.label}</em></div>
-            <p className="indicator-badge"><Icon className="size-3.5" aria-hidden="true" /> {label}</p>
+            <p className="indicator-badge"><Icon className="size-3.5" aria-hidden="true" /> {compact ? `${item.id === "spo2" ? "Blood oxygen" : "Heart rate"}: ${label.toLowerCase()}` : label}</p>
             {!compact && <p className="indicator-text">{item.text}</p>}
             {!compact && sources && <SourceList ids={item.source_ids} sources={sources} />}
           </li>

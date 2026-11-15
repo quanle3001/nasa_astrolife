@@ -27,7 +27,7 @@ It runs offline on one computer. Nothing is sent anywhere.
 | 6. Findings | Reads the prompts | Runs the Python rules. Each prompt lists simple steps the astronaut can take and when to involve the crew, and is traced: mission → hazard → NASA risk → observation → rule → follow-up. Each measured value is colour coded against a cited general reference. |
 | 7. Health Compass | Explores a 3D body | Shows recorded values, prompts and NASA research per body region |
 | 8. Actions | Marks follow-ups done, or reassesses | Stores them locally |
-| Later | Opens the app again | Starts on a dashboard with the mission, latest check-in, live values and open actions |
+| Later | Opens the app again | Opens on the intro page, then one step to a dashboard with the mission, latest check-in, live values and open actions |
 
 A "Report concern" button is on every screen.
 
@@ -135,7 +135,7 @@ cd desktop && npm run typecheck && npm test && npm run build && npm run bridge:p
 ```
 
 At the last full cycle: 197 Python tests (2 opt-in live NASA tests skipped) and
-142 interface tests in 24 files passed.
+144 interface tests in 24 files passed.
 
 ## Known limitations
 

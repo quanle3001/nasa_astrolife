@@ -1,4 +1,4 @@
-import { Bounds, Html, Line, OrbitControls, useBounds, useGLTF } from "@react-three/drei";
+import { Bounds, Bvh, Html, Line, OrbitControls, useBounds, useGLTF } from "@react-three/drei";
 import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
 import { ANATOMY_BY_KEY, ATTRIBUTION, SYSTEM_LABELS, type AnatomySex, type AnatomyStructure, type AnatomySystem } from "open-anatomy-3d";
 import femaleModelUrl from "open-anatomy-3d/models/anatomy-female.glb?url";
@@ -62,21 +62,20 @@ function Model({ url, layers, selected, highlighted, hoveredKey, showPins, onPic
   const invalidate = useThree((state) => state.invalidate);
   const parts = useMemo(() => {
     const list: Part[] = [];
+    const excluded: Object3D[] = [];
     scene.traverse((object) => {
       // GLTFLoader makes node names unique ("skin" inside the "skin" group becomes
       // "skin_1"), so a mesh is identified by walking up to the first catalog key.
       const structure = object instanceof Mesh ? structureOf(object) : null;
       if (!(object instanceof Mesh) || !structure) return;
-      if (isExcluded(structure)) {
-        // Hidden for good, and removed from picking and from the camera's framing.
-        object.visible = false;
-        object.raycast = () => undefined;
-        return;
-      }
+      if (isExcluded(structure)) { excluded.push(object); return; }
       // The models ship without materials; each structure gets its catalog colour.
       object.material = new MeshStandardMaterial({ color: structure.color, roughness: 0.62, metalness: 0.04 });
       list.push({ mesh: object, structure, regionId: regionForStructure(structure)?.id ?? null });
     });
+    // Taken out of the scene for good: never drawn, never picked, never framed, and
+    // no time is spent preparing them for picking.
+    for (const object of excluded) object.removeFromParent();
     return list;
   }, [scene]);
 
@@ -97,17 +96,22 @@ function Model({ url, layers, selected, highlighted, hoveredKey, showPins, onPic
     // the selection can be seen through what surrounds it (the heart behind the ribs).
     const focus = parts.some((part) => part.regionId === selected && layers[part.structure.system]);
     for (const { mesh, structure, regionId } of parts) {
+      // A layer that is switched off moves to a render layer neither the camera nor the
+      // pointer looks at, so hidden structures cannot be hovered or picked through.
       mesh.visible = layers[structure.system];
+      mesh.layers.set(layers[structure.system] ? 0 : 1);
       const material = mesh.material as MeshStandardMaterial;
       const isSelected = regionId === selected;
       const hasPrompt = regionId !== null && highlighted.has(regionId);
       const isHovered = structure.key === hoveredKey;
-      const faded = focus && !isSelected && !isHovered;
+      // Fading follows the selection only. Switching a part between solid and see-through on
+      // every hover recompiled its material and made the viewer stutter; hover now just brightens.
+      const faded = focus && !isSelected;
       material.emissive.copy(isHovered ? HOVER : isSelected ? SELECTED : hasPrompt ? PROMPT : NONE);
       material.emissiveIntensity = isHovered ? 0.45 : isSelected ? 0.7 : hasPrompt ? 0.3 : 0;
       // Recompiling a material is only needed when it switches between opaque and see-through.
       if (material.transparent !== faded) { material.transparent = faded; material.needsUpdate = true; }
-      material.opacity = faded ? 0.5 : 1;
+      material.opacity = faded ? (isHovered ? 0.85 : 0.5) : 1;
       material.depthWrite = !faded;
     }
     invalidate();
@@ -139,7 +143,7 @@ function Model({ url, layers, selected, highlighted, hoveredKey, showPins, onPic
           <Line points={[pin.anchor, pin.labelAt]} color={pin.regionId === selected ? "#9dcddc" : "#789fb0"} lineWidth={1} transparent opacity={0.75} />
           <Html position={pin.labelAt} center zIndexRange={[15, 0]}>
             <button type="button" className={cn("anatomy-pin", pin.regionId === selected && "is-selected", highlighted.has(pin.regionId) && "has-prompt")} aria-pressed={pin.regionId === selected} onClick={() => onPickRegion(pin.regionId)} onPointerEnter={() => onHoverPin(pin.regionId)} onPointerLeave={() => onHoverPin(null)} onFocus={() => onHoverPin(pin.regionId)} onBlur={() => onHoverPin(null)}>
-              {pin.label}{highlighted.has(pin.regionId) && <span className="sr-only"> · has a prompt to review</span>}
+              {pin.label}{highlighted.has(pin.regionId) && <>{" "}<span className="sr-only">· has a prompt to review</span></>}
             </button>
           </Html>
         </group>
@@ -241,14 +245,18 @@ export default function AnatomyViewer({ selected, highlighted, onSelect, calm, r
         <div ref={card} className={cn("hover-card", hoverLabel && "is-visible")} role="status" aria-live="polite">
           {hoverLabel && <HoverCard label={hoverLabel} summary={hoverRegion ? regionInfo?.[hoverRegion.id] ?? null : null} />}
         </div>
-        <Canvas frameloop={spinning ? "always" : "demand"} dpr={[1, 1.75]} camera={{ fov: 32, position: [0, 1, 4.2] }} role="group" aria-label="3D anatomical model with selectable region labels. Drag to rotate, scroll to zoom. The same regions are listed as buttons below.">
+        <Canvas frameloop={spinning ? "always" : "demand"} dpr={[1, 1.5]} camera={{ fov: 32, position: [0, 1, 4.2] }} role="group" aria-label="3D anatomical model with selectable region labels. Drag to rotate, scroll to zoom. The same regions are listed as buttons below.">
           <ambientLight intensity={1.15} />
           <hemisphereLight args={["#c9d5e4", "#0c1424", 1.2]} />
           <directionalLight position={[2.5, 4, 3.5]} intensity={2.2} />
           <directionalLight position={[-3, 2, -2.5]} intensity={0.9} />
           <Suspense fallback={null}>
             <Bounds fit clip observe margin={1.02} maxDuration={calm ? 0 : 0.9} key={`${sex}-${view}`}>
-              <Model url={MODEL_URLS[sex]} layers={layers} selected={selected} highlighted={highlighted} hoveredKey={hovered?.key ?? null} showPins={showPins} onPick={(structure) => { setSpinning(false); pick(structure); }} onPickRegion={(regionId) => { setSpinning(false); setPicked(null); onSelect(regionId); }} onHover={setHovered} onHoverPin={setHoveredPin} />
+              {/* The models hold over a million triangles. Without a spatial index every pointer move
+                  was tested against all of them, which made the viewer lag. */}
+              <Bvh firstHitOnly>
+                <Model url={MODEL_URLS[sex]} layers={layers} selected={selected} highlighted={highlighted} hoveredKey={hovered?.key ?? null} showPins={showPins} onPick={(structure) => { setSpinning(false); pick(structure); }} onPickRegion={(regionId) => { setSpinning(false); setPicked(null); onSelect(regionId); }} onHover={setHovered} onHoverPin={setHoveredPin} />
+              </Bvh>
             </Bounds>
           </Suspense>
           <OrbitControls ref={controls as never} makeDefault enablePan={false} enableDamping={!calm} minDistance={0.25} maxDistance={7} autoRotate={spinning} autoRotateSpeed={0.9} onStart={() => setSpinning(false)} />

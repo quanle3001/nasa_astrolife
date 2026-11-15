@@ -3,9 +3,10 @@ import { assign, setup } from "xstate";
 /**
  * Navigation state machine for the guided AstroLife journey.
  *
- * First launch walks the onboarding steps in order and ends on the dashboard.
- * Later launches start on the dashboard; a new check-in then begins at the
- * safety screen. Reporting an urgent concern is possible from every step and
+ * Every launch opens on the intro page. A first launch then walks the
+ * onboarding steps in order and ends on the dashboard; a returning astronaut
+ * goes from the intro straight to the dashboard, where a new check-in begins
+ * at the safety screen. The brand mark returns to the intro from the dashboard. Reporting an urgent concern is possible from every step and
  * returns to the same step afterwards.
  *
  * The machine owns navigation only. Answers, sessions and results live in the
@@ -25,6 +26,7 @@ export type FlowEvent =
   | { type: "NEXT" }
   | { type: "BACK" }
   | { type: "EXIT" }
+  | { type: "HOME" }
   | { type: "RESUME"; step: ResumableStep }
   | { type: "START_CHECKIN" }
   | { type: "CHANGE_MISSION" }
@@ -55,7 +57,7 @@ export const flowMachine = setup({
     loading: {
       on: {
         LOADED: [
-          { guard: "loadedOnboarded", target: "app.dashboard", actions: "markOnboarded" },
+          { guard: "loadedOnboarded", target: "app.welcome", actions: "markOnboarded" },
           { target: "app.welcome" },
         ],
       },
@@ -66,7 +68,7 @@ export const flowMachine = setup({
       on: { REPORT_URGENT: "urgent" },
       states: {
         last: { type: "history", history: "shallow" },
-        welcome: { on: { NEXT: "mission", RESUME: [
+        welcome: { on: { NEXT: "mission", EXIT: { guard: "onboarded", target: "dashboard" }, RESUME: [
           { guard: "resumeSafety", target: "safety" }, { guard: "resumeQuestions", target: "questions" }, { guard: "resumeMeasure", target: "measure" },
         ] } },
         mission: { on: { NEXT: "context", BACK: [{ guard: "onboarded", target: "dashboard" }, { target: "welcome" }] } },
@@ -82,6 +84,7 @@ export const flowMachine = setup({
         dashboard: {
           entry: "markOnboarded",
           on: {
+            HOME: "welcome",
             START_CHECKIN: "safety",
             CHANGE_MISSION: "mission",
             RESUME: [

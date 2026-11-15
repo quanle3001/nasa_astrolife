@@ -51,7 +51,7 @@ every prompt is traced back to NASA evidence and the astronaut's own answers.
 | 2:05 | **Use saved reading and see my findings** | "Python rules produce the prompts. Each one gives simple steps I can take myself and when to involve the crew, and is traced: mission, NASA hazard, NASA risk, my own observation, the rule, the follow-up. My pulse and oxygen are colour coded against cited references." |
 | 2:20 | **Explore the Health Compass** → Muscles → Show NASA research | "The 3D body shows where each prompt belongs. Here is a real NASA space-biology study, clearly marked as mouse data, not mine." |
 | 2:35 | See my next steps → mark one action done → dashboard → **NASA data** | "Follow-ups are tracked. And this is real NASA instrument data from the RadLab API: the Curiosity rover's radiation detector, analysed with pandas, with full provenance. It is labelled as historical data, never as my exposure." |
-| 2:50 | Quit and relaunch | "Everything is stored locally. It resumes where I left off, offline." |
+| 2:50 | Quit and relaunch → **Open Mission Dashboard** | "Everything is stored locally. It opens on the intro, and my mission, findings and follow-ups are all still here, offline." |
 
 Tips: number keys answer the current question (`1` first option, `2` second).
 If the saved reading looks wrong, press **Measure again** on the Measurement screen.
@@ -80,7 +80,7 @@ No scores are claimed here. Each row says what can be shown and what is not done
 | Criterion | What to show | Not done |
 |---|---|---|
 | Relevance | One flow from mission to follow-up: gather, evaluate, explain, act, track | No clinical validation; not a medical device |
-| Works | Full flow in the built app; restart resumes; works offline; 197 Python and 142 interface tests | Packaged installer not re-verified after the last backend changes; Windows untested for the React app |
+| Works | Full flow in the built app; restart resumes; works offline; 197 Python and 144 interface tests | Packaged installer not re-verified after the last backend changes; Windows untested for the React app |
 | NASA data | RadLab API with validation, analysis and provenance; OSDR Biological Data API study; HRP hazards and risks driving question order; Roadmap evidence reports on every finding | RadLab unit not verified (its documentation was unavailable), shown as "unit not stated by the API" |
 | ESP32 | MAX30102 → firmware → serial → Python → live chart and values; values withdrawn on contact loss | Accuracy not compared with a reference oximeter |
 | Creativity | Mission-driven adaptive check-in; evidence trace per prompt; 3D Health Compass; cursor-reactive interface | — |
@@ -126,9 +126,10 @@ encrypted storage.
   app in this branch (transport, timing and the no-contact path are).
 - RadLab unit and two instrument descriptions are unverified and shown as such.
 - In automated walkthroughs on 2026-11-15, the Electron window crashed once
-  when switching the Compass from 3D to 2D. The cause was not found. Four later
-  full walkthroughs and a separate 3D → 2D → 3D test completed without it. If it
-  happens, relaunch: the check-in resumes.
+  when switching the Compass from 3D to the 2D map. The cause was not found, and
+  the 2D map has since been removed, so that switch no longer exists. Every later
+  full walkthrough completed without a crash. If one happens, relaunch: the
+  check-in resumes.
 - That crash left an Electron process running in the background. While it was
   running, two of three relaunches were still on the loading screen after 3.5
   seconds. After it was closed, seven of seven relaunches reached the dashboard.

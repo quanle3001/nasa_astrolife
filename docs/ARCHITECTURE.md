@@ -49,9 +49,9 @@ React renderer (desktop/src)
 | 6 | Questions | One question at a time, follow-ups appear and disappear | `questionnaire-machine.ts`, re-checked in `questionnaire/registry.py` |
 | 7 | Measurement | Live optical pulse plus a durable stable heart-rate/SpO₂ snapshot for this session | `sensor.*` events + `assessment_sessions.measurement_json` |
 | 8 | Findings | Prompts, measurement quality, what was reported, trends, NASA context | `session.submit` → `rules.assess` + `build_trace` |
-| 9 | Health Compass | 3D or 2D body view; pick a region to see its information | `components/compass` |
+| 9 | Health Compass | 3D body view; pick a region to see its information | `components/compass` |
 | 10 | Actions | Follow-up actions, mark done, reassess | `actions.list`, `actions.update` |
-| — | Dashboard | Later launches start here: mission, latest check-in, live values, open actions | `session.current` |
+| — | Dashboard | Later launches open on the intro page and reach this in one step: mission, latest check-in, live values, open actions. The brand mark returns to the intro. | `session.current` |
 
 "Report concern" is available on every screen. It interrupts the current step
 and returns to it afterwards.
@@ -200,7 +200,7 @@ Explain. See [NASA_DATA.md](NASA_DATA.md).
 
 Only one WebGL scene runs at a time. The star and astronaut scene is unmounted
 while the Health Compass shows the 3D anatomy. Both are lazy chunks. Without
-WebGL the Compass falls back to the 2D body map, which has the same functions.
+WebGL the Compass says so and stays usable through its region buttons; there is no 2D map.
 "Pause motion" and the OS reduced-motion setting stop decorative animation
 everywhere.
 

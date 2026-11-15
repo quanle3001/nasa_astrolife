@@ -42,7 +42,7 @@ Source layout:
 | `src/App.tsx` | Connects the two state machines to the screens |
 | `src/flow/`, `src/questions/` | Navigation machine; question engine and questionnaire machine (XState) |
 | `src/components/flow/` | Guided screens and shared pieces (badges, evidence trace, sources) |
-| `src/components/compass/` | 3D anatomy viewer, 2D body map |
+| `src/components/compass/` | 3D anatomy viewer and its region list |
 | `src/components/monitor/` | PPG chart, live monitor, sensor dock |
 | `src/components/nasa/` | Radiation Explorer, OSDR study card |
 | `src/components/pages/` | Dashboard, NASA data, monitor, history, concern report |
@@ -132,7 +132,7 @@ reviews are documented in [`docs/UI_UX.md`](../docs/UI_UX.md).
   written with Motion, CSS and Canvas 2D. Generic scroll reveals are avoided so
   state changes and the Home astronaut remain the focal motion.
 - The Health Compass uses `open-anatomy-3d` models through React Three Fiber,
-  bundled locally; a 2D body map is the fallback without WebGL.
+  bundled locally. Without WebGL the page says so and its region buttons still work.
 - "Pause motion" in the navbar and `prefers-reduced-motion` stop all decorative
   motion and video autoplay while keeping state and focus feedback.
 

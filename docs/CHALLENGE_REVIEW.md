@@ -36,8 +36,8 @@ is missing.
 > The software could display a human figure where each part of the body is
 > clickable and displays information about its function and health status.
 
-The Health Compass does this: a 3D anatomical model (2D fallback) where each
-region opens what was recorded, the prompts with their steps, the NASA
+The Health Compass does this: a 3D anatomical model where each region (also
+listed as plain buttons below it) opens what was recorded, the prompts with their steps, the NASA
 research and the follow-up actions.
 
 ## Potential considerations (optional)
@@ -56,7 +56,7 @@ research and the follow-up actions.
 | Category | Max | What can be shown | What is missing |
 |---|---|---|---|
 | Relevance: does it solve the chosen challenge? | 10 | One flow covering gather → assess → explain → act → follow up, plus the clickable body the challenge suggests | Three of the six example indicators (blood pressure, blood sugar, temperature) are not collected |
-| Does it work? Are the facts believable? | 10 | Full flow in the built app; restart resumes; offline; 197 backend and 142 interface tests; every health statement has a named source; limits are stated on screen | Sensor accuracy is not validated; a reading with a finger on the sensor should be rehearsed; one unexplained window crash was seen once in automated runs |
+| Does it work? Are the facts believable? | 10 | Full flow in the built app; restart resumes; offline; 197 backend and 144 interface tests; every health statement has a named source; limits are stated on screen | Sensor accuracy is not validated; a reading with a finger on the sensor should be rehearsed; one unexplained window crash was seen once in automated runs |
 | Use of NASA data, with sources named | 10 | NASA OSDR RadLab API (validated, analysed, cached with checksums, retrievable live); NASA OSDR Biological Data API (study OSD-104); NASA Human Research Program hazards and risks drive question order; Human Research Roadmap evidence report on every finding | The RadLab unit could not be verified and is shown as "not stated by the API" |
 | Use of the provided ESP32 (0 if unused) | 5 | ESP32 + MAX30102 → firmware estimates → serial → live chart and values; three agreeing reports are required before a reading is saved | — |
 | Creativity | 10 | Mission-driven adaptive check-in; six-step evidence trace per prompt; 3D Health Compass; honest labelling of simulated and historical data | — |

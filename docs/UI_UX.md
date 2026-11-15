@@ -258,8 +258,9 @@ dialog, the design tokens, the motion-pause preference and the shortcut map.
 ## 8. Health Compass
 
 The Compass shows the body in 3D with `open-anatomy-3d` 0.1.0 (code MIT,
-models CC BY 4.0, bundled locally; credit line beside the viewer). The 2D body
-map has the same functions and is the fallback when WebGL is unavailable.
+models CC BY 4.0, bundled locally; credit line beside the viewer). Every region
+is also a plain button below the viewer, which keeps the page usable from the
+keyboard and on a device without WebGL. The earlier 2D body map was removed.
 
 | Behaviour | Detail |
 |---|---|
@@ -411,3 +412,40 @@ It uses the same Python health modules and the same local NASA media, with a
 space theme restyle (`b92f88e`). It is not the primary interface. It stays so
 that a problem in the desktop shell never blocks sensor work, and as a backup
 monitor during a demo.
+
+## 12. Merged-build review (15 November)
+
+The Codex work and the reviewed version were compared screen by screen.
+
+**Kept from the Codex work:** overlapping screen transitions, the animated
+header stepper, the astronaut's poses and exit, neutral white lighting that
+shows the suit's detail, the three-report saved reading, and the ocean-blue
+(`#5692a9`) and ice-cyan (`#9dcddc`) palette **on blue components**: buttons,
+chips, borders, progress, focus and selection.
+
+**Returned to the reviewed version:** panel and card surfaces, the status
+colour for "Follow up", and all decoration: the mission atmosphere, the
+black-hole glow on every screen (full strength on the intro), the cursor light,
+surface spotlights and hero ornaments.
+
+**Fixed**
+
+| Problem | Fix |
+|---|---|
+| Symptom chips ran into the Sleep / Exercise facts | Spacing between the two blocks |
+| The astronaut overlapped the mission cards | Smaller, higher supporting pose with less cursor travel |
+| Fieldset titles sat on the box border | Legends placed inside the box |
+| Content showed through the navbar while scrolling | Content is clipped below the navbar (a rectangular clip, not a mask) |
+| Priority badges wrapped onto two lines | Badges never wrap |
+| The app no longer opened on the intro page | Every launch opens on the intro; a returning astronaut goes to the dashboard in one step and the brand mark leads back |
+| The 3D Compass lagged | Picking uses a spatial index (the models hold over a million triangles), hidden layers are not pickable, hover no longer recompiles materials, and the page mask over the viewer is gone. A pointer sweep over the model measured about 8 ms per frame afterwards |
+| 2D body map | Removed at the team's request; region buttons remain |
+
+A redesign of the Compass guide labels (fixed columns with tracking lines) was
+tried and withdrawn in favour of the previous in-scene labels.
+
+Both design skills were run again on this pass. The Impeccable detector (source
+scan; its page-level rules need a running page and did not run) reported one
+finding, a thick one-sided accent border on the new indicator cards, which was
+replaced with a tinted outline. UI UX Pro Max's "colour only" rule is met: each
+indicator status carries an icon and a text label as well as its colour.

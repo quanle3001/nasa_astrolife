@@ -201,6 +201,9 @@ See `git log --oneline -- docs README.md` for the commits.
 | `c1d4a6b` | Rules 2026.11.2: sourced self-care steps per prompt, resting heart-rate reference, indicator status for colour coding, measuring instructions. Keeps the session-saved reading. Restores component surfaces with the ocean-blue accents. Fixes the reported-section spacing, astronaut overlap, legend alignment and navbar bleed |
 | `3d411f4` | "Measure again" for a saved reading; tests for guidance, indicators and follow-up actions |
 
+| `96a2950` | Documentation for the new guidance; challenge and rubric check |
+| (next commit) | Intro page on every launch; decoration colours of the reviewed version with the blue palette on components; faster 3D Compass picking; 2D map removed; badges no longer wrap |
+
 The challenge and rubric check is in `CHALLENGE_REVIEW.md`.
 
 ## Conventions for further work

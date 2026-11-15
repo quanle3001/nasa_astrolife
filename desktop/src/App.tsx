@@ -373,7 +373,7 @@ export default function App() {
   let screen: ReactNode = null;
   let screenKey: string = view;
   if (view === "welcome") {
-    screen = <WelcomePage onBegin={() => send({ type: "NEXT" })} onResume={appState.open ? resume : undefined} resumeLabel="Resume Previous Mission" visual={<ParticleField className="welcome-particles" />} credit="3D astronaut: NASA 3D Resources, model by DigitalSpace Corporation. Decorative only." />;
+    screen = <WelcomePage onDashboard={onboarded ? () => send({ type: "EXIT" }) : undefined} onBegin={() => send({ type: "NEXT" })} onResume={appState.open ? resume : undefined} resumeLabel="Resume Previous Mission" visual={<ParticleField className="welcome-particles" />} credit="3D astronaut: NASA 3D Resources, model by DigitalSpace Corporation. Decorative only." />;
   } else if (view === "mission") {
     screen = <MissionPage mission={profile.environment} onChange={(environment) => setProfile((current) => ({ ...current, environment, phase: knowledge.mission_context.missions[environment].phases.includes(current.phase) ? current.phase : knowledge.mission_context.missions[environment].phases[0] }))} onBack={() => send({ type: "BACK" })} onNext={() => send({ type: "NEXT" })} />;
   } else if (view === "context") {
@@ -444,7 +444,12 @@ export default function App() {
         page={page} setPage={setPage} mission={mission} connected={sensor.connected} simulated={sensor.source === "simulated"} backendReady={backendReady} disclaimer={config.disclaimer}
         onShowShortcuts={() => setShortcutsOpen(true)} onReportConcern={view === "urgent" ? undefined : reportConcern}
         flow={flowProgress} scrollKey={`${screenKey}-${view === "questions" ? questionIndex : ""}`}
-        onHome={() => { if (view === "dashboard") setPage("dashboard"); else if (onboarded && view !== "urgent") send({ type: "EXIT" }); }}
+        onHome={() => {
+          // The brand mark steps back one level: a dashboard tab -> the dashboard -> the intro page.
+          if (view === "dashboard" && page !== "dashboard") setPage("dashboard");
+          else if (view === "dashboard") send({ type: "HOME" });
+          else if (onboarded && view !== "urgent") send({ type: "EXIT" });
+        }}
       >
         <div className="screen-stage">
           <AnimatePresence mode="sync" initial={false}>

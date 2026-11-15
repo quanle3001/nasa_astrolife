@@ -21,9 +21,19 @@ describe("flow machine", () => {
     expect(visited).toEqual([...FLOW_STEPS, "dashboard"]);
   });
 
-  it("resumes the dashboard on later launches and starts a check-in at the safety screen", () => {
+  it("opens on the intro page on later launches too, then goes straight to the dashboard", () => {
     const flow = start(true);
-    expect(flow.view()).toBe("dashboard");
+    expect(flow.view()).toBe("welcome");
+    expect(flow.send("EXIT")).toBe("dashboard");
+    // The brand mark leads back to the intro, and the intro back to the dashboard.
+    expect(flow.send("HOME")).toBe("welcome");
+    expect(flow.send("EXIT")).toBe("dashboard");
+    expect(start(false).send("EXIT")).toBe("welcome");
+  });
+
+  it("starts a returning astronaut's check-in at the safety screen", () => {
+    const flow = start(true);
+    expect(flow.send("EXIT")).toBe("dashboard");
     expect(flow.send("START_CHECKIN")).toBe("safety");
     expect(flow.send("NEXT", "NEXT", "NEXT")).toBe("findings");
   });
@@ -49,6 +59,7 @@ describe("flow machine", () => {
 
   it("lets a returning astronaut save and exit, change mission, and go back to the dashboard", () => {
     const flow = start(true);
+    flow.send("EXIT");
     expect(flow.send("START_CHECKIN", "NEXT", "EXIT")).toBe("dashboard");
     expect(flow.send("CHANGE_MISSION")).toBe("mission");
     expect(flow.send("BACK")).toBe("dashboard");
@@ -62,6 +73,7 @@ describe("flow machine", () => {
 
   it("opens the latest result pages from the dashboard", () => {
     const flow = start(true);
+    flow.send("EXIT");
     expect(flow.send({ type: "VIEW_RESULT", step: "compass" })).toBe("compass");
     expect(flow.send("EXIT")).toBe("dashboard");
     expect(flow.send({ type: "VIEW_RESULT", step: "actions" }, "NEXT")).toBe("dashboard");
