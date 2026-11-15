@@ -59,10 +59,14 @@ describe("WelcomePage", () => {
 
   it("leads a returning astronaut from the intro to the dashboard", () => {
     const dashboard = vi.fn();
-    render(<WelcomePage onBegin={() => undefined} onDashboard={dashboard} />);
+    const begin = vi.fn();
+    render(<WelcomePage onBegin={begin} onDashboard={dashboard} />);
     expect(screen.queryByRole("button", { name: /Begin Mission Assessment/ })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Open Mission Dashboard/ }));
     expect(dashboard).toHaveBeenCalledOnce();
+    // The whole guided flow can be run again from the intro without losing saved history.
+    fireEvent.click(screen.getByRole("button", { name: /Start a New Mission Assessment/ }));
+    expect(begin).toHaveBeenCalledOnce();
   });
 });
 

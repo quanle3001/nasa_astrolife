@@ -22,11 +22,13 @@ every prompt is traced back to NASA evidence and the astronaut's own answers.
 3. Start with a clean demo database so the first-launch flow appears:
 
    ```bash
-   cd desktop && ASTROTIP_HISTORY_PATH="$HOME/astrolife-demo.sqlite3" npm start
+   cd desktop && npm run demo
    ```
 
-   Delete `~/astrolife-demo.sqlite3` to reset the demo. Your real history is
-   not touched.
+   `npm run demo` starts from nothing every time: intro, mission choice, first
+   check-in. It uses its own demo database in the system temp folder, so your
+   real history is never touched. To show that the app remembers, quit and run
+   `npm run demo:resume`, which reopens the same demo data.
 4. **Rehearse the measurement step with a finger on the sensor.** Transport and
    timing are verified on the real board. A reading with a finger on the sensor
    has not yet been verified in the React app (see [HARDWARE.md](HARDWARE.md)).
@@ -51,7 +53,7 @@ every prompt is traced back to NASA evidence and the astronaut's own answers.
 | 2:05 | **Use saved reading and see my findings** | "Python rules produce the prompts. Each one gives simple steps I can take myself and when to involve the crew, and is traced: mission, NASA hazard, NASA risk, my own observation, the rule, the follow-up. My pulse and oxygen are colour coded against cited references." |
 | 2:20 | **Explore the Health Compass** → Muscles → Show NASA research | "The 3D body shows where each prompt belongs. Here is a real NASA space-biology study, clearly marked as mouse data, not mine." |
 | 2:35 | See my next steps → mark one action done → dashboard → **NASA data** | "Follow-ups are tracked. And this is real NASA instrument data from the RadLab API: the Curiosity rover's radiation detector, analysed with pandas, with full provenance. It is labelled as historical data, never as my exposure." |
-| 2:50 | Quit and relaunch → **Open Mission Dashboard** | "Everything is stored locally. It opens on the intro, and my mission, findings and follow-ups are all still here, offline." |
+| 2:50 | Quit, run `npm run demo:resume` → **Open Mission Dashboard** | "Everything is stored locally. It opens on the intro, and my mission, findings and follow-ups are all still here, offline." |
 
 Tips: number keys answer the current question (`1` first option, `2` second).
 If the saved reading looks wrong, press **Measure again** on the Measurement screen.

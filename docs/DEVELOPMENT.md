@@ -35,7 +35,9 @@ On Windows, activate with `.venv\Scripts\activate`.
 | Command (in `desktop/`) | What it does |
 |---|---|
 | `npm run dev` | Vite dev server plus Electron with hot reload |
-| `npm start` | Production build of the interface, then Electron |
+| `npm start` | Production build of the interface, then Electron, on your real local history |
+| `npm run demo` | Build, then start on a **fresh** demo database every time (first-launch flow). Real history is untouched |
+| `npm run demo:resume` | Reopen the same demo database, to show that the app remembers |
 | `npm run package:dir` | Unpacked app with a PyInstaller backend sidecar (needs `software/requirements-dev.txt`) |
 
 Electron looks for `.venv/bin/python` at the repository root, then `python3`

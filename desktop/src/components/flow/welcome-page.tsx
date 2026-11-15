@@ -24,7 +24,7 @@ export function WelcomePage({ onBegin, onResume, onDashboard, resumeLabel, visua
         <p className="welcome-lead">Choose your mission, see the NASA hazards that matter most for it, answer a short adaptive check-in, measure your pulse and oxygen, and leave with clear next steps.</p>
         <div className="hero-actions">
           {onDashboard
-            ? <Button variant="primary" size="lg" onClick={onDashboard}><PlayCircle className="size-4" /> Open Mission Dashboard</Button>
+            ? <><Button variant="primary" size="lg" onClick={onDashboard}><PlayCircle className="size-4" /> Open Mission Dashboard</Button><Button size="lg" onClick={onBegin}>Start a New Mission Assessment</Button></>
             : <Button variant="primary" size="lg" onClick={onBegin}><PlayCircle className="size-4" /> Begin Mission Assessment</Button>}
           {onResume && <Button size="lg" onClick={onResume}><RotateCcw className="size-4" /> {resumeLabel ?? "Resume Previous Mission"}</Button>}
         </div>

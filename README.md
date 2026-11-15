@@ -72,11 +72,16 @@ cd desktop && npm install
 npm start
 ```
 
-To try it without touching your real local history:
+To start from nothing every time, without touching your real local history:
 
 ```bash
-ASTROTIP_HISTORY_PATH="$HOME/astrolife-demo.sqlite3" npm start
+npm run demo
 ```
+
+`npm run demo:resume` reopens the same demo data, to show that the app
+remembers the mission, findings and follow-up actions. In normal use
+(`npm start`) the app always remembers; from the intro page a returning
+astronaut can open the dashboard or start a new mission assessment.
 
 No sensor? Use **Run simulated stream** on the Measurement screen.
 

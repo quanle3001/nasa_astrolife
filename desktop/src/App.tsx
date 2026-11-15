@@ -250,6 +250,12 @@ export default function App() {
     setAppState((current) => ({ ...current, open: started }));
     return started;
   };
+  /**
+   * From the intro: walk mission, context and hazards again and then start a new check-in.
+   * An unfinished check-in is not continued (the backend closes it as abandoned, never deletes
+   * it); saved history and follow-up actions stay.
+   */
+  const beginNewAssessment = () => { setSession(null); send({ type: "NEXT" }); };
   const beginCheckin = (event: "NEXT" | "START_CHECKIN") => guarded(async () => { await ensureSession(); send({ type: event }); });
 
   const resume = () => {
@@ -373,7 +379,7 @@ export default function App() {
   let screen: ReactNode = null;
   let screenKey: string = view;
   if (view === "welcome") {
-    screen = <WelcomePage onDashboard={onboarded ? () => send({ type: "EXIT" }) : undefined} onBegin={() => send({ type: "NEXT" })} onResume={appState.open ? resume : undefined} resumeLabel="Resume Previous Mission" visual={<ParticleField className="welcome-particles" />} credit="3D astronaut: NASA 3D Resources, model by DigitalSpace Corporation. Decorative only." />;
+    screen = <WelcomePage onDashboard={onboarded ? () => send({ type: "EXIT" }) : undefined} onBegin={beginNewAssessment} onResume={appState.open ? resume : undefined} resumeLabel="Resume Previous Mission" visual={<ParticleField className="welcome-particles" />} credit="3D astronaut: NASA 3D Resources, model by DigitalSpace Corporation. Decorative only." />;
   } else if (view === "mission") {
     screen = <MissionPage mission={profile.environment} onChange={(environment) => setProfile((current) => ({ ...current, environment, phase: knowledge.mission_context.missions[environment].phases.includes(current.phase) ? current.phase : knowledge.mission_context.missions[environment].phases[0] }))} onBack={() => send({ type: "BACK" })} onNext={() => send({ type: "NEXT" })} />;
   } else if (view === "context") {
