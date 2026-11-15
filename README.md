@@ -133,6 +133,7 @@ docs/         Documentation
 | [docs/DEMO.md](docs/DEMO.md) | Three-minute demo script, fallback plan, known limitations |
 | [docs/CHALLENGE_REVIEW.md](docs/CHALLENGE_REVIEW.md) | The app checked against the challenge statement, the judging rubric and the submission checklist |
 | [docs/CHANGELOG.md](docs/CHANGELOG.md) | Commit history by phase |
+| [docs/presentation-prep/](docs/presentation-prep/README.md) | Presentation study set: architecture handbook, technology stack, feature guide, NASA data and API audit, script, judge Q&A |
 | [desktop/THIRD_PARTY_NOTICES.md](desktop/THIRD_PARTY_NOTICES.md) | Licenses and attribution |
 
 ## Tests
