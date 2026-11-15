@@ -166,7 +166,13 @@ class BridgeTests(unittest.TestCase):
         bad = self.call("session.submit", {"session_id": sid, "answers": safety, "measurement": {"use": "manual", "spo2": 140}})
         self.assertFalse(bad["ok"])
         self.assertFalse(self.call("session.submit", {"session_id": sid, "answers": safety, "measurement": {"use": "guess"}})["ok"])
-        none = self.ok("session.submit", {"session_id": sid, "answers": safety, "measurement": {"use": "none"}})
+        # The sensor reading is the expected input: omitting it needs a stated, known reason.
+        for missing in ({"use": "none"}, {"use": "none", "reason": "did not feel like it"}, None):
+            refused = self.call("session.submit", {"session_id": sid, "answers": safety, **({"measurement": missing} if missing else {})})
+            self.assertFalse(refused["ok"])
+            self.assertIn("say why no measurement", refused["error"]["message"])
+        none = self.ok("session.submit", {"session_id": sid, "answers": safety, "measurement": {"use": "none", "reason": "sensor_unavailable"}})
+        self.assertIn("Reason given: the sensor was not available or not working.", none["session_notes"])
         self.assertIsNone(none["checkin"]["spo2"])
         self.assertIsNone(none["checkin"]["heart_rate"])
         self.assertEqual(none["assessment"]["level"], "info")

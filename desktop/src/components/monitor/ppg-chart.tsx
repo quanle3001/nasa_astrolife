@@ -45,13 +45,18 @@ function chartOptions(width: number, height: number, showRed: boolean): uPlot.Op
  * happen on state changes (connect, contact lost) and never per sample.
  * When there is no usable signal it shows the reason instead of a flat line.
  */
-export function PpgChart({ buffer = ppgBuffer, height = 220, className }: {
+export function PpgChart({ buffer = ppgBuffer, height = 220, className, compact }: {
   buffer?: PpgBuffer; height?: number; className?: string;
+  /** Chart and status only, for previews: no channel toggle, pause control or caption. */
+  compact?: boolean;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<PpgState>(buffer.state);
   const [simulated, setSimulated] = useState(buffer.source === "simulated");
   const [showRed, setShowRed] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const pausedRef = useRef(false);
+  pausedRef.current = paused;
 
   useEffect(() => {
     const element = host.current;
@@ -69,7 +74,8 @@ export function PpgChart({ buffer = ppgBuffer, height = 220, className }: {
     const tick = (now: number) => {
       frame = requestAnimationFrame(tick);
       if (now - lastFreshness > 500) { lastFreshness = now; buffer.checkFreshness(); }
-      if (now - lastDraw < REDRAW_INTERVAL_MS || buffer.revision === drawnRevision) return;
+      // Paused: the buffer keeps filling, the picture holds still for reading.
+      if (pausedRef.current || now - lastDraw < REDRAW_INTERVAL_MS || buffer.revision === drawnRevision) return;
       lastDraw = now;
       drawnRevision = buffer.revision;
       const shown = buffer.window(WINDOW_SECONDS);
@@ -84,23 +90,28 @@ export function PpgChart({ buffer = ppgBuffer, height = 220, className }: {
   return (
     <div className={cn("ppg-chart", className)}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-space-silver" role="status" aria-live="polite">{STATE_TEXT[state]}</p>
+        <p className="text-sm text-space-silver" role="status" aria-live="polite">{paused ? "Chart paused · the sensor is still being read." : STATE_TEXT[state]}</p>
         <div className="flex items-center gap-3">
           {simulated && <span className="provenance-badge provenance-simulated">Simulated data · not a measurement</span>}
-          <label className="flex cursor-pointer items-center gap-2 text-xs text-space-muted">
-            <input type="checkbox" checked={showRed} onChange={(event) => setShowRed(event.target.checked)} />
-            Show red channel
-          </label>
+          {!compact && (
+            <>
+              <label className="flex cursor-pointer items-center gap-2 text-xs text-space-muted">
+                <input type="checkbox" checked={showRed} onChange={(event) => setShowRed(event.target.checked)} />
+                Show red channel
+              </label>
+              <button type="button" className="chart-pause" aria-pressed={paused} onClick={() => setPaused((value) => !value)}>{paused ? "Resume chart" : "Pause chart"}</button>
+            </>
+          )}
         </div>
       </div>
       <div className="relative mt-3">
         <div ref={host} role="img" aria-label="Live optical finger pulse over the last ten seconds. This is a PPG signal, not an ECG." />
         {state !== "live" && <div className="ppg-chart-idle" aria-hidden="true" />}
       </div>
-      <p className="mt-2 text-xs leading-5 text-space-subtle">
+      {!compact && <p className="mt-2 text-xs leading-5 text-space-subtle">
         Optical pulse (PPG) at the fingertip, not an ECG. Infrared about 880 nm{showRed ? ", red about 660 nm" : ""}. The trace is display-filtered
         (baseline removed, lightly smoothed, inverted); raw counts are unchanged, and heart-rate and SpO₂ estimates come from the sensor firmware, not from this trace.
-      </p>
+      </p>}
     </div>
   );
 }

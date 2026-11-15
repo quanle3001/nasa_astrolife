@@ -1,26 +1,24 @@
 import { Activity, AlertTriangle, ClipboardCheck, Compass, Database, ListTodo, Orbit, PlayCircle, Radiation, RotateCcw, Settings2 } from "lucide-react";
-import { motion } from "motion/react";
 import type { ReactNode } from "react";
 import { Magnetic, TiltCard } from "@/components/effects/interactive";
 import { ActionItem } from "@/components/flow/actions-page";
 import { LEVEL_LABELS, measurementKind, ProvenanceBadge } from "@/components/flow/common";
 import { MissionViewport } from "@/components/hero/mission-viewport";
+import { PpgChart } from "@/components/monitor/ppg-chart";
 import type { SensorViewState } from "@/components/monitor/sensor-state";
 import { Button } from "@/components/ui/button";
-import { useCalmMotion } from "@/lib/motion-preference";
 import { cn } from "@/lib/utils";
 import type { AppConfig } from "@/types/backend";
 import type { AppState, FollowupAction, Knowledge } from "@/types/flow";
 
-function Tile({ title, icon: Icon, children, className, index }: { title: string; icon: typeof Activity; children: ReactNode; className?: string; index: number }) {
-  const reduced = useCalmMotion();
+function Tile({ title, icon: Icon, children, className }: { title: string; icon: typeof Activity; children: ReactNode; className?: string }) {
   return (
-    <motion.div className={className} initial={reduced ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: reduced ? 0 : index * 0.05, duration: 0.32 }}>
+    <div className={className}>
       <TiltCard className="glass-panel dashboard-tile" maxTilt={2.5}>
         <h2 className="telemetry-label"><Icon className="mr-1.5 inline size-3.5 text-space-cyan" aria-hidden="true" />{title}</h2>
         {children}
       </TiltCard>
-    </motion.div>
+    </div>
   );
 }
 
@@ -54,8 +52,7 @@ export function DashboardPage({ state, knowledge, config, sensor, onStartCheckin
     <div className="page-grid dashboard">
       <section className="dashboard-hero">
         <div className="dashboard-hero-copy">
-          <p className="telemetry-label">Mission dashboard</p>
-          <h1>{mission?.title ?? "Mission"} <span className="gradient-text">health</span></h1>
+          <h1>{mission?.title ?? "Mission"} health</h1>
           <p className="text-sm text-space-muted">{state.open ? "You have a check-in in progress." : doneToday ? "Today's check-in is complete. You can reassess at any time." : "No check-in recorded today."}</p>
           <div className="hero-actions">
             {state.open
@@ -73,7 +70,7 @@ export function DashboardPage({ state, knowledge, config, sensor, onStartCheckin
       </section>
 
       <div className="dashboard-grid">
-        <Tile index={0} title="Mission profile" icon={Orbit}>
+        <Tile title="Mission profile" icon={Orbit}>
           {profile && mission ? (
             <>
               <dl className="fact-grid">
@@ -88,7 +85,7 @@ export function DashboardPage({ state, knowledge, config, sensor, onStartCheckin
           ) : <p className="empty-line">No mission saved.</p>}
         </Tile>
 
-        <Tile index={1} title="Latest check-in" icon={ClipboardCheck}>
+        <Tile title="Latest check-in" icon={ClipboardCheck}>
           {latest && state.latest ? (
             <>
               <div className="flex flex-wrap items-center gap-2"><span className={cn("priority-badge", `priority-${latest.assessment.level}`)}>{LEVEL_LABELS[latest.assessment.level]}</span><ProvenanceBadge kind="rule" /></div>
@@ -99,7 +96,7 @@ export function DashboardPage({ state, knowledge, config, sensor, onStartCheckin
           ) : <p className="empty-line">No completed check-in yet.</p>}
         </Tile>
 
-        <Tile index={2} title="Latest measurement" icon={Activity}>
+        <Tile title="Latest measurement" icon={Activity}>
           {hasMeasurement && checkin ? (
             <>
               <div className="tile-vitals"><div><strong>{checkin.heart_rate ?? "—"}</strong><small>bpm</small></div><div><strong>{checkin.spo2 ?? "—"}</strong><small>% SpO₂</small></div></div>
@@ -107,6 +104,7 @@ export function DashboardPage({ state, knowledge, config, sensor, onStartCheckin
               <p className="tile-note">{checkin.sensor_received_at ? `Measured ${when(checkin.sensor_received_at)}` : "From your latest check-in"} · estimates, not validated</p>
             </>
           ) : <p className="empty-line">No measurement in your latest check-in. Pulse and oxygen are unassessed.</p>}
+          {sensor.connected && <PpgChart compact height={96} />}
           <div className="tile-live">
             <span className={cn("live-pulse", sensor.connected && "is-live", sensor.connecting && "is-connecting")} />
             <span>{sensor.connected ? (sensor.usable ? `Live now: ${sensor.heartRate ?? "—"} bpm · ${sensor.spo2 ?? "—"}%${sensor.source === "simulated" ? " (simulated)" : ""}` : "Sensor connected · waiting for a usable reading") : "Sensor not connected"}</span>
@@ -114,7 +112,7 @@ export function DashboardPage({ state, knowledge, config, sensor, onStartCheckin
           </div>
         </Tile>
 
-        <Tile index={3} title={`Active findings · ${findings.length}`} icon={ListTodo} className="dashboard-wide">
+        <Tile title={`Active findings · ${findings.length}`} icon={ListTodo} className="dashboard-wide">
           {findings.length ? (
             <ul className="tile-findings">
               {findings.slice(0, 4).map((finding) => (
@@ -124,14 +122,14 @@ export function DashboardPage({ state, knowledge, config, sensor, onStartCheckin
           ) : <p className="empty-line">{latest ? "No prompt from your latest check-in. This is not a health clearance." : "Findings appear here after a check-in."}</p>}
         </Tile>
 
-        <Tile index={4} title={`Follow-up tasks · ${openActions.length} open`} icon={ListTodo} className="dashboard-wide">
+        <Tile title={`Follow-up tasks · ${openActions.length} open`} icon={ListTodo} className="dashboard-wide">
           {openActions.length ? (
             <ul className="action-list">{openActions.slice(0, 3).map((action) => <ActionItem key={action.id} action={action} knowledge={knowledge} conditionTitles={config.condition_titles} onToggle={onToggleAction} />)}</ul>
           ) : <p className="empty-line">No open follow-up task.</p>}
           {state.actions.length > 0 && <Button size="sm" variant="ghost" onClick={() => onViewResult("actions")}>Open Action Center ({state.actions.length})</Button>}
         </Tile>
 
-        <Tile index={5} title="Explore" icon={Compass}>
+        <Tile title="Explore" icon={Compass}>
           <div className="tile-links">
             <button type="button" onClick={() => onOpen("compass")}><Compass className="size-4" /><span><strong>Health Compass</strong><small>Your observations and NASA research by body system</small></span></button>
             <button type="button" onClick={() => onOpen("nasa")}><Radiation className="size-4" /><span><strong>NASA data</strong><small>Radiation measurements and research evidence</small></span></button>

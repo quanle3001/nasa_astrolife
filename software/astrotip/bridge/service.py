@@ -34,6 +34,11 @@ from astrotip.storage.database import HistoryStore
 
 MAX_LINE_BYTES = 1_000_000
 PROTOCOL_VERSION = 2
+# Accepted reasons for submitting a check-in without a pulse / oxygen measurement.
+NO_MEASUREMENT_REASONS = {
+    "sensor_unavailable": "the sensor was not available or not working",
+    "no_stable_reading": "a stable reading could not be obtained",
+}
 # Raw optical samples are flushed to the renderer at this interval.
 PPG_FLUSH_MS = 80
 # Mission labels are presentation context for the desktop shell. They are not
@@ -390,6 +395,9 @@ class BridgeService(QObject):
             return {"heart_rate": measurement.get("heart_rate"), "spo2": measurement.get("spo2"),
                     "signal_quality": measurement.get("signal_quality", "unknown"), "input_source": "manual"}
         if use == "none":
+            # The sensor reading is the expected input; leaving it out needs a stated reason.
+            if measurement.get("reason") not in NO_MEASUREMENT_REASONS:
+                raise ValueError("Take a sensor reading, or say why no measurement could be taken.")
             return {}
         raise ValueError("Choose a sensor reading, a manual entry, or no measurement.")
 
@@ -397,8 +405,13 @@ class BridgeService(QObject):
         """Assess a finished check-in with the existing rules and store the result."""
         session = self._open_session(params)
         answers = self._clean_answers(session, params.get("answers", session["answers"]))
+        # Check the answers first, so a missing required answer is reported before a missing reading.
+        checkin_from_answers(self.registry, session["mission"], answers, self._hazard_order(session))
         checkin, notes = checkin_from_answers(self.registry, session["mission"], answers,
                                               self._hazard_order(session), self._measurement(params))
+        reason = (params.get("measurement") or {}).get("reason")
+        if checkin.heart_rate is None and checkin.spo2 is None and reason in NO_MEASUREMENT_REASONS:
+            notes.append(f"Reason given: {NO_MEASUREMENT_REASONS[reason]}.")
         assessment = assess(checkin, self.catalog)
         entry_id = self.history.save(checkin, assessment)
         actions = [

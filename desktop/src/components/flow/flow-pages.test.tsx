@@ -62,7 +62,7 @@ describe("ContextPage", () => {
     expect(phases).toEqual(["In orbit or habitat", "Return and recovery"]);
     fireEvent.change(screen.getByLabelText(/Mission day/), { target: { value: "0" } });
     expect(screen.getByText(/whole number from 1 to 2000/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Continue/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Save mission context/ })).toBeDisabled();
     fireEvent.change(screen.getByLabelText(/Mission day/), { target: { value: "120" } });
     expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ mission_day: 120 }));
     fireEvent.click(within(screen.getByRole("radiogroup", { name: /EVA or pressure change/ })).getByRole("radio", { name: "Yes" }));
@@ -178,7 +178,7 @@ describe("QuestionsPage", () => {
     const onIndex = vi.fn();
     const onDone = vi.fn();
     render(<QuestionsPage view={current} knowledge={knowledge} index={current.questions.length} onIndex={onIndex} onAnswer={() => undefined} onBack={() => undefined} onDone={onDone} />);
-    expect(screen.getByRole("heading", { name: "Your answers" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Review your answers" })).toBeInTheDocument();
     expect(screen.getByText("Not sure")).toBeInTheDocument();
     expect(screen.getAllByText("Not answered").length).toBe(current.questions.length - 1);
     fireEvent.click(screen.getByRole("button", { name: /How well have you been sleeping/ }));
@@ -194,32 +194,56 @@ describe("MeasurePage", () => {
     render(<MeasurePage sensor={sensor} onConnectStart={() => undefined} onBack={() => undefined} onSubmit={onSubmit} busy={false} error="" />);
     return onSubmit;
   };
+  const primary = () => screen.getByRole("button", { name: /Use this reading and see my findings/ });
 
-  it("never submits a sensor measurement when no usable reading exists, but never blocks the check-in", () => {
+  it("requires the sensor reading and says what is still missing", () => {
     const onSubmit = renderPage();
-    expect(screen.getByRole("button", { name: /See my findings/ })).toBeDisabled();
-    expect(screen.getByText(/No usable reading yet/)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("radio", { name: /Continue without a measurement/ }));
-    fireEvent.click(screen.getByRole("button", { name: /See my findings/ }));
-    expect(onSubmit).toHaveBeenCalledWith({ use: "none" });
+    expect(primary()).toBeDisabled();
+    expect(screen.getByText("Required")).toBeInTheDocument();
+    expect(screen.getByText(/Connect the ESP32 sensor to take your reading/)).toBeInTheDocument();
+    expect(screen.queryByRole("radiogroup")).not.toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("guides the astronaut from connected to a usable reading", () => {
+    renderPage({ ...INITIAL_SENSOR, connected: true, source: "sensor" });
+    expect(screen.getByText(/Rest your fingertip on the lit window/)).toBeInTheDocument();
+    expect(primary()).toBeDisabled();
   });
 
   it("asks the backend for its own sensor reading instead of sending numbers", () => {
     const onSubmit = renderPage({ ...INITIAL_SENSOR, connected: true, usable: true, heartRate: 72, spo2: 98, source: "sensor" });
     expect(screen.getByText("Your sensor measurement")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /See my findings/ }));
+    fireEvent.click(primary());
     expect(onSubmit).toHaveBeenCalledWith({ use: "sensor" });
   });
 
-  it("accepts manual values from another instrument and labels simulated data", () => {
-    const onSubmit = renderPage({ ...INITIAL_SENSOR, connected: true, usable: true, heartRate: 72, spo2: 98, source: "simulated" });
+  it("labels simulated data", () => {
+    renderPage({ ...INITIAL_SENSOR, connected: true, usable: true, heartRate: 72, spo2: 98, source: "simulated" });
     expect(screen.getByText("Simulated data · not a measurement")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("radio", { name: /Enter values from another instrument/ }));
-    expect(screen.getByRole("button", { name: /See my findings/ })).toBeDisabled();
+  });
+
+  it("never dead-ends when the hardware fails, but needs a stated reason", () => {
+    const onSubmit = renderPage();
+    fireEvent.click(screen.getByRole("button", { name: /The sensor cannot be used right now/ }));
+    const proceed = screen.getByRole("button", { name: "Continue without a sensor reading" });
+    expect(proceed).toBeDisabled();
+    expect(screen.getByText(/never assumed to be normal/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("radio", { name: /The sensor is not available or not working/ }));
+    fireEvent.click(proceed);
+    expect(onSubmit).toHaveBeenCalledWith({ use: "none", reason: "sensor_unavailable" });
+  });
+
+  it("accepts values from another instrument through the fallback only", () => {
+    const onSubmit = renderPage();
+    fireEvent.click(screen.getByRole("button", { name: /The sensor cannot be used right now/ }));
+    fireEvent.click(screen.getByRole("radio", { name: /Enter values from another approved instrument/ }));
+    const proceed = screen.getByRole("button", { name: "Continue without a sensor reading" });
+    expect(proceed).toBeDisabled();
     fireEvent.change(screen.getByLabelText("SpO₂ (%)"), { target: { value: "abc" } });
     expect(screen.getByText("Enter a number, or leave this blank.")).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("SpO₂ (%)"), { target: { value: "97" } });
-    fireEvent.click(screen.getByRole("button", { name: /See my findings/ }));
+    fireEvent.click(proceed);
     expect(onSubmit).toHaveBeenCalledWith({ use: "manual", heart_rate: null, spo2: 97, signal_quality: "unknown" });
   });
 });

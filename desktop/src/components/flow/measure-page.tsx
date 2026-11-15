@@ -1,4 +1,4 @@
-import { HeartPulse, PenLine, SkipForward } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { FlowPage, ProvenanceBadge } from "@/components/flow/common";
 import { LiveMonitor } from "@/components/monitor/live-monitor";
@@ -6,74 +6,95 @@ import { SensorDock } from "@/components/monitor/sensor-dock";
 import type { SensorViewState } from "@/components/monitor/sensor-state";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import type { MeasurementChoice } from "@/types/flow";
+import type { MeasurementChoice, NoMeasurementReason } from "@/types/flow";
 
-type Mode = "sensor" | "manual" | "none";
+type Fallback = "manual" | NoMeasurementReason;
 const optionalNumber = (text: string) => (text.trim() === "" ? null : Number(text));
 const formatError = (text: string) => (text.trim() === "" || Number.isFinite(Number(text)) ? "" : "Enter a number, or leave this blank.");
 
+/** What still stands between the astronaut and a usable sensor reading. */
+function sensorStep(sensor: SensorViewState): string {
+  if (sensor.usable) return "Reading ready. Keep still and continue.";
+  if (sensor.connecting) return "Opening the sensor link…";
+  if (!sensor.connected) return "Connect the ESP32 sensor to take your reading.";
+  return "Sensor connected. Rest your fingertip on the lit window and hold still until a reading appears.";
+}
+
 /**
- * Step 7: add a pulse and oxygen measurement, or continue without one.
+ * Step 7: the pulse and blood-oxygen reading from the ESP32 + MAX30102.
  *
- * A sensor reading is never copied from this screen. Choosing it tells the
- * backend to use its own newest valid reading, so a stale or invalid value
- * cannot be submitted. Range checks stay in the Python backend.
+ * The sensor reading is a required part of every check-in. It is never copied
+ * from this screen: continuing tells the backend to use its own newest valid
+ * reading, so a stale or invalid value cannot be submitted.
+ *
+ * If the hardware genuinely cannot be used, a secondary path records values
+ * from another instrument or the reason no measurement was possible. That
+ * keeps a check-in from being lost, and the result then says the measurement
+ * is missing instead of treating it as normal.
  */
 export function MeasurePage({ sensor, onConnectStart, onBack, onSubmit, busy, error, aside }: {
   sensor: SensorViewState; onConnectStart: (port: string) => void; onBack: () => void;
   onSubmit: (measurement: MeasurementChoice) => void; busy: boolean; error: string; aside?: React.ReactNode;
 }) {
-  const [mode, setMode] = useState<Mode>("sensor");
+  const [fallbackOpen, setFallbackOpen] = useState(false);
+  const [fallback, setFallback] = useState<Fallback | null>(null);
   const [heartRate, setHeartRate] = useState("");
   const [spo2, setSpo2] = useState("");
   const [quality, setQuality] = useState<"unknown" | "good" | "poor">("unknown");
   const manualError = formatError(heartRate) || formatError(spo2);
-  const manualEmpty = heartRate.trim() === "" && spo2.trim() === "";
-  const blocked = mode === "sensor" ? !sensor.usable : mode === "manual" ? Boolean(manualError) || manualEmpty : false;
-  const submit = () => onSubmit(
-    mode === "sensor" ? { use: "sensor" }
-      : mode === "manual" ? { use: "manual", heart_rate: optionalNumber(heartRate), spo2: optionalNumber(spo2), signal_quality: quality }
-        : { use: "none" },
-  );
+  const manualReady = !manualError && (heartRate.trim() !== "" || spo2.trim() !== "");
+  const fallbackReady = fallback === "manual" ? manualReady : fallback !== null;
+  const submitFallback = () => {
+    if (fallback === "manual") onSubmit({ use: "manual", heart_rate: optionalNumber(heartRate), spo2: optionalNumber(spo2), signal_quality: quality });
+    else if (fallback) onSubmit({ use: "none", reason: fallback });
+  };
   const simulate = () => { onConnectStart("simulated stream"); void api.simulateSensor().catch(() => undefined); };
-  const modes: { id: Mode; label: string; hint: string; icon: typeof HeartPulse }[] = [
-    { id: "sensor", label: "Use the sensor reading", hint: sensor.usable ? `Current estimate: ${sensor.heartRate ?? "—"} bpm · ${sensor.spo2 ?? "—"}% SpO₂` : "Waiting for a usable reading", icon: HeartPulse },
-    { id: "manual", label: "Enter values from another instrument", hint: "For an approved monitor you read yourself", icon: PenLine },
-    { id: "none", label: "Continue without a measurement", hint: "Pulse and oxygen stay unassessed", icon: SkipForward },
+  const options: { id: Fallback; label: string; hint: string }[] = [
+    { id: "manual", label: "Enter values from another approved instrument", hint: "Recorded as a manual entry" },
+    { id: "no_stable_reading", label: "A stable reading could not be obtained", hint: "Pulse and oxygen will be recorded as not measured" },
+    { id: "sensor_unavailable", label: "The sensor is not available or not working", hint: "Pulse and oxygen will be recorded as not measured" },
   ];
   return (
     <FlowPage
-      wide eyebrow="Step 6 · Measurement" title="Measure your pulse and blood oxygen"
-      lead="Connect the ESP32, rest a fingertip on the sensor window and hold still for a few seconds. A missing or invalid measurement never blocks your check-in and is never treated as normal."
-      onBack={onBack} onNext={submit} nextDisabled={blocked} busy={busy} nextLabel="See my findings" aside={aside}
+      wide title="Measure your pulse and blood oxygen"
+      lead="Every check-in includes a reading from your fingertip sensor. Rest a fingertip on the lit window and hold still for a few seconds."
+      onBack={onBack} onNext={() => onSubmit({ use: "sensor" })} nextDisabled={!sensor.usable} busy={busy} nextLabel="Use this reading and see my findings" aside={aside}
     >
-      <SensorDock state={sensor} onConnectStart={onConnectStart} />
+      <SensorDock state={sensor} onConnectStart={onConnectStart} autoConnect />
       <LiveMonitor state={sensor} onSimulate={simulate} />
-      <fieldset className="measure-choice">
-        <legend>Which measurement should this check-in include?</legend>
-        <div className="measure-options" role="radiogroup" aria-label="Measurement to include">
-          {modes.map(({ id, label, hint, icon: Icon }) => (
-            <button key={id} type="button" role="radio" aria-checked={mode === id} className={cn("measure-option", mode === id && "is-selected")} onClick={() => setMode(id)}>
-              <Icon className="size-4 shrink-0" aria-hidden="true" /><span><strong>{label}</strong><small>{hint}</small></span>
-            </button>
-          ))}
-        </div>
-        {mode === "sensor" && (
-          <p className="measure-hint">
-            {sensor.usable ? <ProvenanceBadge kind={sensor.source === "simulated" ? "simulated" : "measurement"} /> : null}
-            {sensor.usable ? " The newest valid reading at the moment you continue is recorded with its timestamp." : " No usable reading yet. Keep your finger on the sensor, or choose another option."}
-          </p>
-        )}
-        {mode === "manual" && (
-          <div className="form-grid manual-grid">
-            <label><span>Heart rate (bpm)</span><input className="control" inputMode="decimal" value={heartRate} onChange={(event) => setHeartRate(event.target.value)} placeholder="Optional" aria-invalid={formatError(heartRate) ? true : undefined} /></label>
-            <label><span>SpO₂ (%)</span><input className="control" inputMode="decimal" value={spo2} onChange={(event) => setSpo2(event.target.value)} placeholder="Optional" aria-invalid={formatError(spo2) ? true : undefined} /></label>
-            <label><span>Reading quality</span><select className="control" value={quality} onChange={(event) => setQuality(event.target.value as typeof quality)}><option value="unknown">Unknown / not checked</option><option value="good">Good · stable repeated reading</option><option value="poor">Poor · motion or unstable contact</option></select></label>
-            {manualError && <small className="field-error col-span-full">{manualError}</small>}
+      <p className={cn("measure-status", sensor.usable && "is-ready")} role="status">
+        <span className="measure-required">Required</span>
+        {sensorStep(sensor)}
+        {sensor.usable && <ProvenanceBadge kind={sensor.source === "simulated" ? "simulated" : "measurement"} />}
+      </p>
+      {error && <div role="alert" className="flow-error">{error}</div>}
+
+      <section className="measure-fallback">
+        <button type="button" className="measure-fallback-toggle" aria-expanded={fallbackOpen} aria-controls="measure-fallback" onClick={() => setFallbackOpen((open) => !open)}>
+          <ChevronDown className={cn("size-4 transition-transform", fallbackOpen && "rotate-180")} aria-hidden="true" /> The sensor cannot be used right now
+        </button>
+        {fallbackOpen && (
+          <div id="measure-fallback" className="measure-fallback-body">
+            <p>Use this only when a sensor reading is not possible. Your findings will say that pulse and oxygen were not measured by the sensor; they are never assumed to be normal.</p>
+            <div className="measure-options" role="radiogroup" aria-label="Why the sensor reading is missing">
+              {options.map((option) => (
+                <button key={option.id} type="button" role="radio" aria-checked={fallback === option.id} className={cn("measure-option", fallback === option.id && "is-selected")} onClick={() => setFallback(option.id)}>
+                  <span><strong>{option.label}</strong><small>{option.hint}</small></span>
+                </button>
+              ))}
+            </div>
+            {fallback === "manual" && (
+              <div className="form-grid manual-grid">
+                <label><span>Heart rate (bpm)</span><input className="control" inputMode="decimal" value={heartRate} onChange={(event) => setHeartRate(event.target.value)} placeholder="Optional" aria-invalid={formatError(heartRate) ? true : undefined} /></label>
+                <label><span>SpO₂ (%)</span><input className="control" inputMode="decimal" value={spo2} onChange={(event) => setSpo2(event.target.value)} placeholder="Optional" aria-invalid={formatError(spo2) ? true : undefined} /></label>
+                <label><span>Reading quality</span><select className="control" value={quality} onChange={(event) => setQuality(event.target.value as typeof quality)}><option value="unknown">Unknown / not checked</option><option value="good">Good · stable repeated reading</option><option value="poor">Poor · motion or unstable contact</option></select></label>
+                {manualError && <small className="field-error col-span-full">{manualError}</small>}
+              </div>
+            )}
+            <button type="button" className="measure-fallback-submit" disabled={!fallbackReady || busy} onClick={submitFallback}>Continue without a sensor reading</button>
           </div>
         )}
-      </fieldset>
-      {error && <div role="alert" className="flow-error">{error}</div>}
+      </section>
     </FlowPage>
   );
 }

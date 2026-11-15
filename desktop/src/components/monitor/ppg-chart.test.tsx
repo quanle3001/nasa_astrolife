@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PpgBuffer } from "@/lib/ppg-buffer";
 import type { PpgBatch } from "@/types/backend";
@@ -32,6 +32,30 @@ describe("PpgChart", () => {
     const calls = setData.mock.calls.length;
     act(() => { vi.advanceTimersByTime(300); });
     expect(setData.mock.calls.length).toBe(calls);
+  });
+
+  it("can be paused without losing samples, and resumes with the newest data", async () => {
+    const { PpgChart } = await import("@/components/monitor/ppg-chart");
+    const buffer = new PpgBuffer();
+    render(<PpgChart buffer={buffer} />);
+    act(() => { buffer.push(batch()); vi.advanceTimersByTime(100); });
+    const drawn = setData.mock.calls.length;
+    fireEvent.click(screen.getByRole("button", { name: "Pause chart" }));
+    expect(screen.getByRole("status")).toHaveTextContent("Chart paused");
+    act(() => { buffer.push(batch({ batch_seq: 1, seq: [3, 4], t_ms: [120, 160], red: [60030, 60040], ir: [80060, 80080] })); vi.advanceTimersByTime(200); });
+    expect(setData.mock.calls.length).toBe(drawn);
+    expect(buffer.length).toBe(5);
+    fireEvent.click(screen.getByRole("button", { name: "Resume chart" }));
+    act(() => { vi.advanceTimersByTime(100); });
+    expect((setData.mock.calls.at(-1)![0] as number[][])[0]).toHaveLength(5);
+  });
+
+  it("offers only the chart and its status in compact previews", async () => {
+    const { PpgChart } = await import("@/components/monitor/ppg-chart");
+    render(<PpgChart buffer={new PpgBuffer()} compact />);
+    expect(screen.queryByRole("button", { name: "Pause chart" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/display-filtered/)).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("No signal");
   });
 
   it("explains lost contact and labels simulated data", async () => {

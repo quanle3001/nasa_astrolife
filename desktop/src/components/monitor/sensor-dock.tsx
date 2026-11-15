@@ -11,8 +11,12 @@ import type { SensorViewState } from "@/components/monitor/sensor-state";
 const plainError = (message: string) => message.replace(/\[Errno \d+\]\s*/g, "").replace(/\s{2,}/g, " ").trim();
 
 /** Serial port picker and link control for the ESP32 + MAX30102. */
-export function SensorDock({ state, onConnectStart, inputRef }: {
+const USB_SERIAL = /usb|slab|wch|uart|cp210|ch34/i;
+
+export function SensorDock({ state, onConnectStart, inputRef, autoConnect }: {
   state: SensorViewState; onConnectStart: (port: string) => void; inputRef?: Ref<HTMLInputElement>;
+  /** Open the link without a click when a USB serial adapter is found (measurement step). */
+  autoConnect?: boolean;
 }) {
   const [ports, setPorts] = useState<{ device: string; description: string }[]>([]);
   const [port, setPort] = useState("");
@@ -25,10 +29,20 @@ export function SensorDock({ state, onConnectStart, inputRef }: {
       const found = await api.listPorts();
       setPorts(found);
       // Prefer a USB serial adapter over built-in ports when nothing was chosen yet.
-      if (!chosen.current) setPort((found.find((item) => /usb|slab|wch|uart|cp210|ch34/i.test(`${item.device} ${item.description}`)) ?? found[0])?.device ?? "");
-    } catch (reason) { setError(reason instanceof Error ? reason.message : String(reason)); }
+      const usb = found.find((item) => USB_SERIAL.test(`${item.device} ${item.description}`));
+      if (!chosen.current) setPort((usb ?? found[0])?.device ?? "");
+      return usb?.device ?? null;
+    } catch (reason) { setError(reason instanceof Error ? reason.message : String(reason)); return null; }
   };
-  useEffect(() => { void refresh(); }, []);
+  useEffect(() => {
+    let alive = true;
+    void refresh().then(async (usbPort) => {
+      // Only a port that looks like the ESP32's USB adapter is opened unasked.
+      if (!alive || !autoConnect || !usbPort || state.connected || state.connecting) return;
+      try { onConnectStart(usbPort); await api.connectSensor(usbPort); } catch (reason) { setError(reason instanceof Error ? reason.message : String(reason)); }
+    });
+    return () => { alive = false; };
+  }, []);
 
   const toggle = async () => {
     try {

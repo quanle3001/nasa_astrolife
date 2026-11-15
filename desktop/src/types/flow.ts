@@ -151,10 +151,17 @@ export interface SubmittedSession extends SessionResult {
 
 export interface SessionPreview extends SessionResult { urgent: boolean }
 
-/** Which measurement to include. Sensor values are read by the backend, not sent from here. */
+/** Why a check-in is submitted without a pulse and oxygen measurement. */
+export type NoMeasurementReason = "sensor_unavailable" | "no_stable_reading";
+
+/**
+ * Which measurement to include. The sensor reading is the expected choice and
+ * its values are read by the backend, not sent from here. Leaving the
+ * measurement out is only accepted with a reason.
+ */
 export type MeasurementChoice =
   | { use: "sensor" }
-  | { use: "none" }
+  | { use: "none"; reason: NoMeasurementReason }
   | { use: "manual"; heart_rate: number | null; spo2: number | null; signal_quality: "unknown" | "good" | "poor" };
 
 export interface AppState {
