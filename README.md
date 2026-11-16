@@ -176,6 +176,28 @@ At the last full cycle: 197 Python tests (2 opt-in live NASA tests skipped) and
 
 The full list is in [docs/DEMO.md](docs/DEMO.md#known-limitations).
 
+## Future integrations and optional extensions
+
+None of these are built. They are directions the current design leaves room
+for, with what each one would need.
+
+| Idea | What it would add | What it needs |
+|---|---|---|
+| **Wireless sensor** | The ESP32 already has Bluetooth Low Energy and Wi-Fi radios, so the sensor could send readings without a USB cable and be worn or moved freely | A wireless reader next to the serial reader in `software/astrotip/inputs/`, firmware that sends the same reports over the radio, a battery, and pairing so one sensor belongs to one astronaut |
+| **More health indicators** | Body temperature, blood pressure and blood sugar, which the challenge lists as examples | Extra sensors or manual entry, a cited general reference for each value, and new rules |
+| **Sensor validation** | Evidence of how close the pulse and oxygen estimates are to a medical device | A side-by-side comparison with a reference pulse oximeter, with the results published |
+| **Optional AI model** | Help spotting slow changes against a personal baseline, or judging signal quality | Suitable labelled data and validation. It would advise only: the fixed rules stay the source of every prompt, and anything the model flags must be explained and sourced. `software/astrotip/analysis/local_ai.py` is an empty placeholder for this |
+| **Trend charts and personal baseline** | Charts of each indicator over time, compared with the astronaut's own usual values | Enough saved real readings, and limits set with a medical team |
+| **Reminders and routine progress** | Prompts to take the daily check-in and a simple record of completed routines | A scheduler and notification settings. Progress should reward honest check-ins, never "healthy" results |
+| **Camera or image input** | Photos as part of a check-in, for example of a skin change | A capture screen, safe local storage and a clear statement that images are not analysed. `inputs/camera_capture.py` and `inputs/image_input.py` are empty placeholders |
+| **More NASA data** | More open studies per health topic, and radiation data for more dates | New entries in `software/resources/osdr_studies.json`, a wider RadLab window, and the RadLab unit confirmed from NASA's documentation |
+| **Crew view** | A summary for the crew medical officer across several astronauts | User accounts, access control and encrypted storage |
+| **Encrypted storage** | Protection for the local health history | Encryption of the SQLite file and a way to manage the key |
+| **Refined housing** | A smaller or wearable enclosure with a steadier fingertip position | New design files in [mechanical/](mechanical/) and a check that readings stay consistent |
+
+Any medical use would also need clinical validation and review of every rule
+by flight surgeons.
+
 ## Credits
 
 - **Team:** Ben Vo, Jayden Nguyen, and Quan Le.
